@@ -1,8 +1,9 @@
 package database
 
 import (
-	"sync"
 	"errors"
+	"sync"
+	"github.com/satori/go.uuid"
 )
 
 type DataInterface interface {
@@ -32,21 +33,41 @@ func NewMetaData(name, tel, pass string, photo []byte) MetaData {
 }
 
 type DataBase struct {
-	UserId map[string]int64
-	IdMeta map[int64]MetaData
+	UserId        map[string]int64
+	IdMeta        map[int64]MetaData
+	CookieSession map[string]string
 
 	UserCounter int64
 	mutex       sync.Mutex
 }
-
-
-
 
 func NewDataBase() DataBase {
 
 	return DataBase{UserId: make(map[string]int64), IdMeta: make(map[int64]MetaData), UserCounter: 0}
 
 }
+
+func (db *DataBase) SetCookie(login string) string {
+
+	db.mutex.Lock()
+	info , _  := uuid.NewV4()
+	cookie := info.String()
+	db.CookieSession[login] = cookie
+	db.mutex.Unlock()
+
+	return cookie
+
+}
+
+func (db *DataBase) CheckCookie(cookie string, login string) bool {
+
+	return db.CookieSession[login] == cookie
+
+}
+
+
+
+
 
 func (db *DataBase) AddUser(login string, data MetaData) (error, MetaData) {
 
@@ -110,5 +131,3 @@ func (db *DataBase) CheckAuth(login, password string) error {
 
 	return nil
 }
-
-

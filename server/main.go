@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"net/http"
+	"time"
 )
 
 type DataHandler struct {
@@ -30,11 +31,21 @@ func (dh DataHandler) Register(w http.ResponseWriter, r *http.Request) {
 	makeCorsHeaders(&w)
 	data := myDataB.NewMetaData("xd", "xd", "xd", make([]byte, 2))
 	login := "nikita"
+	// test data
+
 	if err, info := dh.dataBase.AddUser(login, data); err != nil {
 		http.Error(w,`{"error":"неправильные данные!"}` , 401)
 		return
 	} else {
 		json.NewEncoder(w).Encode(&myDataB.Result{Body: info})
+
+		cValue := dh.dataBase.SetCookie(login)
+		cookie := http.Cookie{
+			Name : "session_id",
+			Value : cValue,
+			Expires: time.Now().Add(12 * time.Hour),
+		}
+		http.SetCookie(w,&cookie)
 	}
 }
 
