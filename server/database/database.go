@@ -48,6 +48,15 @@ func NewMetaData(name, tel, pass string, photo []byte) *MetaData {
 	return &MetaData{name, photo, tel, pass}
 }
 
+func MergeData(dataLeft , dataRight MetaData) MetaData{
+	dataLeft.Password = dataRight.Password
+	dataLeft.Username = dataRight.Username
+	dataLeft.Telephone = dataRight.Telephone
+
+	return dataLeft
+
+}
+
 func NewDataBase() *DataBase {
 
 	return &DataBase{UserId: make(map[string]int64), IdMeta: make(map[int64]MetaData), UserCounter: 0}

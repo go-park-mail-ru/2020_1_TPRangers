@@ -30,9 +30,18 @@ func makeCorsHeaders(w *http.ResponseWriter) {
 func (dh DataHandler) Register(w http.ResponseWriter, r *http.Request) {
 	fmt.Print("=============REGISTER=============\n")
 	makeCorsHeaders(&w)
-	data := DB.NewMetaData("xd", "xd", "xd", make([]byte, 2))
-	login := "nikita"
-	// test data
+
+	decoder := json.NewDecoder(r.Body)
+	defer r.Body.Close()
+	var newUser AP.RegisterJson
+	err := decoder.Decode(newUser)
+
+	if err != nil {
+		fmt.Print("Cant decode , data is ", newUser)
+		return
+	}
+	data := DB.NewMetaData("", "", newUser.Password, make([]byte, 2))
+	login := newUser.Login
 
 
 	if err, info := (dh.dataBase).AddUser(login, *data); err != nil {
@@ -72,27 +81,79 @@ func (dh DataHandler) Feed(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (dh DataHandler) Settings(w http.ResponseWriter, r *http.Request) {
+func (dh DataHandler) SettingsPost(w http.ResponseWriter, r *http.Request) {
 
-	fmt.Print("=============Settings=============\n")
+	fmt.Print("=============SettingsPost=============\n")
 	makeCorsHeaders(&w)
+	cookie, err := r.Cookie("session_id")
+
+	if err == http.ErrNoCookie {
+		http.Error(w, `{"err":"истёкшие куки!"}`, 401)
+		return
+	}
+
+	if login, flag := dh.cookieBase.GetUser(cookie.Value); flag != nil {
+
+		json.NewEncoder(w).Encode(&AP.JsonStruct{Body: dh.dataBase.GetUserDataLogin(login)})
+
+	} else {
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(&AP.JsonStruct{Err: "неверная сессия"})
+		return
+	}
 
 }
 
-func (dh DataHandler) PhotoUpload(w http.ResponseWriter, r *http.Request){
-	fmt.Print("=============PhotoUpload=============\n")
+func (dh DataHandler) SettingsGet(w http.ResponseWriter, r *http.Request) {
+
+	fmt.Print("=============SettingsGet=============\n")
 	makeCorsHeaders(&w)
-	cookie, err:= r.Cookie("session_id")
+	cookie, err := r.Cookie("session_id")
 
 	if err != nil {
 		http.Error(w, `{"err":"истёкшие куки!"}`, 401)
 		return
 	}
 
-	if login , flag := dh.cookieBase.GetUser(cookie.Value); flag != nil {
+	if login, flag := dh.cookieBase.GetUser(cookie.Value); flag != nil {
+
+		decoder := json.NewDecoder(r.Body)
+		defer r.Body.Close()
+		var newMeta DB.MetaData
+		err := decoder.Decode(newMeta)
+
+		if err != nil {
+			fmt.Print("Cant decode , data is ", newMeta)
+			return
+		}
+
+		newMeta = DB.MergeData(dh.dataBase.GetUserDataLogin(login), newMeta)
+		dh.dataBase.EditUser(login, newMeta)
+
+		json.NewEncoder(w).Encode(&AP.JsonStruct{Body: newMeta})
+
+	} else {
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(&AP.JsonStruct{Err: "неверная сессия"})
+		return
+	}
+
+}
+
+func (dh DataHandler) PhotoUpload(w http.ResponseWriter, r *http.Request) {
+	fmt.Print("=============PhotoUpload=============\n")
+	makeCorsHeaders(&w)
+	cookie, err := r.Cookie("session_id")
+
+	if err != nil {
+		http.Error(w, `{"err":"истёкшие куки!"}`, 401)
+		return
+	}
+
+	if login, flag := dh.cookieBase.GetUser(cookie.Value); flag != nil {
 
 		r.ParseMultipartForm(FileMaxSize)
-		file, header , err := r.FormFile("my_file")
+		file, header, err := r.FormFile("my_file")
 		if err != nil {
 			http.Error(w, `{"err":"неверный формат файла!"}`, 401)
 			return
@@ -101,22 +162,22 @@ func (dh DataHandler) PhotoUpload(w http.ResponseWriter, r *http.Request){
 
 		userData := dh.dataBase.GetUserDataLogin(login)
 
-		photoByte , fileErr := ioutil.ReadAll(file)
+		photoByte, fileErr := ioutil.ReadAll(file)
 
-		if fileErr!= nil{
+		if fileErr != nil {
 			http.Error(w, `{"err":"файл не может быть сохранён!"}`, 500)
 			return
 		}
 
 		userData.Photo = photoByte
 
-		dh.dataBase.EditUser(login,userData)
+		dh.dataBase.EditUser(login, userData)
 		size := r.Header.Get("Content-Length")
 		//  отправка фотки
-		w.Header().Set("Content-Disposition", "attachment; filename="+ header.Filename)
+		w.Header().Set("Content-Disposition", "attachment; filename="+header.Filename)
 		w.Header().Set("Content-Type", http.DetectContentType([]byte(header.Filename)))
 		w.Header().Set("Content-Length", size)
-		io.Copy(w,file)
+		io.Copy(w, file)
 
 	} else {
 
@@ -125,8 +186,6 @@ func (dh DataHandler) PhotoUpload(w http.ResponseWriter, r *http.Request){
 
 	}
 }
-
-
 
 func main() {
 	fmt.Print("main")
@@ -137,10 +196,12 @@ func main() {
 	api := &(DataHandler{dataBase: db, cookieBase: cb})
 
 	server.HandleFunc("/feed", api.Feed)
-	server.HandleFunc("/profile", api.Profile)
+	server.HandleFunc("/profile", api.Profile).Methods("GET")
 	server.HandleFunc("/register", api.Register)
 	server.HandleFunc("/login", api.Login)
-	server.HandleFunc("/settings", api.Settings)
+	server.HandleFunc("/settings", api.SettingsPost).Methods("POST")
+	server.HandleFunc("/settings", api.SettingsGet).Methods("GET")
+	server.HandleFunc("/uploadphoto", api.PhotoUpload).Methods("POST")
 
 	http.ListenAndServe(":3001", server)
 
