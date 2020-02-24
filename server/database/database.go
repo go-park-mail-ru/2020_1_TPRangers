@@ -63,6 +63,8 @@ func (db *DataBase) AddUser(login string, data MetaData) (error, MetaData) {
 
 }
 
+
+
 func (db *DataBase) GetUserDataLogin(login string) MetaData {
 
 	return db.IdMeta[db.UserId[login]]

@@ -26,29 +26,40 @@ func makeCorsHeaders(w *http.ResponseWriter) {
 
 
 func (dh DataHandler) Register(w http.ResponseWriter, r *http.Request) {
-	
-	// тут получение данных с сервера
 	fmt.Print("=============REGISTER=============\n")
 	makeCorsHeaders(&w)
 	data := myDataB.NewMetaData("xd", "xd", "xd", make([]byte, 2))
 	login := "nikita"
 	if err, info := dh.dataBase.AddUser(login, data); err != nil {
 		http.Error(w,`{"error":"неправильные данные!"}` , 401)
-		fmt.Print("incorrect \n")
-		fmt.Print("==============================\n")
 		return
 	} else {
-		fmt.Print("correct : ",info,"\n")
-		fmt.Print("==============================\n")
 		json.NewEncoder(w).Encode(&myDataB.Result{Body: info})
 	}
-
 }
 
 func (dh DataHandler) Login(w http.ResponseWriter, r *http.Request) {
 
-	// тут получение данных с сервера
 	fmt.Print("=============Login=============\n")
+	makeCorsHeaders(&w)
+}
+
+func (dh DataHandler) Profile(w http.ResponseWriter, r *http.Request) {
+
+	fmt.Print("=============Profile=============\n")
+	makeCorsHeaders(&w)
+}
+
+func (dh DataHandler) Feed(w http.ResponseWriter, r *http.Request) {
+
+	fmt.Print("=============Feed=============\n")
+	makeCorsHeaders(&w)
+
+}
+
+func (dh DataHandler) Settings(w http.ResponseWriter, r *http.Request) {
+
+	fmt.Print("=============Settings=============\n")
 	makeCorsHeaders(&w)
 
 }
@@ -59,9 +70,11 @@ func main() {
 	db := myDataB.NewDataBase()
 	api := &(DataHandler{dataBase:&db})
 
+	server.HandleFunc("/feed", api.Feed)
+	server.HandleFunc("/profile", api.Profile)
 	server.HandleFunc("/register",api.Register)
 	server.HandleFunc("/login",api.Login)
-
+	server.HandleFunc("/settings", api.Settings)
 
 	http.ListenAndServe(":3001", server)
 
