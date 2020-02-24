@@ -172,12 +172,8 @@ func (dh DataHandler) PhotoUpload(w http.ResponseWriter, r *http.Request) {
 		userData.Photo = photoByte
 
 		dh.dataBase.EditUser(login, userData)
-		size := r.Header.Get("Content-Length")
-		//  отправка фотки
-		w.Header().Set("Content-Disposition", "attachment; filename="+header.Filename)
-		w.Header().Set("Content-Type", http.DetectContentType([]byte(header.Filename)))
-		w.Header().Set("Content-Length", size)
-		io.Copy(w, file)
+
+		w.WriteHeader(http.StatusOK)
 
 	} else {
 
