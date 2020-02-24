@@ -19,6 +19,7 @@ type DataInterface interface {
 type CookieInterface interface {
 	SetCookie(string) string
 	CheckCookie(string, string) bool
+	GetUser(string) (string,error)
 }
 
 type CookieData struct {
@@ -62,16 +63,28 @@ func (db *CookieData) SetCookie(login string) string {
 	db.mutex.Lock()
 	info, _ := uuid.NewV4()
 	cookie := info.String()
-	db.CookieSession[login] = cookie
+	db.CookieSession[cookie] = login
 	db.mutex.Unlock()
 
 	return cookie
 
 }
 
+func (db *CookieData) GetUser(cookie string) (string , error){
+
+	if _ , flag := db.CookieSession[cookie] ; flag{
+		return "",errors.New("неверные куки!")
+	}
+
+	return db.CookieSession[cookie] , nil
+}
+
 func (db *CookieData) CheckCookie(cookie string, login string) bool {
 
-	return db.CookieSession[login] == cookie
+	if val, flag := db.CookieSession[cookie] ; val == login && flag{
+		return true
+	}
+	return false
 
 }
 

@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
+	"io"
+	"io/ioutil"
 	"net/http"
 	"time"
 )
@@ -14,6 +16,8 @@ type DataHandler struct {
 	dataBase   DB.DataInterface
 	cookieBase DB.CookieInterface
 }
+
+var FileMaxSize = int64(5 * 1024 * 1024)
 
 func makeCorsHeaders(w *http.ResponseWriter) {
 	(*w).Header().Set("Access-Control-Allow-Origin", "*")
@@ -32,7 +36,7 @@ func (dh DataHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 
 	if err, info := (dh.dataBase).AddUser(login, *data); err != nil {
-		http.Error(w, `{"error":"неправильные данные!"}`, 401)
+		http.Error(w, `{"err":"неправильные данные!"}`, 401)
 		return
 	} else {
 		answerData := make(map[string]interface{})
@@ -74,6 +78,55 @@ func (dh DataHandler) Settings(w http.ResponseWriter, r *http.Request) {
 	makeCorsHeaders(&w)
 
 }
+
+func (dh DataHandler) PhotoUpload(w http.ResponseWriter, r *http.Request){
+	fmt.Print("=============PhotoUpload=============\n")
+	makeCorsHeaders(&w)
+	cookie, err:= r.Cookie("session_id")
+
+	if err != nil {
+		http.Error(w, `{"err":"истёкшие куки!"}`, 401)
+		return
+	}
+
+	if login , flag := dh.cookieBase.GetUser(cookie.Value); flag != nil {
+
+		r.ParseMultipartForm(FileMaxSize)
+		file, header , err := r.FormFile("my_file")
+		if err != nil {
+			http.Error(w, `{"err":"неверный формат файла!"}`, 401)
+			return
+		}
+		defer file.Close()
+
+		userData := dh.dataBase.GetUserDataLogin(login)
+
+		photoByte , fileErr := ioutil.ReadAll(file)
+
+		if fileErr!= nil{
+			http.Error(w, `{"err":"файл не может быть сохранён!"}`, 500)
+			return
+		}
+
+		userData.Photo = photoByte
+
+		dh.dataBase.EditUser(login,userData)
+		size := r.Header.Get("Content-Length")
+		//  отправка фотки
+		w.Header().Set("Content-Disposition", "attachment; filename="+ header.Filename)
+		w.Header().Set("Content-Type", http.DetectContentType([]byte(header.Filename)))
+		w.Header().Set("Content-Length", size)
+		io.Copy(w,file)
+
+	} else {
+
+		http.Error(w, `{"err":"неверная сессия!"}`, 401)
+		return
+
+	}
+}
+
+
 
 func main() {
 	fmt.Print("main")
