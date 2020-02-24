@@ -2,17 +2,22 @@ package database
 
 import (
 	"errors"
-	"github.com/satori/go.uuid"
 	"sync"
 )
 
 type DataInterface interface {
-	AddUser(MetaData) (error, MetaData)
+	AddUser(string, MetaData) (error, MetaData)
 	GetUserDataLogin(string) MetaData
 	GetUserDataId(int64) MetaData
 	DeleteUser(string) error
 	EditUser(string, MetaData)
 	CheckUser(string) bool
+	CheckAuth(string,string) error
+}
+
+type CookieInterface interface {
+	SetCookie(string) string
+	CheckCookie(string, string) bool
 }
 
 type MetaData struct {
@@ -28,8 +33,8 @@ type Result struct {
 	Err  string      `json:"err,omitempty"`
 }
 
-func NewMetaData(name, tel, pass string, photo []byte) MetaData {
-	return MetaData{name, photo, tel, pass}
+func NewMetaData(name, tel, pass string, photo []byte) *MetaData {
+	return &MetaData{name, photo, tel, pass}
 }
 
 type DataBase struct {
@@ -47,23 +52,23 @@ func NewDataBase() DataBase {
 
 }
 
-func (db *DataBase) SetCookie(login string) string {
-
-	db.mutex.Lock()
-	info, _ := uuid.NewV4()
-	cookie := info.String()
-	db.CookieSession[login] = cookie
-	db.mutex.Unlock()
-
-	return cookie
-
-}
-
-func (db *DataBase) CheckCookie(cookie string, login string) bool {
-
-	return db.CookieSession[login] == cookie
-
-}
+//func (db *DataBase) SetCookie(login string) string {
+//
+//	db.mutex.Lock()
+//	info, _ := uuid.NewV4()
+//	cookie := info.String()
+//	db.CookieSession[login] = cookie
+//	db.mutex.Unlock()
+//
+//	return cookie
+//
+//}
+//
+//func (db *DataBase) CheckCookie(cookie string, login string) bool {
+//
+//	return db.CookieSession[login] == cookie
+//
+//}
 
 func (db *DataBase) AddUser(login string, data MetaData) (error, MetaData) {
 
@@ -92,10 +97,17 @@ func (db *DataBase) GetUserDataId(id int64) MetaData {
 
 }
 
-func (db *DataBase) DeleteUser(login string) {
+func (db *DataBase) DeleteUser(login string) error {
+
+
+	if !db.CheckUser(login) {
+		return errors.New("such user doesnt exist!")
+	}
 
 	delete(db.IdMeta, db.UserId[login])
 	delete(db.UserId, login)
+
+	return nil
 
 }
 
