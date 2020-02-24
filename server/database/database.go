@@ -140,3 +140,18 @@ func (db *DataBase) CheckAuth(login, password string) error {
 
 	return nil
 }
+
+
+
+
+func FillDataBase(dataInterface DataInterface){
+
+	sliceMail := []string{"asdasd@yandex.ru","123@yandex.ru","znajderko@yandex.ru"}
+	defData := NewMetaData("TEST","88005553535","TEST",make([]byte,16))
+
+	for _, val := range sliceMail{
+		dataInterface.AddUser(val,*defData)
+	}
+
+
+}

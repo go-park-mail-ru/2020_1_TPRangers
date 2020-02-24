@@ -35,8 +35,10 @@ func (dh DataHandler) Register(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, `{"error":"неправильные данные!"}`, 401)
 		return
 	} else {
-		json.NewEncoder(w).Encode(&AP.JsonStruct{Body: info})
-
+		answerData := make(map[string]interface{})
+		answerData["isAuth"] = true
+		answerData["data"] = info
+		json.NewEncoder(w).Encode(&AP.JsonStruct{Body: answerData})
 		cValue := (dh.cookieBase).SetCookie(login)
 		cookie := http.Cookie{
 			Name:    "session_id",
@@ -78,6 +80,7 @@ func main() {
 	server := mux.NewRouter()
 	db := DB.NewDataBase()
 	cb := DB.NewCookieBase()
+	DB.FillDataBase(db)
 	api := &(DataHandler{dataBase: db, cookieBase: cb})
 
 	server.HandleFunc("/feed", api.Feed)
