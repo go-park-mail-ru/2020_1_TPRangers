@@ -122,7 +122,7 @@ func (dh *DataHandler) Regisrer(w http.ResponseWriter, r *http.Request) {
 	data := NewMetaData("xd", "xd", "xd", make([]byte, 2))
 	login := "nikita"
 	if err, info := dh.dataBase.AddUser(login, data); err != nil {
-		http.Error(w, err.(string), 401)
+		http.Error(w,`{"error":"неправильные данные!"}` , 401)
 		return
 	} else {
 		json.NewEncoder(w).Encode(&Result{Body: info})
