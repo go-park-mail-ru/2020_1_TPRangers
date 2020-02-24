@@ -1,0 +1,6 @@
+form(action="#", class=classes,id=id)
+    each item in formItems
+        div
+            span #{item.title}
+        input(type=item.type, name=item.name, placeholder=item.placeholder)
+    input(type="submit", value=buttonName)
