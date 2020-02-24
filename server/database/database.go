@@ -41,10 +41,6 @@ type MetaData struct {
 	//Birthday time
 }
 
-type Result struct {
-	Body interface{} `json:"body,omitempty"`
-	Err  string      `json:"err,omitempty"`
-}
 
 func NewMetaData(name, tel, pass string, photo []byte) *MetaData {
 	return &MetaData{name, photo, tel, pass}

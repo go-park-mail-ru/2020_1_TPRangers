@@ -1,7 +1,8 @@
 package main
 
 import (
-	myDataB "./database"
+	DB "./database"
+	AP "./json-answers"
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
@@ -10,8 +11,8 @@ import (
 )
 
 type DataHandler struct {
-	dataBase   myDataB.DataInterface
-	cookieBase myDataB.CookieInterface
+	dataBase   DB.DataInterface
+	cookieBase DB.CookieInterface
 }
 
 func makeCorsHeaders(w *http.ResponseWriter) {
@@ -25,14 +26,16 @@ func makeCorsHeaders(w *http.ResponseWriter) {
 func (dh DataHandler) Register(w http.ResponseWriter, r *http.Request) {
 	fmt.Print("=============REGISTER=============\n")
 	makeCorsHeaders(&w)
-	data := myDataB.NewMetaData("xd", "xd", "xd", make([]byte, 2))
+	data := DB.NewMetaData("xd", "xd", "xd", make([]byte, 2))
 	login := "nikita"
 	// test data
+
+
 	if err, info := (dh.dataBase).AddUser(login, *data); err != nil {
 		http.Error(w, `{"error":"неправильные данные!"}`, 401)
 		return
 	} else {
-		json.NewEncoder(w).Encode(&myDataB.Result{Body: info})
+		json.NewEncoder(w).Encode(&AP.JsonStruct{Body: info})
 
 		cValue := (dh.cookieBase).SetCookie(login)
 		cookie := http.Cookie{
@@ -73,8 +76,8 @@ func (dh DataHandler) Settings(w http.ResponseWriter, r *http.Request) {
 func main() {
 	fmt.Print("main")
 	server := mux.NewRouter()
-	db := myDataB.NewDataBase()
-	cb := myDataB.NewCookieBase()
+	db := DB.NewDataBase()
+	cb := DB.NewCookieBase()
 	api := &(DataHandler{dataBase: db, cookieBase: cb})
 
 	server.HandleFunc("/feed", api.Feed)
