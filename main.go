@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/gorilla/mux"
 	"net/http"
 	"sync"
@@ -116,15 +117,20 @@ type DataHandler struct {
 	dataBase *DataBase
 }
 
-func (dh *DataHandler) Regisrer(w http.ResponseWriter, r *http.Request) {
+func (dh *DataHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 	// тут получение данных с сервера
+	fmt.Print("=============REGISTER=============\n")
 	data := NewMetaData("xd", "xd", "xd", make([]byte, 2))
 	login := "nikita"
 	if err, info := dh.dataBase.AddUser(login, data); err != nil {
 		http.Error(w,`{"error":"неправильные данные!"}` , 401)
+		fmt.Print("incorrect \n")
+		fmt.Print("==============================\n")
 		return
 	} else {
+		fmt.Print("correct : ",info,"\n")
+		fmt.Print("==============================\n")
 		json.NewEncoder(w).Encode(&Result{Body: info})
 	}
 
@@ -133,6 +139,11 @@ func (dh *DataHandler) Regisrer(w http.ResponseWriter, r *http.Request) {
 func main() {
 
 	server := mux.NewRouter()
+	db := NewDataBase()
+	api := &DataHandler{dataBase:&db}
+
+	server.HandleFunc("/register",api.Register)
+
 
 	http.ListenAndServe(":8080", server)
 
