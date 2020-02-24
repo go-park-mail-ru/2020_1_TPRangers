@@ -1,12 +1,8 @@
-package main
+package database
 
 import (
-	"encoding/json"
-	"errors"
-	"fmt"
-	"github.com/gorilla/mux"
-	"net/http"
 	"sync"
+	"errors"
 )
 
 type DataInterface interface {
@@ -32,9 +28,7 @@ type Result struct {
 }
 
 func NewMetaData(name, tel, pass string, photo []byte) MetaData {
-
 	return MetaData{name, photo, tel, pass}
-
 }
 
 type DataBase struct {
@@ -44,6 +38,9 @@ type DataBase struct {
 	UserCounter int64
 	mutex       sync.Mutex
 }
+
+
+
 
 func NewDataBase() DataBase {
 
@@ -110,41 +107,6 @@ func (db *DataBase) CheckAuth(login, password string) error {
 	}
 
 	return nil
-
 }
 
-type DataHandler struct {
-	dataBase *DataBase
-}
 
-func (dh *DataHandler) Register(w http.ResponseWriter, r *http.Request) {
-
-	// тут получение данных с сервера
-	fmt.Print("=============REGISTER=============\n")
-	data := NewMetaData("xd", "xd", "xd", make([]byte, 2))
-	login := "nikita"
-	if err, info := dh.dataBase.AddUser(login, data); err != nil {
-		http.Error(w,`{"error":"неправильные данные!"}` , 401)
-		fmt.Print("incorrect \n")
-		fmt.Print("==============================\n")
-		return
-	} else {
-		fmt.Print("correct : ",info,"\n")
-		fmt.Print("==============================\n")
-		json.NewEncoder(w).Encode(&Result{Body: info})
-	}
-
-}
-
-func main() {
-
-	server := mux.NewRouter()
-	db := NewDataBase()
-	api := &DataHandler{dataBase:&db}
-
-	server.HandleFunc("/register",api.Register)
-
-
-	http.ListenAndServe(":8080", server)
-
-}
