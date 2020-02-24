@@ -10,12 +10,9 @@ import (
 )
 
 type DataHandler struct {
-	dataBase myDataB.DataInterface
+	dataBase   myDataB.DataInterface
 	cookieBase myDataB.CookieInterface
 }
-
-
-
 
 func makeCorsHeaders(w *http.ResponseWriter) {
 	(*w).Header().Set("Access-Control-Allow-Origin", "*")
@@ -25,7 +22,6 @@ func makeCorsHeaders(w *http.ResponseWriter) {
 	(*w).Header().Set("Content-Type", "application/json")
 }
 
-
 func (dh DataHandler) Register(w http.ResponseWriter, r *http.Request) {
 	fmt.Print("=============REGISTER=============\n")
 	makeCorsHeaders(&w)
@@ -33,18 +29,18 @@ func (dh DataHandler) Register(w http.ResponseWriter, r *http.Request) {
 	login := "nikita"
 	// test data
 	if err, info := (dh.dataBase).AddUser(login, *data); err != nil {
-		http.Error(w,`{"error":"неправильные данные!"}` , 401)
+		http.Error(w, `{"error":"неправильные данные!"}`, 401)
 		return
 	} else {
 		json.NewEncoder(w).Encode(&myDataB.Result{Body: info})
 
 		cValue := (dh.cookieBase).SetCookie(login)
 		cookie := http.Cookie{
-			Name : "session_id",
-			Value : cValue,
+			Name:    "session_id",
+			Value:   cValue,
 			Expires: time.Now().Add(12 * time.Hour),
 		}
-		http.SetCookie(w,&cookie)
+		http.SetCookie(w, &cookie)
 	}
 }
 
@@ -79,12 +75,12 @@ func main() {
 	server := mux.NewRouter()
 	db := myDataB.NewDataBase()
 	cb := myDataB.NewCookieBase()
-	api := &(DataHandler{dataBase:db , cookieBase:cb})
+	api := &(DataHandler{dataBase: db, cookieBase: cb})
 
 	server.HandleFunc("/feed", api.Feed)
 	server.HandleFunc("/profile", api.Profile)
-	server.HandleFunc("/register",api.Register)
-	server.HandleFunc("/login",api.Login)
+	server.HandleFunc("/register", api.Register)
+	server.HandleFunc("/login", api.Login)
 	server.HandleFunc("/settings", api.Settings)
 
 	http.ListenAndServe(":3001", server)
