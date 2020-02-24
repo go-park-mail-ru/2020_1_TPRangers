@@ -2,19 +2,37 @@ package database
 
 import (
 	"errors"
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 	"sync"
 )
 
 type DataInterface interface {
-	AddUser(MetaData) (error, MetaData)
+	AddUser(string, MetaData) (error, MetaData)
 	GetUserDataLogin(string) MetaData
 	GetUserDataId(int64) MetaData
 	DeleteUser(string) error
 	EditUser(string, MetaData)
 	CheckUser(string) bool
+	CheckAuth(string, string) error
 }
 
+type CookieInterface interface {
+	SetCookie(string) string
+	CheckCookie(string, string) bool
+}
+
+type CookieData struct {
+	CookieSession map[string]string
+
+	mutex sync.Mutex
+}
+type DataBase struct {
+	UserId map[string]int64
+	IdMeta map[int64]MetaData
+
+	UserCounter int64
+	mutex       sync.Mutex
+}
 type MetaData struct {
 	Username  string
 	Photo     []byte
@@ -28,26 +46,21 @@ type Result struct {
 	Err  string      `json:"err,omitempty"`
 }
 
-func NewMetaData(name, tel, pass string, photo []byte) MetaData {
-	return MetaData{name, photo, tel, pass}
+func NewMetaData(name, tel, pass string, photo []byte) *MetaData {
+	return &MetaData{name, photo, tel, pass}
 }
 
-type DataBase struct {
-	UserId        map[string]int64
-	IdMeta        map[int64]MetaData
-	CookieSession map[string]string
+func NewDataBase() *DataBase {
 
-	UserCounter int64
-	mutex       sync.Mutex
-}
-
-func NewDataBase() DataBase {
-
-	return DataBase{UserId: make(map[string]int64), IdMeta: make(map[int64]MetaData), CookieSession: make(map[string]string), UserCounter: 0}
+	return &DataBase{UserId: make(map[string]int64), IdMeta: make(map[int64]MetaData), UserCounter: 0}
 
 }
 
-func (db *DataBase) SetCookie(login string) string {
+func NewCookieBase() *CookieData {
+	return &CookieData{CookieSession: make(map[string]string)}
+}
+
+func (db *CookieData) SetCookie(login string) string {
 
 	db.mutex.Lock()
 	info, _ := uuid.NewV4()
@@ -59,7 +72,7 @@ func (db *DataBase) SetCookie(login string) string {
 
 }
 
-func (db *DataBase) CheckCookie(cookie string, login string) bool {
+func (db *CookieData) CheckCookie(cookie string, login string) bool {
 
 	return db.CookieSession[login] == cookie
 
@@ -92,10 +105,16 @@ func (db *DataBase) GetUserDataId(id int64) MetaData {
 
 }
 
-func (db *DataBase) DeleteUser(login string) {
+func (db *DataBase) DeleteUser(login string) error {
+
+	if !db.CheckUser(login) {
+		return errors.New("such user doesnt exist!")
+	}
 
 	delete(db.IdMeta, db.UserId[login])
 	delete(db.UserId, login)
+
+	return nil
 
 }
 

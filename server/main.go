@@ -10,8 +10,8 @@ import (
 )
 
 type DataHandler struct {
-	dataBase *myDataB.DataBase
-	//cookie
+	dataBase myDataB.DataInterface
+	cookieBase myDataB.CookieInterface
 }
 
 
@@ -32,14 +32,13 @@ func (dh DataHandler) Register(w http.ResponseWriter, r *http.Request) {
 	data := myDataB.NewMetaData("xd", "xd", "xd", make([]byte, 2))
 	login := "nikita"
 	// test data
-
-	if err, info := dh.dataBase.AddUser(login, data); err != nil {
+	if err, info := (dh.dataBase).AddUser(login, *data); err != nil {
 		http.Error(w,`{"error":"неправильные данные!"}` , 401)
 		return
 	} else {
 		json.NewEncoder(w).Encode(&myDataB.Result{Body: info})
 
-		cValue := dh.dataBase.SetCookie(login)
+		cValue := (dh.cookieBase).SetCookie(login)
 		cookie := http.Cookie{
 			Name : "session_id",
 			Value : cValue,
@@ -79,7 +78,8 @@ func main() {
 	fmt.Print("main")
 	server := mux.NewRouter()
 	db := myDataB.NewDataBase()
-	api := &(DataHandler{dataBase:&db})
+	cb := myDataB.NewCookieBase()
+	api := &(DataHandler{dataBase:db , cookieBase:cb})
 
 	server.HandleFunc("/feed", api.Feed)
 	server.HandleFunc("/profile", api.Profile)
