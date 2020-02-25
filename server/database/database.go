@@ -2,8 +2,8 @@ package database
 
 import (
 	"errors"
-	uuid "github.com/satori/go.uuid"
 	"sync"
+	uuid "github.com/satori/go.uuid"
 )
 
 type DataInterface interface {

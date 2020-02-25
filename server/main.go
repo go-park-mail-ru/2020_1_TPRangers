@@ -245,6 +245,22 @@ func (dh DataHandler) PhotoUpload(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (dh DataHandler) Logout(w http.ResponseWriter, r *http.Request) {
+	cookie, err := r.Cookie("session_id")
+
+	if err == http.ErrNoCookie {
+		fmt.Print(err, "\n")
+		SetErrors([]string{ET.CookieExpiredError,}, http.StatusBadRequest, &w)
+		return
+	}
+
+	var freeData DB.MetaData
+	SetData(false, freeData, &w)
+
+	cookie.Expires = time.Now().AddDate(0, 0, -1)
+	http.SetCookie(w, cookie)
+}
+
 func SetCorsMiddleware(r *mux.Router) mux.MiddlewareFunc {
 
 	return func(next http.Handler) http.Handler {
@@ -275,9 +291,11 @@ func main() {
 	server.HandleFunc("/profile", api.Profile).Methods("GET")
 	server.HandleFunc("/register", api.Register).Methods("POST")
 	server.HandleFunc("/login", api.Login).Methods("POST")
+	server.HandleFunc("/logout", api.Logout).Methods("GET")
 	server.HandleFunc("/settings", api.SettingsPost).Methods("POST")
 	server.HandleFunc("/settings", api.SettingsGet).Methods("GET")
 	server.HandleFunc("/settings", api.PhotoUpload).Methods("PUT")
+
 	fmt.Print("hosted at 3001")
 	http.ListenAndServe(":3001", server)
 
