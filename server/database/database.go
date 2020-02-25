@@ -41,17 +41,18 @@ type MetaData struct {
 	Photo     []byte
 	Telephone string
 	Password  string
-	//Birthday time
+	Birthday string
 }
 
-func NewMetaData(name, tel, pass string, photo []byte) *MetaData {
-	return &MetaData{name, photo, tel, pass}
+func NewMetaData(name, tel, pass, date string, photo []byte) *MetaData {
+	return &MetaData{name, photo, tel, pass , date}
 }
 
 func MergeData(dataLeft , dataRight MetaData) MetaData{
 	dataLeft.Password = dataRight.Password
 	dataLeft.Username = dataRight.Username
 	dataLeft.Telephone = dataRight.Telephone
+	dataLeft.Birthday = dataRight.Birthday
 
 	return dataLeft
 
@@ -167,7 +168,7 @@ func (db *DataBase) CheckAuth(login, password string) error {
 func FillDataBase(dataInterface DataInterface) {
 
 	sliceMail := []string{"asdasd@yandex.ru", "123@yandex.ru", "znajderko@yandex.ru"}
-	defData := NewMetaData("TEST", "88005553535", "TEST", make([]byte, 16))
+	defData := NewMetaData("TEST", "88005553535", "TEST", "00.00.2000",make([]byte, 16) )
 
 	for _, val := range sliceMail {
 		dataInterface.AddUser(val, *defData)
