@@ -19,12 +19,13 @@ type DataHandler struct {
 
 var FileMaxSize = int64(5 * 1024 * 1024)
 
-func makeCorsHeaders(w *http.ResponseWriter) {
-	(*w).Header().Set("Access-Control-Allow-Origin", "*")
-	(*w).Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
-	(*w).Header().Set("Access-Control-Allow-Headers", "access-control-allow-origin, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers, Authorization")
-	(*w).Header().Set("Access-Control-Allow-Credentials", "true")
-	(*w).Header().Set("Content-Type", "application/json")
+func SetCookie(w *http.ResponseWriter, cookieValue string) {
+	cookie := http.Cookie{
+		Name:    "session_id",
+		Value:   cookieValue,
+		Expires: time.Now().Add(12 * time.Hour),
+	}
+	http.SetCookie(w, &cookie)
 }
 
 func (dh DataHandler) Register(w http.ResponseWriter, r *http.Request) {
@@ -32,8 +33,9 @@ func (dh DataHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 	decoder := json.NewDecoder(r.Body)
 	defer r.Body.Close()
-	var newUser AP.RegisterJson
+	var newUser AP.JsonStruct
 	err := decoder.Decode(newUser)
+	mapData := newUser.Body.(map[string]interface{})
 
 	if err != nil {
 		// посмотреть номер ошибки
@@ -42,21 +44,14 @@ func (dh DataHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err, info := (dh.dataBase).AddUser(newUser.Login, newUser.Data); err == nil {
+	if err, info := (dh.dataBase).AddUser(mapData["login"].(string), mapData["data"].(DB.MetaData)); err == nil {
 
 		answerData := make(map[string]interface{})
 		answerData["isAuth"] = true
 		answerData["data"] = info
 
 		json.NewEncoder(w).Encode(&AP.JsonStruct{Body: answerData})
-
-		cValue := (dh.cookieBase).SetCookie(newUser.Login)
-		cookie := http.Cookie{
-			Name:    "session_id",
-			Value:   cValue,
-			Expires: time.Now().Add(12 * time.Hour),
-		}
-		http.SetCookie(w, &cookie)
+		SetCookie(&w, (dh.cookieBase).SetCookie(mapData["login"].(string)))
 
 		w.WriteHeader(http.StatusOK)
 	} else {
@@ -70,6 +65,35 @@ func (dh DataHandler) Register(w http.ResponseWriter, r *http.Request) {
 func (dh DataHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Print("=============Login=============\n")
+	decoder := json.NewDecoder(r.Body)
+	defer r.Body.Close()
+	var loginUser AP.JsonStruct
+	err := decoder.Decode(loginUser)
+	mapData := loginUser.Body.(map[string]interface{})
+
+	if err != nil {
+		// посмотреть номер ошибки
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(&AP.JsonStruct{Err: ET.DecodeError})
+		return
+	}
+
+	if existFlag := (dh.dataBase).CheckUser(mapData["login"].(string)); existFlag {
+
+		answerData := make(map[string]interface{})
+		answerData["isAuth"] = true
+		answerData["data"] = (dh.dataBase).GetUserDataLogin(mapData["login"].(string))
+
+		json.NewEncoder(w).Encode(&AP.JsonStruct{Body: answerData})
+		SetCookie(&w, (dh.cookieBase).SetCookie(mapData["login"].(string)))
+
+		w.WriteHeader(http.StatusOK)
+	} else {
+		// посмотреть номер ошибки
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(&AP.JsonStruct{Err: ET.DoesntExistError})
+		return
+	}
 
 }
 
@@ -232,7 +256,7 @@ func main() {
 	server.HandleFunc("/feed", api.Feed)
 	server.HandleFunc("/profile", api.Profile).Methods("GET")
 	server.HandleFunc("/register", api.Register).Methods("POST")
-	server.HandleFunc("/login", api.Login)
+	server.HandleFunc("/login", api.Login).Methods("POST")
 	server.HandleFunc("/settings", api.SettingsPost).Methods("POST")
 	server.HandleFunc("/settings", api.SettingsGet).Methods("GET")
 	server.HandleFunc("/uploadphoto", api.PhotoUpload).Methods("POST")

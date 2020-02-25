@@ -7,4 +7,5 @@ const (
 	WrongCookie        = "Неверная сессия"
 	DecodeError        = "Невозможно получить данные"
 	AlreadyExistError  = "Такой пользователь уже сушествует"
+	DoesntExistError = "Такого пользователя не существует"
 )
