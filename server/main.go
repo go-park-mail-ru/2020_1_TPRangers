@@ -12,12 +12,12 @@ import (
 	"time"
 )
 
+var FileMaxSize = int64(5 * 1024 * 1024)
+
 type DataHandler struct {
 	dataBase   DB.DataInterface
 	cookieBase DB.CookieInterface
 }
-
-var FileMaxSize = int64(5 * 1024 * 1024)
 
 func SetCookie(w *http.ResponseWriter, cookieValue string) {
 	cookie := http.Cookie{
@@ -25,7 +25,7 @@ func SetCookie(w *http.ResponseWriter, cookieValue string) {
 		Value:   cookieValue,
 		Expires: time.Now().Add(12 * time.Hour),
 	}
-	http.SetCookie(w, &cookie)
+	http.SetCookie(*w, &cookie)
 }
 
 func (dh DataHandler) Register(w http.ResponseWriter, r *http.Request) {
@@ -43,7 +43,12 @@ func (dh DataHandler) Register(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(&AP.JsonStruct{Err: ET.DecodeError})
 		return
 	}
-
+	// структура для реги
+	// name
+	// email
+	// phone
+	// date
+	// password
 	if err, info := (dh.dataBase).AddUser(mapData["login"].(string), mapData["data"].(DB.MetaData)); err == nil {
 
 		answerData := make(map[string]interface{})
@@ -67,29 +72,41 @@ func (dh DataHandler) Login(w http.ResponseWriter, r *http.Request) {
 	fmt.Print("=============Login=============\n")
 	decoder := json.NewDecoder(r.Body)
 	defer r.Body.Close()
-	var loginUser AP.JsonStruct
-	err := decoder.Decode(loginUser)
-	mapData := loginUser.Body.(map[string]interface{})
+	var userData AP.JsonStruct
+	err := decoder.Decode(&userData)
+	mapData := userData.Body.([]interface{})[0].(map[string]interface{})
+
 
 	if err != nil {
 		// посмотреть номер ошибки
+		fmt.Print(err,"\n")
 		w.WriteHeader(http.StatusUnauthorized)
 		json.NewEncoder(w).Encode(&AP.JsonStruct{Err: ET.DecodeError})
 		return
 	}
 
-	if existFlag := (dh.dataBase).CheckUser(mapData["login"].(string)); existFlag {
+	login := mapData["login"].(string)
+	password := mapData["password"].(string)
 
-		answerData := make(map[string]interface{})
-		answerData["isAuth"] = true
-		answerData["data"] = (dh.dataBase).GetUserDataLogin(mapData["login"].(string))
 
-		json.NewEncoder(w).Encode(&AP.JsonStruct{Body: answerData})
-		SetCookie(&w, (dh.cookieBase).SetCookie(mapData["login"].(string)))
+	if existFlag := (dh.dataBase).CheckUser(login); existFlag {
 
-		w.WriteHeader(http.StatusOK)
+		if passFlag := (dh.dataBase).CheckAuth(login, password); passFlag == nil {
+			answerData := make(map[string]interface{})
+			answerData["isAuth"] = true
+			answerData["data"] = (dh.dataBase).GetUserDataLogin(login)
+
+			json.NewEncoder(w).Encode(&AP.JsonStruct{Body: answerData})
+			SetCookie(&w, (dh.cookieBase).SetCookie(login))
+
+			w.WriteHeader(http.StatusOK)
+		} else {
+			w.WriteHeader(http.StatusUnauthorized)
+			json.NewEncoder(w).Encode(&AP.JsonStruct{Err: ET.WrongPassword})
+			return
+		}
+
 	} else {
-		// посмотреть номер ошибки
 		w.WriteHeader(http.StatusUnauthorized)
 		json.NewEncoder(w).Encode(&AP.JsonStruct{Err: ET.DoesntExistError})
 		return
@@ -228,7 +245,7 @@ func (dh DataHandler) PhotoUpload(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func SetCorsMiddlware(r *mux.Router) mux.MiddlewareFunc {
+func SetCorsMiddleware(r *mux.Router) mux.MiddlewareFunc {
 
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
@@ -244,13 +261,14 @@ func SetCorsMiddlware(r *mux.Router) mux.MiddlewareFunc {
 }
 
 func main() {
-	fmt.Print("main")
 	server := mux.NewRouter()
+	server.Use(SetCorsMiddleware(server))
 
-	server.Use(SetCorsMiddlware(server))
 	db := DB.NewDataBase()
 	cb := DB.NewCookieBase()
 	DB.FillDataBase(db)
+	fmt.Print("data: ", db.IdMeta , " \n", db.UserId , " \n" )
+
 	api := &(DataHandler{dataBase: db, cookieBase: cb})
 
 	server.HandleFunc("/feed", api.Feed)
@@ -259,8 +277,8 @@ func main() {
 	server.HandleFunc("/login", api.Login).Methods("POST")
 	server.HandleFunc("/settings", api.SettingsPost).Methods("POST")
 	server.HandleFunc("/settings", api.SettingsGet).Methods("GET")
-	server.HandleFunc("/uploadphoto", api.PhotoUpload).Methods("POST")
-
+	server.HandleFunc("/settings", api.PhotoUpload).Methods("PUT")
+	fmt.Print("hosted at 3001")
 	http.ListenAndServe(":3001", server)
 
 }
