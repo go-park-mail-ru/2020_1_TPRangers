@@ -29,7 +29,6 @@ func makeCorsHeaders(w *http.ResponseWriter) {
 
 func (dh DataHandler) Register(w http.ResponseWriter, r *http.Request) {
 	fmt.Print("=============REGISTER=============\n")
-	makeCorsHeaders(&w)
 
 	decoder := json.NewDecoder(r.Body)
 	defer r.Body.Close()
@@ -61,7 +60,6 @@ func (dh DataHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 		w.WriteHeader(http.StatusOK)
 	} else {
-
 		// посмотреть номер ошибки
 		w.WriteHeader(http.StatusUnauthorized)
 		json.NewEncoder(w).Encode(&AP.JsonStruct{Err: ET.AlreadyExistError})
@@ -72,27 +70,24 @@ func (dh DataHandler) Register(w http.ResponseWriter, r *http.Request) {
 func (dh DataHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Print("=============Login=============\n")
-	makeCorsHeaders(&w)
 
 }
 
 func (dh DataHandler) Profile(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Print("=============Profile=============\n")
-	makeCorsHeaders(&w)
+
 }
 
 func (dh DataHandler) Feed(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Print("=============Feed=============\n")
-	makeCorsHeaders(&w)
 
 }
 
 func (dh DataHandler) SettingsPost(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Print("=============SettingsPost=============\n")
-	makeCorsHeaders(&w)
 	cookie, err := r.Cookie("session_id")
 
 	if err == http.ErrNoCookie {
@@ -120,7 +115,6 @@ func (dh DataHandler) SettingsPost(w http.ResponseWriter, r *http.Request) {
 func (dh DataHandler) SettingsGet(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Print("=============SettingsGet=============\n")
-	makeCorsHeaders(&w)
 	cookie, err := r.Cookie("session_id")
 
 	if err == http.ErrNoCookie {
@@ -163,7 +157,7 @@ func (dh DataHandler) SettingsGet(w http.ResponseWriter, r *http.Request) {
 
 func (dh DataHandler) PhotoUpload(w http.ResponseWriter, r *http.Request) {
 	fmt.Print("=============PhotoUpload=============\n")
-	makeCorsHeaders(&w)
+
 	cookie, err := r.Cookie("session_id")
 
 	if err == http.ErrNoCookie {
@@ -218,7 +212,7 @@ func SetCorsMiddlware(r *mux.Router) mux.MiddlewareFunc {
 			(w).Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
 			(w).Header().Set("Access-Control-Allow-Headers", "access-control-allow-origin, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers, Authorization")
 			(w).Header().Set("Access-Control-Allow-Credentials", "true")
-			(w).Header().Set("Content-Type", "application/json")
+			(w).Header().Set("Content-Type", "*")
 			next.ServeHTTP(w, req)
 		})
 	}
