@@ -39,7 +39,7 @@ func (dh DataHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		// посмотреть номер ошибки
-		w.WriteHeader(http.StatusUnauthorized)
+		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(&AP.JsonStruct{Err: ET.DecodeError})
 		return
 	}
@@ -61,7 +61,7 @@ func (dh DataHandler) Register(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	} else {
 		// посмотреть номер ошибки
-		w.WriteHeader(http.StatusUnauthorized)
+		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(&AP.JsonStruct{Err: ET.AlreadyExistError})
 		return
 	}
@@ -80,7 +80,7 @@ func (dh DataHandler) Login(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		// посмотреть номер ошибки
 		fmt.Print(err,"\n")
-		w.WriteHeader(http.StatusUnauthorized)
+		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(&AP.JsonStruct{Err: ET.DecodeError})
 		return
 	}
@@ -101,13 +101,13 @@ func (dh DataHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 			w.WriteHeader(http.StatusOK)
 		} else {
-			w.WriteHeader(http.StatusUnauthorized)
+			w.WriteHeader(http.StatusBadRequest)
 			json.NewEncoder(w).Encode(&AP.JsonStruct{Err: ET.WrongPassword})
 			return
 		}
 
 	} else {
-		w.WriteHeader(http.StatusUnauthorized)
+		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(&AP.JsonStruct{Err: ET.DoesntExistError})
 		return
 	}
@@ -132,7 +132,7 @@ func (dh DataHandler) SettingsPost(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("session_id")
 
 	if err == http.ErrNoCookie {
-		w.WriteHeader(http.StatusUnauthorized)
+		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(&AP.JsonStruct{Err: ET.CookieExpiredError})
 		return
 	}
@@ -146,7 +146,7 @@ func (dh DataHandler) SettingsPost(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 
 	} else {
-		w.WriteHeader(http.StatusUnauthorized)
+		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(&AP.JsonStruct{Err: ET.WrongCookie})
 		return
 	}
@@ -159,7 +159,7 @@ func (dh DataHandler) SettingsGet(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("session_id")
 
 	if err == http.ErrNoCookie {
-		w.WriteHeader(http.StatusUnauthorized)
+		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(&AP.JsonStruct{Err: ET.CookieExpiredError})
 		return
 	}
@@ -172,8 +172,7 @@ func (dh DataHandler) SettingsGet(w http.ResponseWriter, r *http.Request) {
 		err := decoder.Decode(newMeta)
 
 		if err != nil {
-			// посмотреть номер ошибки
-			w.WriteHeader(http.StatusUnauthorized)
+			w.WriteHeader(http.StatusBadRequest)
 			json.NewEncoder(w).Encode(&AP.JsonStruct{Err: ET.DecodeError})
 			return
 		}
@@ -189,7 +188,7 @@ func (dh DataHandler) SettingsGet(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 
 	} else {
-		w.WriteHeader(http.StatusUnauthorized)
+		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(&AP.JsonStruct{Err: ET.WrongCookie})
 		return
 	}
@@ -202,7 +201,7 @@ func (dh DataHandler) PhotoUpload(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("session_id")
 
 	if err == http.ErrNoCookie {
-		w.WriteHeader(http.StatusUnauthorized)
+		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(&AP.JsonStruct{Err: ET.CookieExpiredError})
 		return
 	}
@@ -213,7 +212,7 @@ func (dh DataHandler) PhotoUpload(w http.ResponseWriter, r *http.Request) {
 
 		file, _, err := r.FormFile("uploadedFile")
 		if err != nil {
-			w.WriteHeader(http.StatusInsufficientStorage)
+			w.WriteHeader(http.StatusBadRequest)
 			json.NewEncoder(w).Encode(&AP.JsonStruct{Err: ET.FileError})
 			return
 		}
@@ -223,7 +222,7 @@ func (dh DataHandler) PhotoUpload(w http.ResponseWriter, r *http.Request) {
 		photoByte, fileErr := ioutil.ReadAll(file)
 
 		if fileErr != nil {
-			w.WriteHeader(http.StatusInsufficientStorage)
+			w.WriteHeader(http.StatusBadRequest)
 			json.NewEncoder(w).Encode(&AP.JsonStruct{Err: ET.FileSavingError})
 			return
 		}
@@ -238,7 +237,7 @@ func (dh DataHandler) PhotoUpload(w http.ResponseWriter, r *http.Request) {
 
 	} else {
 
-		w.WriteHeader(http.StatusUnauthorized)
+		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(&AP.JsonStruct{Err: ET.WrongCookie})
 		return
 
