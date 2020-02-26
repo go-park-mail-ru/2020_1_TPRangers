@@ -45,11 +45,20 @@ func SetCookie(w *http.ResponseWriter, cookieValue string) {
 	http.SetCookie(*w, &cookie)
 }
 
-func SetData(authFlag bool, answerData DB.MetaData, w *http.ResponseWriter) {
+func SetData(data []interface{}, jsonType []string, w *http.ResponseWriter) {
 
 	answer := make(map[string]interface{})
-	answer["isAuth"] = authFlag
-	answer["data"] = answerData
+
+	for i, val := range jsonType {
+		switch val {
+
+		case "isAuth":
+			answer[val] = data[i].(bool)
+		case "userData":
+			answer[val] = data[i].(DB.MetaData)
+
+		}
+	}
 
 	json.NewEncoder(*w).Encode(&AP.JsonStruct{Body: answer})
 	(*w).WriteHeader(http.StatusOK)
@@ -81,7 +90,12 @@ func (dh DataHandler) Register(w http.ResponseWriter, r *http.Request) {
 	data := DB.NewMetaData(mapData["name"].(string), mapData["phone"].(string), mapData["password"].(string), mapData["date"].(string), make([]byte, 0))
 	if err, info := (dh.dataBase).AddUser(login, *data); err == nil {
 
-		SetData(true, info, &w)
+		sendData := make([]interface{}, 2)
+
+		sendData[0] = true
+		sendData[1] = info
+
+		SetData(sendData, []string{"isAuth", "userData"}, &w)
 
 		cookie := (dh.cookieBase).SetCookie(login)
 		SetCookie(&w, cookie)
@@ -114,7 +128,12 @@ func (dh DataHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 		if passFlag := (dh.dataBase).CheckAuth(login, password); passFlag == nil {
 
-			SetData(true, (dh.dataBase).GetUserDataLogin(login), &w)
+			sendData := make([]interface{}, 2)
+
+			sendData[0] = true
+			sendData[1] = (dh.dataBase).GetUserDataLogin(login)
+
+			SetData(sendData, []string{"isAuth", "userData"}, &w)
 			SetCookie(&w, (dh.cookieBase).SetCookie(login))
 
 		} else {
@@ -154,7 +173,12 @@ func (dh DataHandler) SettingsGet(w http.ResponseWriter, r *http.Request) {
 
 	if login, flag := dh.cookieBase.GetUser(cookie.Value); flag == nil {
 
-		SetData(true, dh.dataBase.GetUserDataLogin(login), &w)
+		sendData := make([]interface{}, 2)
+
+		sendData[0] = true
+		sendData[1] = (dh.dataBase).GetUserDataLogin(login)
+
+		SetData(sendData, []string{"isAuth", "userData"}, &w)
 
 	} else {
 		SetErrors([]string{ET.WrongCookie}, http.StatusBadRequest, &w)
@@ -192,7 +216,12 @@ func (dh DataHandler) SettingsPost(w http.ResponseWriter, r *http.Request) {
 		newData = DB.MergeData(dh.dataBase.GetUserDataLogin(login), newData)
 		dh.dataBase.EditUser(login, newData)
 
-		SetData(true, newData, &w)
+		sendData := make([]interface{}, 2)
+
+		sendData[0] = true
+		sendData[1] = newData
+
+		SetData(sendData, []string{"isAuth", "userData"}, &w)
 
 	} else {
 		SetErrors([]string{ET.WrongCookie}, http.StatusBadRequest, &w)
@@ -235,8 +264,12 @@ func (dh DataHandler) PhotoUpload(w http.ResponseWriter, r *http.Request) {
 		userData.Photo = photoByte
 		dh.dataBase.EditUser(login, userData)
 
-		var freeData DB.MetaData
-		SetData(true, freeData, &w)
+		sendData := make([]interface{}, 2)
+
+		sendData[0] = true
+		sendData[1] = DB.MetaData{}
+
+		SetData(sendData, []string{"isAuth", "userData"}, &w)
 
 	} else {
 		SetErrors([]string{ET.WrongCookie}, http.StatusBadRequest, &w)
@@ -254,9 +287,7 @@ func (dh DataHandler) Logout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var freeData DB.MetaData
-	SetData(false, freeData, &w)
-
+	(w).WriteHeader(http.StatusOK)
 	cookie.Expires = time.Now().AddDate(0, 0, -1)
 	http.SetCookie(w, cookie)
 }
@@ -282,6 +313,9 @@ func main() {
 
 	db := DB.NewDataBase()
 	cb := DB.NewCookieBase()
+
+	cook := cb.SetCookie("123@yandex.ru")
+	fmt.Print("\n", cook, "\n")
 	DB.FillDataBase(db)
 	fmt.Print("data: ", db.IdMeta, " \n", db.UserId, " \n")
 
@@ -296,7 +330,7 @@ func main() {
 	server.HandleFunc("/login", api.Login).Methods("POST")
 	server.HandleFunc("/settings", api.SettingsPost).Methods("POST")
 
-	server.HandleFunc("/logout", api.Logout).Methods("DELETE")
+	server.HandleFunc("/login", api.Logout).Methods("DELETE")
 
 	server.HandleFunc("/settings", api.PhotoUpload).Methods("PUT")
 
