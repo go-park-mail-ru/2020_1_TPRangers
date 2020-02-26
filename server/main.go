@@ -15,7 +15,6 @@ import (
 	// "time"
 )
 
-
 var FileMaxSize = int64(5 * 1024 * 1024)
 
 var post = DataBase.Post{PostName: "Test Post Name", PostText: "Test Post Text", PostPhoto: "https://picsum.photos/200/300?grayscale"}

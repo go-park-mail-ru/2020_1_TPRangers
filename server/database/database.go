@@ -2,9 +2,8 @@ package database
 
 import (
 	"errors"
-	"fmt"
-	"sync"
 	uuid "github.com/satori/go.uuid"
+	"sync"
 )
 
 type DataInterface interface {
@@ -21,7 +20,7 @@ type DataInterface interface {
 type CookieInterface interface {
 	SetCookie(string) string
 	CheckCookie(string, string) bool
-	GetUser(string) (string,error)
+	GetUser(string) (string, error)
 }
 
 type CookieData struct {
@@ -30,9 +29,9 @@ type CookieData struct {
 	mutex sync.Mutex
 }
 
-type Post struct{
-	PostName string
-	PostText string
+type Post struct {
+	PostName  string
+	PostText  string
 	PostPhoto string
 }
 
@@ -49,18 +48,18 @@ type MetaData struct {
 	Photo     []byte
 	Telephone string
 	Password  string
-	Date string
+	Date      string
 }
 
 func NewMetaData(name, tel, pass, date string, photo []byte) *MetaData {
-	return &MetaData{name, photo, tel, pass , date}
+	return &MetaData{name, photo, tel, pass, date}
 }
 
-func MergeData(dataLeft , dataRight MetaData) MetaData{
+func MergeData(dataLeft, dataRight MetaData) MetaData {
 	dataLeft.Password = dataRight.Password
 	dataLeft.Username = dataRight.Username
 	dataLeft.Telephone = dataRight.Telephone
-	dataLeft.Date= dataRight.Date
+	dataLeft.Date = dataRight.Date
 
 	return dataLeft
 
@@ -83,7 +82,6 @@ func (db *CookieData) SetCookie(login string) string {
 	cookie := info.String()
 	db.CookieSession[cookie] = login
 
-	fmt.Println(db.CookieSession)
 	db.mutex.Unlock()
 
 	return cookie
@@ -94,22 +92,18 @@ func (db *DataBase) GetPasswordByLogin(login string) string {
 	return db.IdMeta[db.UserId[login]].Password
 }
 
-func (db *CookieData) GetUser(cookie string) (string , error){
+func (db *CookieData) GetUser(cookie string) (string, error) {
 
-	fmt.Println(db.CookieSession)
-	fmt.Println(cookie)
-	fmt.Println(db.CookieSession[cookie])
-
-	if val , _ := db.CookieSession[cookie] ; val != "" {
-		return db.CookieSession[cookie] , nil
+	if val, _ := db.CookieSession[cookie]; val != "" {
+		return db.CookieSession[cookie], nil
 
 	}
-	return "",errors.New("неверные куки!")
+	return "", errors.New("неверные куки!")
 }
 
 func (db *CookieData) CheckCookie(cookie string, login string) bool {
 
-	if val, flag := db.CookieSession[cookie] ; val == login && flag{
+	if val, flag := db.CookieSession[cookie]; val == login && flag {
 		return true
 	}
 	return false
@@ -185,7 +179,7 @@ func (db *DataBase) CheckAuth(login, password string) error {
 func FillDataBase(dataInterface DataInterface) {
 
 	sliceMail := []string{"asdasd@yandex.ru", "123@yandex.ru", "znajderko@yandex.ru"}
-	defData := NewMetaData("TEST", "88005553535", "TEST", "00.00.2000",make([]byte, 16) )
+	defData := NewMetaData("TEST", "88005553535", "TEST", "00.00.2000", make([]byte, 16))
 
 	for _, val := range sliceMail {
 		dataInterface.AddUser(val, *defData)
