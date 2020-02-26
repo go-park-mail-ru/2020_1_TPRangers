@@ -29,6 +29,12 @@ type CookieData struct {
 	mutex sync.Mutex
 }
 
+type Post struct{
+	PostName string
+	PostText string
+	PostPhoto string
+}
+
 //  хэшировать пароли
 type DataBase struct {
 	UserId map[string]int64

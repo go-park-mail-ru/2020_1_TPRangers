@@ -98,10 +98,10 @@ func (dh DataHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 		SetData(sendData, []string{"isAuth", "userData"}, &w)
 
-		cook := (dh.cookieBase).SetCookie(login)
+		cook := (dh.cookieBase).SetCookie("*")
 		cookie := http.Cookie{
 			Name:     "session_id",
-			Value:    cook,
+			Value:    "*",
 			Expires:  time.Now().Add(12 * time.Hour),
 		}
 
@@ -218,6 +218,7 @@ func SetCorsMiddleware(r *mux.Router) mux.MiddlewareFunc {
 			(w).Header().Set("Access-Control-Allow-Headers", "Origin, Content-Type")
 			(w).Header().Set("Access-Control-Allow-Credentials", "true")
 			(w).Header().Set("Content-Type", "*")
+			(w).Header().Set("Set-Cookie", "*")
 
 			next.ServeHTTP(w, req)
 		})
@@ -234,6 +235,27 @@ func (dh DataHandler) Profile(w http.ResponseWriter, r *http.Request) {
 func (dh DataHandler) Feed(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Print("=============Feed=============\n")
+	cookie, err := r.Cookie("session_id")
+
+	if err == http.ErrNoCookie {
+		fmt.Print(err, "\n")
+		SetErrors([]string{ET.CookieExpiredError,}, http.StatusBadRequest, &w)
+		return
+	}
+
+	if login, flag := dh.cookieBase.GetUser(cookie.Value); flag == nil {
+
+		sendData := make([]interface{}, 2)
+
+		sendData[0] = true
+		sendData[1] = (dh.dataBase).GetUserDataLogin(login)
+
+		SetData(sendData, []string{"isAuth", "posts"}, &w)
+
+	} else {
+		SetErrors([]string{ET.WrongCookie}, http.StatusBadRequest, &w)
+		return
+	}
 
 }
 
@@ -317,7 +339,7 @@ func main() {
 	api := &(DataHandler{dataBase: db, cookieBase: cb})
 	DataBase.FillDataBase(db)
 
-	server.HandleFunc("/feed", api.Feed)
+	server.HandleFunc("/feed", api.Feed).Methods("GET", "OPTIONS")
 
 	server.HandleFunc("/profile", api.Profile).Methods("GET", "OPTIONS")
 	server.HandleFunc("/settings", api.SettingsGet).Methods("GET", "OPTIONS")
