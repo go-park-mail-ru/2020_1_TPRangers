@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"io/ioutil"
-	"math/rand"
 	"net/http"
 	"time"
 
@@ -20,13 +19,6 @@ var (
 	letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 )
 
-func RandStringRunes(n int) string {
-	b := make([]rune, n)
-	for i := range b {
-		b[i] = letterRunes[rand.Intn(len(letterRunes))]
-	}
-	return string(b)
-}
 
 var FileMaxSize = int64(5 * 1024 * 1024)
 
@@ -37,7 +29,13 @@ type DataHandler struct {
 	cookieBase DataBase.CookieInterface
 }
 
-func getDataFromJson(userData AP.JsonStruct) (data map[string]interface{}, errConvert error) {
+func getDataFromJson(r *http.Request) (data map[string]interface{}, errConvert error) {
+
+	decoder := json.NewDecoder(r.Body)
+	defer r.Body.Close()
+
+	var userData AP.JsonStruct
+	decoder.Decode(&userData)
 
 	defer func() {
 
@@ -93,13 +91,7 @@ func (dh DataHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 	// тут получение данных с сервера
 	fmt.Print("=============REGISTER=============\n")
-
-	decoder := json.NewDecoder(r.Body)
-	defer r.Body.Close()
-
-	var userData AP.JsonStruct
-	decoder.Decode(&userData)
-	mapData, convertionError := getDataFromJson(userData)
+	mapData, convertionError := getDataFromJson(r)
 
 	if convertionError != nil {
 		return
@@ -118,11 +110,6 @@ func (dh DataHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 		SetData(sendData, []string{"isAuth", "user"}, &w)
 
-
-
-
-		// http.SetCookie(w, &cookie)
-
 	} else {
 		SetErrors([]string{ET.AlreadyExistError}, http.StatusBadRequest, &w)
 		return
@@ -133,12 +120,7 @@ func (dh DataHandler) Register(w http.ResponseWriter, r *http.Request) {
 func (dh DataHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Print("=============Login=============\n")
-	decoder := json.NewDecoder(r.Body)
-	defer r.Body.Close()
-
-	var userData AP.JsonStruct
-	decoder.Decode(&userData)
-	mapData, convertionError := getDataFromJson(userData)
+	mapData, convertionError := getDataFromJson(r)
 
 	if convertionError != nil {
 		return
@@ -161,6 +143,8 @@ func (dh DataHandler) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 func (dh DataHandler) Logout(w http.ResponseWriter, r *http.Request) {
+
+	fmt.Println("===================LOGOUT===================")
 	cookie, err := r.Cookie("session_id")
 
 	if err == http.ErrNoCookie {
@@ -222,33 +206,12 @@ func (dh DataHandler) PhotoUpload(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func SetCorsMiddleware(r *mux.Router) mux.MiddlewareFunc {
-
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-			(w).Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
-			(w).Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS, PUT, DELETE")
-			(w).Header().Set("Access-Control-Allow-Headers", "Origin, X-Login, Set-Cookie, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, csrf-token, Authorization")
-			(w).Header().Set("Access-Control-Allow-Credentials", "true")
-			(w).Header().Set("Content-Type", "*")
-			// (w).Header().Set("Set-Cookie", "*")
-			w.Header().Set("Vary", "Accept, Cookie")
-
-			next.ServeHTTP(w, req)
-		})
-	}
-
-}
-
 func (dh DataHandler) Profile(w http.ResponseWriter, r *http.Request) {
 	fmt.Print("=============Profile=============\n")
 	cookie, _ := r.Cookie("session_id")
 	if login, flag := dh.cookieBase.GetUser(cookie.Value); flag == nil {
-		decoder := json.NewDecoder(r.Body)
-		defer r.Body.Close()
-		var newMeta AP.JsonStruct
-		decoder.Decode(&newMeta)
-		mapData, convertionError := getDataFromJson(newMeta)
+
+		mapData, convertionError := getDataFromJson(r)
 
 		if convertionError != nil {
 			return
@@ -277,7 +240,7 @@ func (dh DataHandler) Feed(w http.ResponseWriter, r *http.Request) {
 
 	if err == http.ErrNoCookie {
 		fmt.Print(err, "\n")
-		SetErrors([]string{ET.CookieExpiredError,}, http.StatusBadRequest, &w)
+		SetErrors([]string{ET.CookieExpiredError}, http.StatusBadRequest, &w)
 		return
 	}
 
@@ -288,7 +251,7 @@ func (dh DataHandler) Feed(w http.ResponseWriter, r *http.Request) {
 		sendData[0] = true
 		sendData[1] = []DataBase.Post{post, post, post, post, post}
 
-		SetData(sendData, []string{"isAuth", "posts"}, &w)
+		SetData(sendData, []string{"isAuth", "feed"}, &w)
 
 	} else {
 		SetErrors([]string{ET.WrongCookie}, http.StatusBadRequest, &w)
@@ -301,7 +264,6 @@ func (dh DataHandler) SettingsGet(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Print("=============SettingsGET=============\n")
 	cookie, err := r.Cookie("session_id")
-
 
 	if err == http.ErrNoCookie {
 		fmt.Print(err, "\n")
@@ -340,11 +302,7 @@ func (dh DataHandler) SettingsPost(w http.ResponseWriter, r *http.Request) {
 
 	if login, flag := dh.cookieBase.GetUser(cookie.Value); flag == nil {
 
-		decoder := json.NewDecoder(r.Body)
-		defer r.Body.Close()
-		var newMeta AP.JsonStruct
-		decoder.Decode(&newMeta)
-		mapData, convertionError := getDataFromJson(newMeta)
+		mapData, convertionError := getDataFromJson(r)
 
 		if convertionError != nil {
 			return
@@ -370,15 +328,13 @@ func (dh DataHandler) SettingsPost(w http.ResponseWriter, r *http.Request) {
 
 func (dh DataHandler) SendCookieAfterSignIn(w http.ResponseWriter, r *http.Request) {
 	fmt.Print("=============SendCookieAfterSignIn=============\n")
+	fmt.Println(r)
 	login := r.Header.Get("X-Login")
 	fmt.Println(*r)
 	fmt.Println("Login is", login)
 
-
-
 	cookie := (dh.cookieBase).SetCookie(login)
-	SetCookie(&w,cookie)
-
+	SetCookie(&w, cookie)
 
 }
 
@@ -394,12 +350,11 @@ func main() {
 	DataBase.FillDataBase(db)
 
 	server.HandleFunc("/news", api.Feed).Methods("GET", "OPTIONS")
-
 	server.HandleFunc("/profile", api.Profile).Methods("GET", "OPTIONS")
 	server.HandleFunc("/settings", api.SettingsGet).Methods("GET", "OPTIONS")
+	server.HandleFunc("/registration", api.SendCookieAfterSignIn).Methods("GET")
 
 	server.HandleFunc("/registration", api.Register).Methods("POST", "OPTIONS")
-	server.HandleFunc("/registration", api.SendCookieAfterSignIn).Methods("GET")
 	server.HandleFunc("/login", api.Login).Methods("POST", "OPTIONS")
 	server.HandleFunc("/login", api.SendCookieAfterSignIn).Methods("GET")
 	server.HandleFunc("/settings", api.SettingsPost).Methods("POST", "OPTIONS")
@@ -409,5 +364,22 @@ func main() {
 	server.HandleFunc("/settings", api.PhotoUpload).Methods("PUT", "OPTIONS")
 
 	http.ListenAndServe(":3001", server)
+
+}
+
+func SetCorsMiddleware(r *mux.Router) mux.MiddlewareFunc {
+
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			(w).Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+			(w).Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS, PUT, DELETE")
+			(w).Header().Set("Access-Control-Allow-Headers", "Origin, X-Login, Set-Cookie, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, csrf-token, Authorization")
+			(w).Header().Set("Access-Control-Allow-Credentials", "true")
+			(w).Header().Set("Content-Type", "*")
+			w.Header().Set("Vary", "Accept, Cookie")
+
+			next.ServeHTTP(w, req)
+		})
+	}
 
 }
