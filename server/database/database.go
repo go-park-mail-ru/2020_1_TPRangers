@@ -41,7 +41,7 @@ type MetaData struct {
 	Photo     []byte
 	Telephone string
 	Password  string
-	Birthday string
+	Date string
 }
 
 func NewMetaData(name, tel, pass, date string, photo []byte) *MetaData {
@@ -52,7 +52,7 @@ func MergeData(dataLeft , dataRight MetaData) MetaData{
 	dataLeft.Password = dataRight.Password
 	dataLeft.Username = dataRight.Username
 	dataLeft.Telephone = dataRight.Telephone
-	dataLeft.Birthday = dataRight.Birthday
+	dataLeft.Date= dataRight.Date
 
 	return dataLeft
 

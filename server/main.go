@@ -288,12 +288,16 @@ func main() {
 	api := &(DataHandler{dataBase: db, cookieBase: cb})
 
 	server.HandleFunc("/feed", api.Feed)
+
 	server.HandleFunc("/profile", api.Profile).Methods("GET")
+	server.HandleFunc("/settings", api.SettingsGet).Methods("GET")
+
 	server.HandleFunc("/register", api.Register).Methods("POST")
 	server.HandleFunc("/login", api.Login).Methods("POST")
-	server.HandleFunc("/logout", api.Logout).Methods("GET")
 	server.HandleFunc("/settings", api.SettingsPost).Methods("POST")
-	server.HandleFunc("/settings", api.SettingsGet).Methods("GET")
+
+	server.HandleFunc("/logout", api.Logout).Methods("DELETE")
+
 	server.HandleFunc("/settings", api.PhotoUpload).Methods("PUT")
 
 	fmt.Print("hosted at 3001")
