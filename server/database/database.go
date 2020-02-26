@@ -82,6 +82,8 @@ func (db *CookieData) SetCookie(login string) string {
 	info, _ := uuid.NewV4()
 	cookie := info.String()
 	db.CookieSession[cookie] = login
+
+	fmt.Println(db.CookieSession)
 	db.mutex.Unlock()
 
 	return cookie
@@ -95,11 +97,14 @@ func (db *DataBase) GetPasswordByLogin(login string) string {
 func (db *CookieData) GetUser(cookie string) (string , error){
 
 	fmt.Println(db.CookieSession)
+	fmt.Println(cookie)
+	fmt.Println(db.CookieSession[cookie])
 
-	if _ , flag := db.CookieSession[cookie] ; flag{
-		return "",errors.New("неверные куки!")
+	if val , _ := db.CookieSession[cookie] ; val != "" {
+		return db.CookieSession[cookie] , nil
+
 	}
-	return db.CookieSession[cookie] , nil
+	return "",errors.New("неверные куки!")
 }
 
 func (db *CookieData) CheckCookie(cookie string, login string) bool {

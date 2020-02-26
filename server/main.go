@@ -149,6 +149,7 @@ func (dh DataHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 	if !dh.dataBase.CheckUser(login) || password != dh.dataBase.GetPasswordByLogin(login) {
 		fmt.Println("Doesn't exit")
+		SetErrors([]string{ET.WrongLogin}, http.StatusBadRequest, &w)
 		return
 	} else {
 		fmt.Println("OK")
@@ -252,10 +253,8 @@ func (dh DataHandler) Profile(w http.ResponseWriter, r *http.Request) {
 		if convertionError != nil {
 			return
 		}
-
 		newData := *DataBase.NewMetaData(mapData["name"].(string), mapData["phone"].(string), mapData["password"].(string), mapData["date"].(string), make([]byte, 0))
 		newData = DataBase.MergeData(dh.dataBase.GetUserDataLogin(login), newData)
-		dh.dataBase.EditUser(login, newData)
 
 		sendData := make([]interface{}, 3)
 
@@ -264,7 +263,6 @@ func (dh DataHandler) Profile(w http.ResponseWriter, r *http.Request) {
 		sendData[2] = post
 
 		SetData(sendData, []string{"isAuth", "user", "feeds"}, &w)
-
 	} else {
 		SetErrors([]string{ET.WrongCookie}, http.StatusBadRequest, &w)
 		return
@@ -303,6 +301,7 @@ func (dh DataHandler) SettingsGet(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Print("=============SettingsGET=============\n")
 	cookie, err := r.Cookie("session_id")
+
 
 	if err == http.ErrNoCookie {
 		fmt.Print(err, "\n")
@@ -371,9 +370,10 @@ func (dh DataHandler) SettingsPost(w http.ResponseWriter, r *http.Request) {
 
 func (dh DataHandler) SendCookieAfterSignIn(w http.ResponseWriter, r *http.Request) {
 	fmt.Print("=============SendCookieAfterSignIn=============\n")
-	login := r.Header.Get("Login")
-	fmt.Println(login)
-	fmt.Println(r)
+	login := r.Header.Get("X-Login")
+	fmt.Println(*r)
+	fmt.Println("Login is", login)
+
 
 
 	cookie := (dh.cookieBase).SetCookie(login)
@@ -393,7 +393,7 @@ func main() {
 	api := &(DataHandler{dataBase: db, cookieBase: cb})
 	DataBase.FillDataBase(db)
 
-	server.HandleFunc("/feed", api.Feed).Methods("GET", "OPTIONS")
+	server.HandleFunc("/news", api.Feed).Methods("GET", "OPTIONS")
 
 	server.HandleFunc("/profile", api.Profile).Methods("GET", "OPTIONS")
 	server.HandleFunc("/settings", api.SettingsGet).Methods("GET", "OPTIONS")
