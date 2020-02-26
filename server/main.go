@@ -128,12 +128,11 @@ func (dh DataHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 		if passFlag := (dh.dataBase).CheckAuth(login, password); passFlag == nil {
 
-			sendData := make([]interface{}, 2)
+			sendData := make([]interface{}, 1)
 
 			sendData[0] = true
-			sendData[1] = (dh.dataBase).GetUserDataLogin(login)
 
-			SetData(sendData, []string{"isAuth", "userData"}, &w)
+			SetData(sendData, []string{"isAuth"}, &w)
 			SetCookie(&w, (dh.cookieBase).SetCookie(login))
 
 		} else {
