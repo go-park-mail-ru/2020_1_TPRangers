@@ -15,10 +15,6 @@ import (
 	// "time"
 )
 
-var (
-	letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
-)
-
 
 var FileMaxSize = int64(5 * 1024 * 1024)
 
