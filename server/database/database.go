@@ -2,8 +2,8 @@ package database
 
 import (
 	"errors"
-	"sync"
 	uuid "github.com/satori/go.uuid"
+	"sync"
 )
 
 type DataInterface interface {
@@ -93,7 +93,7 @@ func (db *DataBase) GetPasswordByLogin(login string) string {
 
 func (db *CookieData) GetUser(cookie string) (string , error){
 
-	if _ , flag := db.CookieSession[cookie] ; flag{
+	if _ , flag := db.CookieSession[cookie] ; !flag {
 		return "",errors.New("неверные куки!")
 	}
 

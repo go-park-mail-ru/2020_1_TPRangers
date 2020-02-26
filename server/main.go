@@ -100,10 +100,10 @@ func (dh DataHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 		SetData(sendData, []string{"isAuth", "userData"}, &w)
 
-		cook := (dh.cookieBase).SetCookie("*")
+		cook := (dh.cookieBase).SetCookie(login)
 		cookie := http.Cookie{
 			Name:     "session_id",
-			Value:    "*",
+			Value:    cook,
 			Expires:  time.Now().Add(12 * time.Hour),
 		}
 
@@ -121,7 +121,6 @@ func (dh DataHandler) Register(w http.ResponseWriter, r *http.Request) {
 func (dh DataHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Print("=============Login=============\n")
-	fmt.Println(*r)
 	decoder := json.NewDecoder(r.Body)
 	defer r.Body.Close()
 
@@ -134,17 +133,19 @@ func (dh DataHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	login := mapData["login"].(string)
-	password := mapData["password"].(string)
 
-	if flagExist := dh.dataBase.CheckAuth(login,password); flagExist == nil {
-		fmt.Println("Doesn't exit")
-		return
-	} else{
-
+	cook := (dh.cookieBase).SetCookie(login)
+	cookie := http.Cookie{
+		Name:     "session_id",
+		Value:    "*",
+		Expires:  time.Now().Add(12 * time.Hour),
 	}
 
-	fmt.Println(login)
-	fmt.Println(password)
+	fmt.Println(cook)
+	fmt.Println((dh.cookieBase).GetUser(cook))
+
+	http.SetCookie(w, &cookie)
+
 
 	json.NewEncoder(w).Encode(&AP.JsonStruct{Body: "Authorised"})
 	(w).WriteHeader(http.StatusOK)
@@ -222,17 +223,8 @@ func SetCorsMiddleware(r *mux.Router) mux.MiddlewareFunc {
 			(w).Header().Set("Access-Control-Allow-Headers", "Origin, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, csrf-token, Authorization")
 			(w).Header().Set("Access-Control-Allow-Credentials", "true")
 			(w).Header().Set("Content-Type", "*")
-			(w).Header().Set("Set-Cookie", "*")
-			w.Header().Set("Vary", "Accept, Cookie")
+			(w).Header().Set("Vary", "Accept, Cookie")
 
-			//w.Header().Set("Content-Type", "*")
-			//w.Header().Set("Access-Control-Allow-Methods",
-			//	"POST, GET, OPTIONS, PUT, DELETE")
-			//w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, csrf-token, Authorization")
-			//w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3001")
-			//w.Header().Set("Access-Control-Allow-Credentials", "true")
-			//w.Header().Set("Set-Cookie", "*")
-			//w.Header().Set("Vary", "Accept, Cookie")
 
 			next.ServeHTTP(w, req)
 		})
