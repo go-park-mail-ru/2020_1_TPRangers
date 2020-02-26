@@ -38,11 +38,9 @@ func getDataFromJson(userData AP.JsonStruct) (data map[string]interface{}, errCo
 
 func SetCookie(w *http.ResponseWriter, cookieValue string) {
 	cookie := http.Cookie{
-		Name:     "session_id",
-		Value:    cookieValue,
-		Expires:  time.Now().Add(12 * time.Hour),
-		Path:     "/",
-		HttpOnly: true,
+		Name:    "session_id",
+		Value:   cookieValue,
+		Expires: time.Now().Add(12 * time.Hour),
 	}
 	http.SetCookie(*w, &cookie)
 }
@@ -105,9 +103,10 @@ func (dh DataHandler) Register(w http.ResponseWriter, r *http.Request) {
 			Name:     "session_id",
 			Value:    cook,
 			Expires:  time.Now().Add(12 * time.Hour),
-			Path:     "/",
-			HttpOnly: true,
 		}
+
+		fmt.Println(cook)
+
 		http.SetCookie(w, &cookie)
 
 	} else {
@@ -219,7 +218,7 @@ func SetCorsMiddleware(r *mux.Router) mux.MiddlewareFunc {
 			(w).Header().Set("Access-Control-Allow-Headers", "Origin, Content-Type")
 			(w).Header().Set("Access-Control-Allow-Credentials", "true")
 			(w).Header().Set("Content-Type", "*")
-			(w).Header().Set("Cookie", "*")
+
 			next.ServeHTTP(w, req)
 		})
 	}
@@ -320,16 +319,16 @@ func main() {
 
 	server.HandleFunc("/feed", api.Feed)
 
-	server.HandleFunc("/profile", api.Profile).Methods("GET","OPTIONS")
-	server.HandleFunc("/settings", api.SettingsGet).Methods("GET","OPTIONS")
+	server.HandleFunc("/profile", api.Profile).Methods("GET", "OPTIONS")
+	server.HandleFunc("/settings", api.SettingsGet).Methods("GET", "OPTIONS")
 
-	server.HandleFunc("/registration", api.Register).Methods("POST","OPTIONS")
-	server.HandleFunc("/login", api.Login).Methods("POST","OPTIONS")
-	server.HandleFunc("/settings", api.SettingsPost).Methods("POST","OPTIONS")
+	server.HandleFunc("/registration", api.Register).Methods("POST", "OPTIONS")
+	server.HandleFunc("/login", api.Login).Methods("POST", "OPTIONS")
+	server.HandleFunc("/settings", api.SettingsPost).Methods("POST", "OPTIONS")
 
-	server.HandleFunc("/login", api.Logout).Methods("DELETE","OPTIONS")
+	server.HandleFunc("/login", api.Logout).Methods("DELETE", "OPTIONS")
 
-	server.HandleFunc("/settings", api.PhotoUpload).Methods("PUT","OPTIONS")
+	server.HandleFunc("/settings", api.PhotoUpload).Methods("PUT", "OPTIONS")
 
 	http.ListenAndServe(":3001", server)
 
