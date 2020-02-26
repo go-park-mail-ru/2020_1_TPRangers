@@ -149,6 +149,7 @@ func (dh DataHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 	if !dh.dataBase.CheckUser(login) || password != dh.dataBase.GetPasswordByLogin(login) {
 		fmt.Println("Doesn't exit")
+		SetErrors([]string{ET.WrongLogin}, http.StatusBadRequest, &w)
 		return
 	} else {
 		fmt.Println("OK")
@@ -227,7 +228,7 @@ func SetCorsMiddleware(r *mux.Router) mux.MiddlewareFunc {
 		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 			(w).Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
 			(w).Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS, PUT, DELETE")
-			(w).Header().Set("Access-Control-Allow-Headers", "Origin, Login, Set-Cookie, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, csrf-token, Authorization")
+			(w).Header().Set("Access-Control-Allow-Headers", "Origin, X-Login, Set-Cookie, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, csrf-token, Authorization")
 			(w).Header().Set("Access-Control-Allow-Credentials", "true")
 			(w).Header().Set("Content-Type", "*")
 			// (w).Header().Set("Set-Cookie", "*")
@@ -252,10 +253,8 @@ func (dh DataHandler) Profile(w http.ResponseWriter, r *http.Request) {
 		if convertionError != nil {
 			return
 		}
-
 		newData := *DataBase.NewMetaData(mapData["name"].(string), mapData["phone"].(string), mapData["password"].(string), mapData["date"].(string), make([]byte, 0))
 		newData = DataBase.MergeData(dh.dataBase.GetUserDataLogin(login), newData)
-		dh.dataBase.EditUser(login, newData)
 
 		sendData := make([]interface{}, 3)
 
@@ -264,7 +263,6 @@ func (dh DataHandler) Profile(w http.ResponseWriter, r *http.Request) {
 		sendData[2] = post
 
 		SetData(sendData, []string{"isAuth", "user", "feeds"}, &w)
-
 	} else {
 		SetErrors([]string{ET.WrongCookie}, http.StatusBadRequest, &w)
 		return
@@ -371,7 +369,8 @@ func (dh DataHandler) SettingsPost(w http.ResponseWriter, r *http.Request) {
 func (dh DataHandler) SendCookieAfterSignIn(w http.ResponseWriter, r *http.Request) {
 	fmt.Print("=============SendCookieAfterSignIn=============\n")
 	login := r.Header.Get("Login")
-	fmt.Println(login)
+	fmt.Println(*r)
+	fmt.Println("Login is", login)
 
 
 	cookie := (dh.cookieBase).SetCookie(login)
