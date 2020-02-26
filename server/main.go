@@ -136,9 +136,11 @@ func (dh DataHandler) Login(w http.ResponseWriter, r *http.Request) {
 	login := mapData["login"].(string)
 	password := mapData["password"].(string)
 
-	if !dh.dataBase.CheckUser(login) || password != dh.dataBase.GetPasswordByLogin(login) {
+	if flagExist := dh.dataBase.CheckAuth(login,password); flagExist == nil {
 		fmt.Println("Doesn't exit")
 		return
+	} else{
+
 	}
 
 	fmt.Println(login)
@@ -222,6 +224,15 @@ func SetCorsMiddleware(r *mux.Router) mux.MiddlewareFunc {
 			(w).Header().Set("Content-Type", "*")
 			(w).Header().Set("Set-Cookie", "*")
 			w.Header().Set("Vary", "Accept, Cookie")
+
+			//w.Header().Set("Content-Type", "*")
+			//w.Header().Set("Access-Control-Allow-Methods",
+			//	"POST, GET, OPTIONS, PUT, DELETE")
+			//w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, csrf-token, Authorization")
+			//w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3001")
+			//w.Header().Set("Access-Control-Allow-Credentials", "true")
+			//w.Header().Set("Set-Cookie", "*")
+			//w.Header().Set("Vary", "Accept, Cookie")
 
 			next.ServeHTTP(w, req)
 		})
