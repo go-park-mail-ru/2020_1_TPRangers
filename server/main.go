@@ -17,6 +17,8 @@ import (
 
 var FileMaxSize = int64(5 * 1024 * 1024)
 
+var post = DataBase.Post{ PostName:"Test Post Name",PostText:"Test Post Text",PostPhoto:"https://picsum.photos/200/300?grayscale" }
+
 type DataHandler struct {
 	dataBase   DataBase.DataInterface
 	cookieBase DataBase.CookieInterface
@@ -215,10 +217,11 @@ func SetCorsMiddleware(r *mux.Router) mux.MiddlewareFunc {
 		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 			(w).Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
 			(w).Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS, PUT, DELETE")
-			(w).Header().Set("Access-Control-Allow-Headers", "Origin, Content-Type")
+			(w).Header().Set("Access-Control-Allow-Headers", "Origin, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, csrf-token, Authorization")
 			(w).Header().Set("Access-Control-Allow-Credentials", "true")
 			(w).Header().Set("Content-Type", "*")
 			(w).Header().Set("Set-Cookie", "*")
+			w.Header().Set("Vary", "Accept, Cookie")
 
 			next.ServeHTTP(w, req)
 		})
@@ -243,12 +246,12 @@ func (dh DataHandler) Feed(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if login, flag := dh.cookieBase.GetUser(cookie.Value); flag == nil {
+	if _, flag := dh.cookieBase.GetUser(cookie.Value); flag == nil {
 
 		sendData := make([]interface{}, 2)
 
 		sendData[0] = true
-		sendData[1] = (dh.dataBase).GetUserDataLogin(login)
+		sendData[1] = []DataBase.Post{post,post,post,post,post}
 
 		SetData(sendData, []string{"isAuth", "posts"}, &w)
 
