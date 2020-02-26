@@ -2,6 +2,7 @@ package database
 
 import (
 	"errors"
+	"fmt"
 	"sync"
 	uuid "github.com/satori/go.uuid"
 )
@@ -92,6 +93,8 @@ func (db *DataBase) GetPasswordByLogin(login string) string {
 }
 
 func (db *CookieData) GetUser(cookie string) (string , error){
+
+	fmt.Println(db.CookieSession)
 
 	if _ , flag := db.CookieSession[cookie] ; flag{
 		return "",errors.New("неверные куки!")

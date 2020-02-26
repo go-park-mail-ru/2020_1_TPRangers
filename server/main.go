@@ -227,7 +227,7 @@ func SetCorsMiddleware(r *mux.Router) mux.MiddlewareFunc {
 		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 			(w).Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
 			(w).Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS, PUT, DELETE")
-			(w).Header().Set("Access-Control-Allow-Headers", "Origin, Login, Set-Cookie, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, csrf-token, Authorization")
+			(w).Header().Set("Access-Control-Allow-Headers", "Origin, X-Login, Set-Cookie, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, csrf-token, Authorization")
 			(w).Header().Set("Access-Control-Allow-Credentials", "true")
 			(w).Header().Set("Content-Type", "*")
 			// (w).Header().Set("Set-Cookie", "*")
@@ -320,6 +320,7 @@ func (dh DataHandler) SettingsGet(w http.ResponseWriter, r *http.Request) {
 		SetData(sendData, []string{"isAuth", "user"}, &w)
 
 	} else {
+		fmt.Println(ET.WrongCookie)
 		SetErrors([]string{ET.WrongCookie}, http.StatusBadRequest, &w)
 		return
 	}
@@ -372,6 +373,7 @@ func (dh DataHandler) SendCookieAfterSignIn(w http.ResponseWriter, r *http.Reque
 	fmt.Print("=============SendCookieAfterSignIn=============\n")
 	login := r.Header.Get("Login")
 	fmt.Println(login)
+	fmt.Println(r)
 
 
 	cookie := (dh.cookieBase).SetCookie(login)

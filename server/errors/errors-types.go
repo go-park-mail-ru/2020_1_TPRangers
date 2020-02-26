@@ -8,5 +8,5 @@ const (
 	DecodeError        = "Невозможно получить данные"
 	AlreadyExistError  = "Такой пользователь уже сушествует"
 	DoesntExistError   = "Такого пользователя не существует"
-	WrongPassword      = "Неправильный пароль"
+	WrongLogin     = "Неправильные данные"
 )
