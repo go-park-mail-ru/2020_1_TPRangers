@@ -96,7 +96,6 @@ func (db *CookieData) GetUser(cookie string) (string , error){
 	if _ , flag := db.CookieSession[cookie] ; flag{
 		return "",errors.New("неверные куки!")
 	}
-
 	return db.CookieSession[cookie] , nil
 }
 
@@ -172,7 +171,6 @@ func (db *DataBase) CheckAuth(login, password string) error {
 	if db.IdMeta[db.UserId[login]].Password != password {
 		return errors.New(`{"error":"неправильные данные!"}`)
 	}
-
 	return nil
 }
 

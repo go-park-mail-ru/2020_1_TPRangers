@@ -11,9 +11,22 @@ import (
 	"io/ioutil"
 	"net/http"
 	"time"
+	"math/rand"
 
 	// "time"
 )
+
+var (
+	letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+)
+
+func RandStringRunes(n int) string {
+	b := make([]rune, n)
+	for i := range b {
+		b[i] = letterRunes[rand.Intn(len(letterRunes))]
+	}
+	return string(b)
+}
 
 var FileMaxSize = int64(5 * 1024 * 1024)
 
@@ -56,8 +69,10 @@ func SetData(data []interface{}, jsonType []string, w *http.ResponseWriter) {
 
 		case "isAuth":
 			answer[val] = data[i].(bool)
-		case "userData":
+		case "user":
 			answer[val] = data[i].(DataBase.MetaData)
+		case "feed":
+			answer[val] = data[i].([]DataBase.Post)
 
 		}
 	}
@@ -89,6 +104,7 @@ func (dh DataHandler) Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	login := mapData["email"].(string)
+	println(login)
 
 	data := DataBase.NewMetaData(mapData["name"].(string), mapData["phone"].(string), mapData["password"].(string), mapData["date"].(string), make([]byte, 0))
 	if err, info := (dh.dataBase).AddUser(login, *data); err == nil {
@@ -98,18 +114,27 @@ func (dh DataHandler) Register(w http.ResponseWriter, r *http.Request) {
 		sendData[0] = true
 		sendData[1] = info
 
-		SetData(sendData, []string{"isAuth", "userData"}, &w)
+		SetData(sendData, []string{"isAuth", "user"}, &w)
 
-		cook := (dh.cookieBase).SetCookie("*")
-		cookie := http.Cookie{
-			Name:     "session_id",
-			Value:    "*",
-			Expires:  time.Now().Add(12 * time.Hour),
+		// cook := (dh.cookieBase).SetCookie(login)
+		// cookie := http.Cookie{
+		// 	Name:     "session_id",
+		// 	Value:    cook,
+		// 	Expires:  time.Now().Add(12 * time.Hour),
+		// }
+		SID := RandStringRunes(32)
+
+	
+		cookie := &http.Cookie{
+			Name:    "session_id",
+			Value:   SID,
+			Expires: time.Now().Add(10000 * time.Hour),
 		}
+		http.SetCookie(w, cookie)
+		w.Write([]byte(SID))
+		fmt.Println("cookie for registration is", cookie.Value)
 
-		fmt.Println(cook)
-
-		http.SetCookie(w, &cookie)
+		// http.SetCookie(w, &cookie)
 
 	} else {
 		SetErrors([]string{ET.AlreadyExistError}, http.StatusBadRequest, &w)
@@ -121,7 +146,6 @@ func (dh DataHandler) Register(w http.ResponseWriter, r *http.Request) {
 func (dh DataHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Print("=============Login=============\n")
-	fmt.Println(*r)
 	decoder := json.NewDecoder(r.Body)
 	defer r.Body.Close()
 
@@ -139,10 +163,10 @@ func (dh DataHandler) Login(w http.ResponseWriter, r *http.Request) {
 	if !dh.dataBase.CheckUser(login) || password != dh.dataBase.GetPasswordByLogin(login) {
 		fmt.Println("Doesn't exit")
 		return
+	} else {
+		fmt.Println("OK")
 	}
 
-	fmt.Println(login)
-	fmt.Println(password)
 
 	json.NewEncoder(w).Encode(&AP.JsonStruct{Body: "Authorised"})
 	(w).WriteHeader(http.StatusOK)
@@ -202,7 +226,7 @@ func (dh DataHandler) PhotoUpload(w http.ResponseWriter, r *http.Request) {
 		sendData[0] = true
 		sendData[1] = DataBase.MetaData{}
 
-		SetData(sendData, []string{"isAuth", "userData"}, &w)
+		SetData(sendData, []string{"isAuth", "user"}, &w)
 
 	} else {
 		SetErrors([]string{ET.WrongCookie}, http.StatusBadRequest, &w)
@@ -217,10 +241,10 @@ func SetCorsMiddleware(r *mux.Router) mux.MiddlewareFunc {
 		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 			(w).Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
 			(w).Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS, PUT, DELETE")
-			(w).Header().Set("Access-Control-Allow-Headers", "Origin, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, csrf-token, Authorization")
+			(w).Header().Set("Access-Control-Allow-Headers", "Origin, Set-Cookie, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, csrf-token, Authorization")
 			(w).Header().Set("Access-Control-Allow-Credentials", "true")
 			(w).Header().Set("Content-Type", "*")
-			(w).Header().Set("Set-Cookie", "*")
+			// (w).Header().Set("Set-Cookie", "*")
 			w.Header().Set("Vary", "Accept, Cookie")
 
 			next.ServeHTTP(w, req)
@@ -230,8 +254,36 @@ func SetCorsMiddleware(r *mux.Router) mux.MiddlewareFunc {
 }
 
 func (dh DataHandler) Profile(w http.ResponseWriter, r *http.Request) {
-
 	fmt.Print("=============Profile=============\n")
+	cookie, _ := r.Cookie("session_id")
+	if login, flag := dh.cookieBase.GetUser(cookie.Value); flag == nil {
+		decoder := json.NewDecoder(r.Body)
+		defer r.Body.Close()
+		var newMeta AP.JsonStruct
+		decoder.Decode(&newMeta)
+		mapData, convertionError := getDataFromJson(newMeta)
+
+		if convertionError != nil {
+			return
+		}
+
+		newData := *DataBase.NewMetaData(mapData["name"].(string), mapData["phone"].(string), mapData["password"].(string), mapData["date"].(string), make([]byte, 0))
+		newData = DataBase.MergeData(dh.dataBase.GetUserDataLogin(login), newData)
+		dh.dataBase.EditUser(login, newData)
+
+		sendData := make([]interface{}, 3)
+
+		sendData[0] = true
+		sendData[1] = newData
+		sendData[2] = post
+
+		SetData(sendData, []string{"isAuth", "user", "feeds"}, &w)
+
+	} else {
+		SetErrors([]string{ET.WrongCookie}, http.StatusBadRequest, &w)
+		return
+	}
+
 
 }
 
@@ -265,27 +317,38 @@ func (dh DataHandler) Feed(w http.ResponseWriter, r *http.Request) {
 func (dh DataHandler) SettingsGet(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Print("=============SettingsGET=============\n")
-	cookie, err := r.Cookie("session_id")
+	// cookie, err := r.Cookie("session_id")
 
-	if err == http.ErrNoCookie {
-		fmt.Print(err, "\n")
-		SetErrors([]string{ET.CookieExpiredError,}, http.StatusBadRequest, &w)
-		return
-	}
+	// if err == http.ErrNoCookie {
+	// 	fmt.Print(err, "\n")
+	// 	SetErrors([]string{ET.CookieExpiredError,}, http.StatusBadRequest, &w)
+	// 	return
+	// }
 
-	if login, flag := dh.cookieBase.GetUser(cookie.Value); flag == nil {
+	// if login, flag := dh.cookieBase.GetUser(cookie.Value); flag == nil {
 
-		sendData := make([]interface{}, 2)
+	// 	sendData := make([]interface{}, 2)
 
-		sendData[0] = true
-		sendData[1] = (dh.dataBase).GetUserDataLogin(login)
+	// 	sendData[0] = true
+	// 	sendData[1] = (dh.dataBase).GetUserDataLogin(login)
 
-		SetData(sendData, []string{"isAuth", "userData"}, &w)
+	// 	SetData(sendData, []string{"isAuth", "user"}, &w)
 
-	} else {
-		SetErrors([]string{ET.WrongCookie}, http.StatusBadRequest, &w)
-		return
-	}
+	// } else {
+	// 	SetErrors([]string{ET.WrongCookie}, http.StatusBadRequest, &w)
+	// 	return
+	// }
+	SID := RandStringRunes(32)
+
+	
+		cookie := &http.Cookie{
+			Name:    "session_id",
+			Value:   SID,
+			Expires: time.Now().Add(10000 * time.Hour),
+		}
+		http.SetCookie(w, cookie)
+		w.Write([]byte(SID))
+		fmt.Println("cookie for registration is", cookie.Value)
 
 }
 
@@ -322,7 +385,7 @@ func (dh DataHandler) SettingsPost(w http.ResponseWriter, r *http.Request) {
 		sendData[0] = true
 		sendData[1] = newData
 
-		SetData(sendData, []string{"isAuth", "userData"}, &w)
+		SetData(sendData, []string{"isAuth", "user"}, &w)
 
 	} else {
 		SetErrors([]string{ET.WrongCookie}, http.StatusBadRequest, &w)
