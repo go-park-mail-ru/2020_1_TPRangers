@@ -241,7 +241,7 @@ func SetCorsMiddleware(r *mux.Router) mux.MiddlewareFunc {
 		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 			(w).Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
 			(w).Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS, PUT, DELETE")
-			(w).Header().Set("Access-Control-Allow-Headers", "Origin, Set-Cookie, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, csrf-token, Authorization")
+			(w).Header().Set("Access-Control-Allow-Headers", "Origin, Login, Set-Cookie, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, csrf-token, Authorization")
 			(w).Header().Set("Access-Control-Allow-Credentials", "true")
 			(w).Header().Set("Content-Type", "*")
 			// (w).Header().Set("Set-Cookie", "*")
@@ -338,6 +338,57 @@ func (dh DataHandler) SettingsGet(w http.ResponseWriter, r *http.Request) {
 	// 	SetErrors([]string{ET.WrongCookie}, http.StatusBadRequest, &w)
 	// 	return
 	// }
+	
+
+
+}
+
+func (dh DataHandler) SettingsPost(w http.ResponseWriter, r *http.Request) {
+
+	fmt.Print("=============SettingsPOST=============\n")
+	// cookie, err := r.Cookie("session_id")
+
+	// if err == http.ErrNoCookie {
+	// 	fmt.Print(err, "\n")
+	// 	w.WriteHeader(http.StatusBadRequest)
+	// 	SetErrors([]string{ET.CookieExpiredError}, http.StatusBadRequest, &w)
+	// 	return
+	// }
+
+	// if login, flag := dh.cookieBase.GetUser(cookie.Value); flag == nil {
+
+	// 	decoder := json.NewDecoder(r.Body)
+	// 	defer r.Body.Close()
+	// 	var newMeta AP.JsonStruct
+	// 	decoder.Decode(&newMeta)
+	// 	mapData, convertionError := getDataFromJson(newMeta)
+
+	// 	if convertionError != nil {
+	// 		return
+	// 	}
+
+	// 	newData := *DataBase.NewMetaData(mapData["name"].(string), mapData["phone"].(string), mapData["password"].(string), mapData["date"].(string), make([]byte, 0))
+	// 	newData = DataBase.MergeData(dh.dataBase.GetUserDataLogin(login), newData)
+	// 	dh.dataBase.EditUser(login, newData)
+
+	// 	sendData := make([]interface{}, 2)
+
+	// 	sendData[0] = true
+	// 	sendData[1] = newData
+
+	// 	SetData(sendData, []string{"isAuth", "user"}, &w)
+
+	// } else {
+	// 	SetErrors([]string{ET.WrongCookie}, http.StatusBadRequest, &w)
+	// 	return
+	// }
+
+}
+
+func (dh DataHandler) SendCookieAfterSignIn(w http.ResponseWriter, r *http.Request){
+	fmt.Print("=============SendCookieAfterSignIn=============\n")
+
+
 	SID := RandStringRunes(32)
 
 	
@@ -349,49 +400,6 @@ func (dh DataHandler) SettingsGet(w http.ResponseWriter, r *http.Request) {
 		http.SetCookie(w, cookie)
 		w.Write([]byte(SID))
 		fmt.Println("cookie for registration is", cookie.Value)
-
-}
-
-func (dh DataHandler) SettingsPost(w http.ResponseWriter, r *http.Request) {
-
-	fmt.Print("=============SettingsPOST=============\n")
-	cookie, err := r.Cookie("session_id")
-
-	if err == http.ErrNoCookie {
-		fmt.Print(err, "\n")
-		w.WriteHeader(http.StatusBadRequest)
-		SetErrors([]string{ET.CookieExpiredError}, http.StatusBadRequest, &w)
-		return
-	}
-
-	if login, flag := dh.cookieBase.GetUser(cookie.Value); flag == nil {
-
-		decoder := json.NewDecoder(r.Body)
-		defer r.Body.Close()
-		var newMeta AP.JsonStruct
-		decoder.Decode(&newMeta)
-		mapData, convertionError := getDataFromJson(newMeta)
-
-		if convertionError != nil {
-			return
-		}
-
-		newData := *DataBase.NewMetaData(mapData["name"].(string), mapData["phone"].(string), mapData["password"].(string), mapData["date"].(string), make([]byte, 0))
-		newData = DataBase.MergeData(dh.dataBase.GetUserDataLogin(login), newData)
-		dh.dataBase.EditUser(login, newData)
-
-		sendData := make([]interface{}, 2)
-
-		sendData[0] = true
-		sendData[1] = newData
-
-		SetData(sendData, []string{"isAuth", "user"}, &w)
-
-	} else {
-		SetErrors([]string{ET.WrongCookie}, http.StatusBadRequest, &w)
-		return
-	}
-
 }
 
 func main() {
@@ -411,6 +419,7 @@ func main() {
 	server.HandleFunc("/settings", api.SettingsGet).Methods("GET", "OPTIONS")
 
 	server.HandleFunc("/registration", api.Register).Methods("POST", "OPTIONS")
+	server.HandleFunc("/registration", api.SendCookieAfterSignIn).Methods("GET")
 	server.HandleFunc("/login", api.Login).Methods("POST", "OPTIONS")
 	server.HandleFunc("/settings", api.SettingsPost).Methods("POST", "OPTIONS")
 
