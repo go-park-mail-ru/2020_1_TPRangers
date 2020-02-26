@@ -6,6 +6,7 @@ import (
 	AP "./json-answers"
 	"encoding/json"
 	"fmt"
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 	"io/ioutil"
@@ -306,9 +307,18 @@ func SetCorsMiddleware(r *mux.Router) mux.MiddlewareFunc {
 
 }
 
+
+
 func main() {
 	server := mux.NewRouter()
+
+	cors := handlers.CORS(
+		handlers.AllowedHeaders([]string{"access-control-allow-origin, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers, Authorization"}),
+		handlers.AllowedOrigins([]string{"*"}),
+		handlers.AllowCredentials(),
+	)
 	server.Use(SetCorsMiddleware(server))
+	server.Use(cors)
 
 	db := DB.NewDataBase()
 	cb := DB.NewCookieBase()
