@@ -316,6 +316,7 @@ func main() {
 		handlers.AllowedHeaders([]string{"access-control-allow-origin, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers, Authorization"}),
 		handlers.AllowedOrigins([]string{"*"}),
 		handlers.AllowCredentials(),
+		handlers.AllowedMethods([]string{"POST, GET, OPTIONS, PUT, DELETE"}),
 	)
 	server.Use(SetCorsMiddleware(server))
 	server.Use(cors)
