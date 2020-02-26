@@ -14,6 +14,7 @@ type DataInterface interface {
 	EditUser(string, MetaData)
 	CheckUser(string) bool
 	CheckAuth(string, string) error
+	GetPasswordByLogin(string) string
 }
 
 type CookieInterface interface {
@@ -78,6 +79,10 @@ func (db *CookieData) SetCookie(login string) string {
 
 	return cookie
 
+}
+
+func (db *DataBase) GetPasswordByLogin(login string) string {
+	return db.IdMeta[db.UserId[login]].Password
 }
 
 func (db *CookieData) GetUser(cookie string) (string , error){
