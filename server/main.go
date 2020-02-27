@@ -97,7 +97,7 @@ func (dh DataHandler) Register(w http.ResponseWriter, r *http.Request) {
 	login := mapData["email"].(string)
 	println(login)
 
-	data := DataBase.NewMetaData(mapData["name"].(string), mapData["phone"].(string), mapData["password"].(string), mapData["date"].(string), make([]byte, 0))
+	data := DataBase.NewMetaData(login,mapData["name"].(string), mapData["phone"].(string), mapData["password"].(string), mapData["date"].(string), make([]byte, 0))
 	if err, info := (dh.dataBase).AddUser(login, *data); err == nil {
 
 		sendData := make([]interface{}, 2)
@@ -272,13 +272,12 @@ func (dh DataHandler) SettingsGet(w http.ResponseWriter, r *http.Request) {
 
 	if login, flag := dh.cookieBase.GetUser(cookie.Value); flag == nil {
 
-		sendData := make([]interface{}, 3)
+		sendData := make([]interface{}, 2)
 
 		sendData[0] = true
 		sendData[1] = (dh.dataBase).GetUserDataLogin(login)
-		sendData[2] = login
 
-		SetData(sendData, []string{"isAuth", "user","login"}, &w)
+		SetData(sendData, []string{"isAuth", "user"}, &w)
 
 	} else {
 		fmt.Println(ET.WrongCookie)
@@ -308,17 +307,16 @@ func (dh DataHandler) SettingsPost(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		newData := *DataBase.NewMetaData(mapData["name"].(string), mapData["phone"].(string), mapData["password"].(string), mapData["date"].(string), make([]byte, 0))
+		newData := *DataBase.NewMetaData(login,mapData["name"].(string), mapData["phone"].(string), mapData["password"].(string), mapData["date"].(string), make([]byte, 0))
 		newData = DataBase.MergeData(dh.dataBase.GetUserDataLogin(login), newData)
 		dh.dataBase.EditUser(login, newData)
 
-		sendData := make([]interface{}, 3)
+		sendData := make([]interface{}, 2)
 
 		sendData[0] = true
 		sendData[1] = newData
-		sendData[2] = login
 
-		SetData(sendData, []string{"isAuth", "user","login"}, &w)
+		SetData(sendData, []string{"isAuth", "user"}, &w)
 
 		fmt.Println(w)
 

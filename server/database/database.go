@@ -44,6 +44,7 @@ type DataBase struct {
 	mutex       sync.Mutex
 }
 type MetaData struct {
+	Email string
 	Username  string
 	Photo     []byte
 	Telephone string
@@ -51,11 +52,12 @@ type MetaData struct {
 	Date      string
 }
 
-func NewMetaData(name, tel, pass, date string, photo []byte) *MetaData {
-	return &MetaData{name, photo, tel, pass, date}
+func NewMetaData(login, name, tel, pass, date string, photo []byte) *MetaData {
+	return &MetaData{login,name, photo, tel, pass, date}
 }
 
 func MergeData(dataLeft, dataRight MetaData) MetaData {
+	dataLeft.Email = dataRight.Email
 	dataLeft.Password = dataRight.Password
 	dataLeft.Username = dataRight.Username
 	dataLeft.Telephone = dataRight.Telephone
@@ -179,9 +181,9 @@ func (db *DataBase) CheckAuth(login, password string) error {
 func FillDataBase(dataInterface DataInterface) {
 
 	sliceMail := []string{"asdasd@yandex.ru", "123@yandex.ru", "znajderko@yandex.ru"}
-	defData := NewMetaData("TEST", "88005553535", "TEST", "00.00.2000", make([]byte, 16))
 
 	for _, val := range sliceMail {
+		defData := NewMetaData(val,"TEST", "88005553535", "TEST", "00.00.2000", make([]byte, 16))
 		dataInterface.AddUser(val, *defData)
 	}
 
