@@ -352,6 +352,21 @@ func (dh DataHandler) SendCookieAfterSignIn(w http.ResponseWriter, r *http.Reque
 
 }
 
+func (dh DataHandler) GetUser(w http.ResponseWriter, r *http.Request) {
+	fmt.Print("=============GETUSER=============\n")
+	fmt.Println(r)
+	login := r.Header.Get("X-User")
+
+
+	sendData := make([]interface{}, 2)
+	sendData[0] = (dh.dataBase).GetUserDataLogin(login)
+	sendData[1] = []DataBase.Post{post, post, post, post, post}
+
+	SetData(sendData, []string{"user", "feed"}, &w)
+
+
+}
+
 func (dh DataHandler) OkStatusForOptions(w http.ResponseWriter, r *http.Request) {
 	fmt.Print("=============OKSTATUSOPTIONS=============\n")
 	w.WriteHeader(http.StatusOK)
@@ -373,6 +388,7 @@ func main() {
 	server.HandleFunc("/api/v1/settings", api.SettingsGet).Methods("GET")
 	server.HandleFunc("/api/v1/registration", api.SendCookieAfterSignIn).Methods("GET")
 	server.HandleFunc("/api/v1/login", api.SendCookieAfterSignIn).Methods("GET")
+	server.HandleFunc("/api/v1/user", api.GetUser).Methods("GET")
 
 	server.HandleFunc("/api/v1/registration", api.Register).Methods("POST", "OPTIONS")
 	server.HandleFunc("/api/v1/login", api.Login).Methods("POST", "OPTIONS")
@@ -384,7 +400,7 @@ func main() {
 
 	server.HandleFunc("/api/v1/settings", api.OkStatusForOptions).Methods("OPTIONS")
 
-	http.ListenAndServe(":3001", server)
+		http.ListenAndServe(":3001", server)
 
 }
 
