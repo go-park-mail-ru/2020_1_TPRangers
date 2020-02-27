@@ -358,6 +358,22 @@ func (dh DataHandler) OkStatusForOptions(w http.ResponseWriter, r *http.Request)
 	w.WriteHeader(http.StatusOK)
 }
 
+func (dh DataHandler) GetUser(w http.ResponseWriter, r *http.Request) {
+	fmt.Print("=============GETUSER=============\n")
+	fmt.Println(r)
+	login := r.Header.Get("X-User")
+
+
+	sendData := make([]interface{}, 2)
+
+	sendData[0] = (dh.dataBase).GetUserDataLogin(login)
+	sendData[1] = []DataBase.Post{post, post, post, post, post}
+
+	SetData(sendData, []string{"user", "feed"}, &w)
+
+
+}
+
 func main() {
 	fmt.Print("main")
 	server := mux.NewRouter()
@@ -374,6 +390,7 @@ func main() {
 	server.HandleFunc("/api/v1/settings", api.SettingsGet).Methods("GET")
 	server.HandleFunc("/api/v1/registration", api.SendCookieAfterSignIn).Methods("GET")
 	server.HandleFunc("/api/v1/login", api.SendCookieAfterSignIn).Methods("GET")
+	server.HandleFunc("/api/v1/users", api.SendCookieAfterSignIn).Methods("GET")
 
 	server.HandleFunc("/api/v1/registration", api.Register).Methods("POST", "OPTIONS")
 	server.HandleFunc("/api/v1/login", api.Login).Methods("POST", "OPTIONS")
@@ -396,11 +413,10 @@ func SetCorsMiddleware(r *mux.Router) mux.MiddlewareFunc {
 			//TODO: убрать из корса
 			(w).Header().Set("Content-Type", "application/json; charset=utf-8")
 
-			(w).Header().Set("Access-Control-Allow-Origin", "https://social-hub.netlify.com/")
+			(w).Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
 			(w).Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS, PUT, DELETE, POST")
 			(w).Header().Set("Access-Control-Allow-Headers", "Origin, X-Login, Set-Cookie, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, csrf-token, Authorization")
 			(w).Header().Set("Access-Control-Allow-Credentials", "true")
-			w.Header().Set("Vary", "Accept, Cookie")
 
 			next.ServeHTTP(w, req)
 		})
