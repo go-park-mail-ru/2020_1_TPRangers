@@ -1,2 +1,2 @@
 # 2020_1_TPRangers
-Рейнджеры Технопарка (vk.com)
+Проект VK команды TPRangers
