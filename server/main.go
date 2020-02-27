@@ -5,7 +5,7 @@ import (
 	ET "./errors"
 	AP "./json-answers"
 	"encoding/json"
-	"errors"
+	//"errors"
 	"fmt"
 	"github.com/gorilla/mux"
 	"io/ioutil"
@@ -30,7 +30,7 @@ func getDataFromJson(jsonType string,r *http.Request) (data interface{}, errConv
 
 	switch jsonType{
 
-	case "reg" :
+	case "reg","data" :
 		data = new(AP.UserData)
 		decoder.Decode(&data)
 	case "log" :
@@ -95,12 +95,12 @@ func (dh DataHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Print("=============REGISTER=============\n")
 	regData, convertionError := getDataFromJson("reg",r)
-	regData = regData.
+	meta := regData.(*AP.UserData)
 	if convertionError != nil {
 		return
 	}
 
-	login := regData
+	login := meta.Email
 	println(login)
 
 	if dh.dataBase.CheckUser(login) {
@@ -110,7 +110,7 @@ func (dh DataHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := DataBase.NewMetaData(login, mapData["name"].(string), mapData["phone"].(string), mapData["password"].(string), mapData["date"].(string), make([]byte, 0))
+	data := DataBase.NewMetaData(login, meta.Name, meta.Phone, meta.Password, meta.Date, make([]byte, 0))
 	err , info := (dh.dataBase).AddUser(login, *data)
 
 	fmt.Println("login err is : ", err)
@@ -130,14 +130,15 @@ func (dh DataHandler) Register(w http.ResponseWriter, r *http.Request) {
 func (dh DataHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Print("=============Login=============\n")
-	mapData, convertionError := getDataFromJson(r)
+	mapData, convertionError := getDataFromJson("log",r)
+	meta := mapData.(*AP.JsonResponceLogin)
 
 	if convertionError != nil {
 		return
 	}
 
-	login := mapData["login"].(string)
-	password := mapData["password"].(string)
+	login := meta.Login
+	password := meta.Password
 
 	if dh.dataBase.CheckAuth(login,password) != nil {
 		fmt.Println("Doesn't exit")
@@ -324,13 +325,14 @@ func (dh DataHandler) SettingsPost(w http.ResponseWriter, r *http.Request) {
 
 	if login, flag := dh.cookieBase.GetUser(cookie.Value); flag == nil {
 
-		mapData, convertionError := getDataFromJson(r)
+		mapData, convertionError := getDataFromJson("data",r)
+		meta := mapData.(*AP.UserData)
 
 		if convertionError != nil {
 			return
 		}
 
-		newData := *DataBase.NewMetaData(login, mapData["name"].(string), mapData["phone"].(string), mapData["password"].(string), mapData["date"].(string), make([]byte, 0))
+		newData := *DataBase.NewMetaData(login, meta.Name, meta.Phone, meta.Password, meta.Date, make([]byte, 0))
 		newData = DataBase.MergeData(dh.dataBase.GetUserDataLogin(login), newData)
 		dh.dataBase.EditUser(login, newData)
 
