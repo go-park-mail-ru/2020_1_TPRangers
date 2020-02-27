@@ -274,8 +274,9 @@ func (dh DataHandler) SettingsGet(w http.ResponseWriter, r *http.Request) {
 
 		sendData[0] = true
 		sendData[1] = (dh.dataBase).GetUserDataLogin(login)
+		sendData[2] = login
 
-		SetData(sendData, []string{"isAuth", "user"}, &w)
+		SetData(sendData, []string{"isAuth", "user","login"}, &w)
 
 	} else {
 		fmt.Println(ET.WrongCookie)
@@ -313,8 +314,9 @@ func (dh DataHandler) SettingsPost(w http.ResponseWriter, r *http.Request) {
 
 		sendData[0] = true
 		sendData[1] = newData
+		sendData[2] = login
 
-		SetData(sendData, []string{"isAuth", "user"}, &w)
+		SetData(sendData, []string{"isAuth", "user","login"}, &w)
 
 	} else {
 		SetErrors([]string{ET.WrongCookie}, http.StatusBadRequest, &w)
