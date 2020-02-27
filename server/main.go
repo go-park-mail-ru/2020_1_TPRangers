@@ -97,7 +97,7 @@ func (dh DataHandler) Register(w http.ResponseWriter, r *http.Request) {
 	login := mapData["email"].(string)
 	println(login)
 
-	data := DataBase.NewMetaData(login,mapData["name"].(string), mapData["phone"].(string), mapData["password"].(string), mapData["date"].(string), make([]byte, 0))
+	data := DataBase.NewMetaData(login, mapData["name"].(string), mapData["phone"].(string), mapData["password"].(string), mapData["date"].(string), make([]byte, 0))
 	if err, info := (dh.dataBase).AddUser(login, *data); err == nil {
 
 		sendData := make([]interface{}, 2)
@@ -167,9 +167,20 @@ func (dh DataHandler) PhotoUpload(w http.ResponseWriter, r *http.Request) {
 
 	if login, flag := dh.cookieBase.GetUser(cookie.Value); flag == nil {
 
-		r.ParseMultipartForm(FileMaxSize)
+		err := r.ParseMultipartForm(FileMaxSize)
 
+		if err != nil {
+			fmt.Println(err)
+			w.WriteHeader(http.StatusBadRequest)
+			SetErrors([]string{ET.FileError}, http.StatusBadRequest, &w)
+			return
+		}
+
+		fmt.Println(r)
 		file, _, err := r.FormFile("uploadedFile")
+		fmt.Println(r.Body)
+		defer r.Body.Close()
+		fmt.Println(file, err)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			SetErrors([]string{ET.FileError}, http.StatusBadRequest, &w)
@@ -228,7 +239,6 @@ func (dh DataHandler) Profile(w http.ResponseWriter, r *http.Request) {
 		SetErrors([]string{ET.WrongCookie}, http.StatusBadRequest, &w)
 		return
 	}
-
 
 }
 
@@ -307,7 +317,7 @@ func (dh DataHandler) SettingsPost(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		newData := *DataBase.NewMetaData(login,mapData["name"].(string), mapData["phone"].(string), mapData["password"].(string), mapData["date"].(string), make([]byte, 0))
+		newData := *DataBase.NewMetaData(login, mapData["name"].(string), mapData["phone"].(string), mapData["password"].(string), mapData["date"].(string), make([]byte, 0))
 		newData = DataBase.MergeData(dh.dataBase.GetUserDataLogin(login), newData)
 		dh.dataBase.EditUser(login, newData)
 
@@ -339,7 +349,7 @@ func (dh DataHandler) SendCookieAfterSignIn(w http.ResponseWriter, r *http.Reque
 
 }
 
-func (dh DataHandler) OkStatusForOptions(w http.ResponseWriter, r *http.Request){
+func (dh DataHandler) OkStatusForOptions(w http.ResponseWriter, r *http.Request) {
 	fmt.Print("=============OKSTATUSOPTIONS=============\n")
 	w.WriteHeader(http.StatusOK)
 }
@@ -369,7 +379,7 @@ func main() {
 
 	server.HandleFunc("/settings", api.PhotoUpload).Methods("PUT")
 
-	server.HandleFunc("/settings",api.OkStatusForOptions).Methods("OPTIONS")
+	server.HandleFunc("/settings", api.OkStatusForOptions).Methods("OPTIONS")
 
 	http.ListenAndServe(":3001", server)
 
