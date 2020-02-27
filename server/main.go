@@ -369,21 +369,21 @@ func main() {
 	api := &(DataHandler{dataBase: db, cookieBase: cb})
 	DataBase.FillDataBase(db)
 
-	server.HandleFunc("/news", api.Feed).Methods("GET", "OPTIONS")
-	server.HandleFunc("/profile", api.Profile).Methods("GET", "OPTIONS")
-	server.HandleFunc("/settings", api.SettingsGet).Methods("GET")
-	server.HandleFunc("/registration", api.SendCookieAfterSignIn).Methods("GET")
+	server.HandleFunc("/api/v1/news", api.Feed).Methods("GET", "OPTIONS")
+	server.HandleFunc("/api/v1/profile", api.Profile).Methods("GET", "OPTIONS")
+	server.HandleFunc("/api/v1/settings", api.SettingsGet).Methods("GET")
+	server.HandleFunc("/api/v1/registration", api.SendCookieAfterSignIn).Methods("GET")
+	server.HandleFunc("/api/v1/login", api.SendCookieAfterSignIn).Methods("GET")
 
-	server.HandleFunc("/registration", api.Register).Methods("POST", "OPTIONS")
-	server.HandleFunc("/login", api.Login).Methods("POST", "OPTIONS")
-	server.HandleFunc("/login", api.SendCookieAfterSignIn).Methods("GET")
-	server.HandleFunc("/settings", api.SettingsPost).Methods("POST")
+	server.HandleFunc("/api/v1/registration", api.Register).Methods("POST", "OPTIONS")
+	server.HandleFunc("/api/v1/login", api.Login).Methods("POST", "OPTIONS")
+	server.HandleFunc("/api/v1/settings", api.SettingsPost).Methods("POST")
 
-	server.HandleFunc("/login", api.Logout).Methods("DELETE", "OPTIONS")
+	server.HandleFunc("/api/v1/login", api.Logout).Methods("DELETE", "OPTIONS")
 
-	server.HandleFunc("/settings", api.PhotoUpload).Methods("PUT")
+	server.HandleFunc("/api/v1/settings", api.PhotoUpload).Methods("PUT")
 
-	server.HandleFunc("/settings", api.OkStatusForOptions).Methods("OPTIONS")
+	server.HandleFunc("/api/v1/settings", api.OkStatusForOptions).Methods("OPTIONS")
 
 	http.ListenAndServe(":3001", server)
 
