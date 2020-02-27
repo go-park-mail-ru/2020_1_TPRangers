@@ -8,10 +8,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gorilla/mux"
-	"io"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"time"
 
 	// "time"
@@ -183,14 +181,6 @@ func (dh DataHandler) PhotoUpload(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(r)
 		file, _, err := r.FormFile("uploadedFile")
 
-
-		f , err := os.OpenFile("./media/set.txt",os.O_WRONLY|os.O_CREATE,0666)
-
-		defer f.Close()
-		_ , err = io.Copy(f,file)
-		if err != nil {
-			fmt.Println(err)
-		}
 
 		fmt.Println(r.Body)
 		defer r.Body.Close()
