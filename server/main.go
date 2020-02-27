@@ -335,6 +335,11 @@ func (dh DataHandler) SendCookieAfterSignIn(w http.ResponseWriter, r *http.Reque
 
 }
 
+func (dh DataHandler) OkStatusForOptions(w http.ResponseWriter, r *http.Request){
+
+	w.WriteHeader(http.StatusOK)
+}
+
 func main() {
 	fmt.Print("main")
 	server := mux.NewRouter()
@@ -348,17 +353,19 @@ func main() {
 
 	server.HandleFunc("/news", api.Feed).Methods("GET", "OPTIONS")
 	server.HandleFunc("/profile", api.Profile).Methods("GET", "OPTIONS")
-	server.HandleFunc("/settings", api.SettingsGet).Methods("GET", "OPTIONS")
+	server.HandleFunc("/settings", api.SettingsGet).Methods("GET")
 	server.HandleFunc("/registration", api.SendCookieAfterSignIn).Methods("GET")
 
 	server.HandleFunc("/registration", api.Register).Methods("POST", "OPTIONS")
 	server.HandleFunc("/login", api.Login).Methods("POST", "OPTIONS")
 	server.HandleFunc("/login", api.SendCookieAfterSignIn).Methods("GET")
-	server.HandleFunc("/settings", api.SettingsPost).Methods("POST", "OPTIONS")
+	server.HandleFunc("/settings", api.SettingsPost).Methods("POST")
 
 	server.HandleFunc("/login", api.Logout).Methods("DELETE", "OPTIONS")
 
-	server.HandleFunc("/settings", api.PhotoUpload).Methods("PUT", "OPTIONS")
+	server.HandleFunc("/settings", api.PhotoUpload).Methods("PUT")
+
+	server.HandleFunc("/settings",api.OkStatusForOptions).Methods("OPTIONS")
 
 	http.ListenAndServe(":3001", server)
 
