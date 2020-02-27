@@ -203,28 +203,30 @@ func (dh DataHandler) PhotoUpload(w http.ResponseWriter, r *http.Request) {
 
 func (dh DataHandler) Profile(w http.ResponseWriter, r *http.Request) {
 	fmt.Print("=============Profile=============\n")
-	cookie, _ := r.Cookie("session_id")
+	cookie, err := r.Cookie("session_id")
+
+	if err == http.ErrNoCookie {
+		fmt.Print(err, "\n")
+		SetErrors([]string{ET.CookieExpiredError,}, http.StatusBadRequest, &w)
+		return
+	}
+
 	if login, flag := dh.cookieBase.GetUser(cookie.Value); flag == nil {
-
-		mapData, convertionError := getDataFromJson(r)
-
-		if convertionError != nil {
-			return
-		}
-		newData := *DataBase.NewMetaData(mapData["name"].(string), mapData["phone"].(string), mapData["password"].(string), mapData["date"].(string), make([]byte, 0))
-		newData = DataBase.MergeData(dh.dataBase.GetUserDataLogin(login), newData)
 
 		sendData := make([]interface{}, 3)
 
 		sendData[0] = true
-		sendData[1] = newData
-		sendData[2] = post
+		sendData[1] = (dh.dataBase).GetUserDataLogin(login)
+		sendData[2] = []DataBase.Post{post, post, post, post, post}
 
-		SetData(sendData, []string{"isAuth", "user", "feeds"}, &w)
+		SetData(sendData, []string{"isAuth", "user", "feed"}, &w)
+
 	} else {
+		fmt.Println(ET.WrongCookie)
 		SetErrors([]string{ET.WrongCookie}, http.StatusBadRequest, &w)
 		return
 	}
+
 
 }
 
@@ -338,7 +340,7 @@ func main() {
 	server := mux.NewRouter()
 	db := DataBase.NewDataBase()
 	cb := DataBase.NewCookieBase()
-
+	fmt.Printf("%T", post)
 	server.Use(SetCorsMiddleware(server))
 
 	api := &(DataHandler{dataBase: db, cookieBase: cb})
