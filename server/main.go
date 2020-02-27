@@ -12,7 +12,6 @@ import (
 	"net/http"
 	"time"
 
-	// "time"
 )
 
 var FileMaxSize = int64(5 * 1024 * 1024)
@@ -62,12 +61,12 @@ func SetData(data []interface{}, jsonType []string, w *http.ResponseWriter) {
 	for i, val := range jsonType {
 		switch val {
 
-		case "isAuth":
-			answer[val] = data[i].(bool)
 		case "user":
 			answer[val] = data[i].(DataBase.MetaData)
 		case "feed":
 			answer[val] = data[i].([]DataBase.Post)
+
+		// TODO : change case
 		case "login":
 			answer[val] = data[i].(string)
 
@@ -100,12 +99,13 @@ func (dh DataHandler) Register(w http.ResponseWriter, r *http.Request) {
 	data := DataBase.NewMetaData(login, mapData["name"].(string), mapData["phone"].(string), mapData["password"].(string), mapData["date"].(string), make([]byte, 0))
 	if err, info := (dh.dataBase).AddUser(login, *data); err == nil {
 
-		sendData := make([]interface{}, 2)
+		sendData := make([]interface{}, 1)
 
-		sendData[0] = true
-		sendData[1] = info
+		sendData[0] = info
+		SetData(sendData, []string{"user"}, &w)
 
-		SetData(sendData, []string{"isAuth", "user"}, &w)
+		cookie := (dh.cookieBase).SetCookie(login)
+		SetCookie(&w, cookie)
 
 	} else {
 		SetErrors([]string{ET.AlreadyExistError}, http.StatusBadRequest, &w)
@@ -134,8 +134,9 @@ func (dh DataHandler) Login(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("OK")
 	}
 
-	json.NewEncoder(w).Encode(&AP.JsonStruct{Body: "Authorised"})
-	(w).WriteHeader(http.StatusOK)
+	cookie := (dh.cookieBase).SetCookie(login)
+	SetCookie(&w, cookie)
+	w.WriteHeader(http.StatusOK)
 
 }
 
@@ -150,7 +151,7 @@ func (dh DataHandler) Logout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	(w).WriteHeader(http.StatusOK)
+	w.WriteHeader(http.StatusOK)
 	cookie.Expires = time.Now().AddDate(0, 0, -1)
 	http.SetCookie(w, cookie)
 }
@@ -203,12 +204,11 @@ func (dh DataHandler) PhotoUpload(w http.ResponseWriter, r *http.Request) {
 		userData.Photo = photoByte
 		dh.dataBase.EditUser(login, userData)
 
-		sendData := make([]interface{}, 2)
+		sendData := make([]interface{}, 1)
 
-		sendData[0] = true
-		sendData[1] = DataBase.MetaData{}
+		sendData[0] = DataBase.MetaData{}
 
-		SetData(sendData, []string{"isAuth", "user"}, &w)
+		SetData(sendData, []string{"user"}, &w)
 
 	} else {
 		SetErrors([]string{ET.WrongCookie}, http.StatusBadRequest, &w)
@@ -229,13 +229,12 @@ func (dh DataHandler) Profile(w http.ResponseWriter, r *http.Request) {
 
 	if login, flag := dh.cookieBase.GetUser(cookie.Value); flag == nil {
 
-		sendData := make([]interface{}, 3)
+		sendData := make([]interface{}, 2)
 
-		sendData[0] = true
-		sendData[1] = (dh.dataBase).GetUserDataLogin(login)
-		sendData[2] = []DataBase.Post{post, post, post, post, post}
+		sendData[0] = (dh.dataBase).GetUserDataLogin(login)
+		sendData[1] = []DataBase.Post{post, post, post, post, post}
 
-		SetData(sendData, []string{"isAuth", "user", "feed"}, &w)
+		SetData(sendData, []string{"user", "feed"}, &w)
 
 	} else {
 		fmt.Println(ET.WrongCookie)
@@ -258,12 +257,11 @@ func (dh DataHandler) Feed(w http.ResponseWriter, r *http.Request) {
 
 	if _, flag := dh.cookieBase.GetUser(cookie.Value); flag == nil {
 
-		sendData := make([]interface{}, 2)
+		sendData := make([]interface{}, 1)
 
-		sendData[0] = true
-		sendData[1] = []DataBase.Post{post, post, post, post, post}
+		sendData[0] = []DataBase.Post{post, post, post, post, post}
 
-		SetData(sendData, []string{"isAuth", "feed"}, &w)
+		SetData(sendData, []string{"feed"}, &w)
 
 	} else {
 		SetErrors([]string{ET.WrongCookie}, http.StatusBadRequest, &w)
@@ -285,12 +283,11 @@ func (dh DataHandler) SettingsGet(w http.ResponseWriter, r *http.Request) {
 
 	if login, flag := dh.cookieBase.GetUser(cookie.Value); flag == nil {
 
-		sendData := make([]interface{}, 2)
+		sendData := make([]interface{}, 1)
 
-		sendData[0] = true
-		sendData[1] = (dh.dataBase).GetUserDataLogin(login)
+		sendData[0] = (dh.dataBase).GetUserDataLogin(login)
 
-		SetData(sendData, []string{"isAuth", "user"}, &w)
+		SetData(sendData, []string{"user"}, &w)
 
 	} else {
 		fmt.Println(ET.WrongCookie)
@@ -324,12 +321,11 @@ func (dh DataHandler) SettingsPost(w http.ResponseWriter, r *http.Request) {
 		newData = DataBase.MergeData(dh.dataBase.GetUserDataLogin(login), newData)
 		dh.dataBase.EditUser(login, newData)
 
-		sendData := make([]interface{}, 2)
+		sendData := make([]interface{}, 1)
 
-		sendData[0] = true
-		sendData[1] = newData
+		sendData[0] = newData
 
-		SetData(sendData, []string{"isAuth", "user"}, &w)
+		SetData(sendData, []string{"user"}, &w)
 
 		fmt.Println(w)
 
@@ -340,23 +336,10 @@ func (dh DataHandler) SettingsPost(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (dh DataHandler) SendCookieAfterSignIn(w http.ResponseWriter, r *http.Request) {
-	fmt.Print("=============SendCookieAfterSignIn=============\n")
-	fmt.Println(r)
-	login := r.Header.Get("X-Login")
-	fmt.Println(*r)
-	fmt.Println("Login is", login)
-
-	cookie := (dh.cookieBase).SetCookie(login)
-	SetCookie(&w, cookie)
-
-}
-
 func (dh DataHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 	fmt.Print("=============GETUSER=============\n")
 	fmt.Println(r)
 	login := r.Header.Get("X-User")
-
 
 	sendData := make([]interface{}, 2)
 	sendData[0] = (dh.dataBase).GetUserDataLogin(login)
@@ -364,13 +347,8 @@ func (dh DataHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 
 	SetData(sendData, []string{"user", "feed"}, &w)
 
-
 }
 
-func (dh DataHandler) OkStatusForOptions(w http.ResponseWriter, r *http.Request) {
-	fmt.Print("=============OKSTATUSOPTIONS=============\n")
-	w.WriteHeader(http.StatusOK)
-}
 
 func main() {
 	fmt.Print("main")
@@ -383,22 +361,19 @@ func main() {
 	api := &(DataHandler{dataBase: db, cookieBase: cb})
 	DataBase.FillDataBase(db)
 
-	server.HandleFunc("/api/v1/news", api.Feed).Methods("GET", "OPTIONS")
-	server.HandleFunc("/api/v1/profile", api.Profile).Methods("GET", "OPTIONS")
-	server.HandleFunc("/api/v1/settings", api.SettingsGet).Methods("GET")
-	server.HandleFunc("/api/v1/registration", api.SendCookieAfterSignIn).Methods("GET")
-	server.HandleFunc("/api/v1/login", api.SendCookieAfterSignIn).Methods("GET")
-	server.HandleFunc("/api/v1/user", api.GetUser).Methods("GET")
+	server.HandleFunc("/api/v1/news", api.Feed).Methods("GET","OPTIONS")
+	server.HandleFunc("/api/v1/profile", api.Profile).Methods("GET","OPTIONS")
+	server.HandleFunc("/api/v1/settings", api.SettingsGet).Methods("GET","OPTIONS")
+	server.HandleFunc("/api/v1/user", api.GetUser).Methods("GET","OPTIONS")
 
-	server.HandleFunc("/api/v1/registration", api.Register).Methods("POST", "OPTIONS")
-	server.HandleFunc("/api/v1/login", api.Login).Methods("POST", "OPTIONS")
-	server.HandleFunc("/api/v1/settings", api.SettingsPost).Methods("POST")
+	server.HandleFunc("/api/v1/registration", api.Register).Methods("POST","OPTIONS")
+	server.HandleFunc("/api/v1/login", api.Login).Methods("POST","OPTIONS")
+	server.HandleFunc("/api/v1/settings", api.SettingsPost).Methods("POST","OPTIONS")
 
-	server.HandleFunc("/api/v1/login", api.Logout).Methods("DELETE", "OPTIONS")
+	server.HandleFunc("/api/v1/login", api.Logout).Methods("DELETE","OPTIONS")
 
-	server.HandleFunc("/api/v1/settings", api.PhotoUpload).Methods("PUT")
+	server.HandleFunc("/api/v1/settings", api.PhotoUpload).Methods("PUT","OPTIONS")
 
-	server.HandleFunc("/api/v1/settings", api.OkStatusForOptions).Methods("OPTIONS")
 
 	http.ListenAndServe(":3001", server)
 
@@ -409,12 +384,17 @@ func SetCorsMiddleware(r *mux.Router) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 			//TODO: убрать из корса
-			(w).Header().Set("Content-Type", "application/json; charset=utf-8")
+			w.Header().Set("Content-Type", "application/json; charset=utf-8")
 
-			(w).Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
-			(w).Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS, PUT, DELETE, POST")
-			(w).Header().Set("Access-Control-Allow-Headers", "Origin, X-Login, Set-Cookie, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, csrf-token, Authorization")
-			(w).Header().Set("Access-Control-Allow-Credentials", "true")
+			w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+			w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS, PUT, DELETE, POST")
+			w.Header().Set("Access-Control-Allow-Headers", "Origin, X-Login, Set-Cookie, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, csrf-token, Authorization")
+			w.Header().Set("Access-Control-Allow-Credentials", "true")
+
+			if req.Method == http.MethodOptions{
+				w.WriteHeader(http.StatusOK)
+				return 
+			}
 
 			next.ServeHTTP(w, req)
 		})
