@@ -11,7 +11,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"time"
-
 )
 
 var FileMaxSize = int64(5 * 1024 * 1024)
@@ -85,7 +84,6 @@ func SetErrors(err []string, status int, w *http.ResponseWriter) {
 
 func (dh DataHandler) Register(w http.ResponseWriter, r *http.Request) {
 
-	// тут получение данных с сервера
 	fmt.Print("=============REGISTER=============\n")
 	mapData, convertionError := getDataFromJson(r)
 
@@ -96,21 +94,27 @@ func (dh DataHandler) Register(w http.ResponseWriter, r *http.Request) {
 	login := mapData["email"].(string)
 	println(login)
 
-	data := DataBase.NewMetaData(login, mapData["name"].(string), mapData["phone"].(string), mapData["password"].(string), mapData["date"].(string), make([]byte, 0))
-	if err, info := (dh.dataBase).AddUser(login, *data); err == nil {
+	if dh.dataBase.CheckUser(login) {
+		fmt.Println("already registered!")
 
-		sendData := make([]interface{}, 1)
-
-		sendData[0] = info
-		SetData(sendData, []string{"user"}, &w)
-
-		cookie := (dh.cookieBase).SetCookie(login)
-		SetCookie(&w, cookie)
-
-	} else {
 		SetErrors([]string{ET.AlreadyExistError}, http.StatusBadRequest, &w)
 		return
 	}
+
+	data := DataBase.NewMetaData(login, mapData["name"].(string), mapData["phone"].(string), mapData["password"].(string), mapData["date"].(string), make([]byte, 0))
+	err , info := (dh.dataBase).AddUser(login, *data)
+
+	fmt.Println("login err is : ", err)
+
+	sendData := make([]interface{}, 1)
+
+	cookie := (dh.cookieBase).SetCookie(login)
+	SetCookie(&w, cookie)
+
+	sendData[0] = info
+	SetData(sendData, []string{"user"}, &w)
+
+	fmt.Println("sucsessfully registered user :", info)
 
 }
 
@@ -126,7 +130,7 @@ func (dh DataHandler) Login(w http.ResponseWriter, r *http.Request) {
 	login := mapData["login"].(string)
 	password := mapData["password"].(string)
 
-	if !dh.dataBase.CheckUser(login) || password != dh.dataBase.GetPasswordByLogin(login) {
+	if dh.dataBase.CheckAuth(login,password) != nil {
 		fmt.Println("Doesn't exit")
 		SetErrors([]string{ET.WrongLogin}, http.StatusBadRequest, &w)
 		return
@@ -349,7 +353,6 @@ func (dh DataHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 
 }
 
-
 func main() {
 	fmt.Print("main")
 	server := mux.NewRouter()
@@ -361,19 +364,18 @@ func main() {
 	api := &(DataHandler{dataBase: db, cookieBase: cb})
 	DataBase.FillDataBase(db)
 
-	server.HandleFunc("/api/v1/news", api.Feed).Methods("GET","OPTIONS")
-	server.HandleFunc("/api/v1/profile", api.Profile).Methods("GET","OPTIONS")
-	server.HandleFunc("/api/v1/settings", api.SettingsGet).Methods("GET","OPTIONS")
-	server.HandleFunc("/api/v1/user", api.GetUser).Methods("GET","OPTIONS")
+	server.HandleFunc("/api/v1/news", api.Feed).Methods("GET", "OPTIONS")
+	server.HandleFunc("/api/v1/profile", api.Profile).Methods("GET", "OPTIONS")
+	server.HandleFunc("/api/v1/settings", api.SettingsGet).Methods("GET", "OPTIONS")
+	server.HandleFunc("/api/v1/user", api.GetUser).Methods("GET", "OPTIONS")
 
-	server.HandleFunc("/api/v1/registration", api.Register).Methods("POST","OPTIONS")
-	server.HandleFunc("/api/v1/login", api.Login).Methods("POST","OPTIONS")
-	server.HandleFunc("/api/v1/settings", api.SettingsPost).Methods("POST","OPTIONS")
+	server.HandleFunc("/api/v1/registration", api.Register).Methods("POST", "OPTIONS")
+	server.HandleFunc("/api/v1/login", api.Login).Methods("POST", "OPTIONS")
+	server.HandleFunc("/api/v1/settings", api.SettingsPost).Methods("POST", "OPTIONS")
 
-	server.HandleFunc("/api/v1/login", api.Logout).Methods("DELETE","OPTIONS")
+	server.HandleFunc("/api/v1/login", api.Logout).Methods("DELETE", "OPTIONS")
 
-	server.HandleFunc("/api/v1/settings", api.PhotoUpload).Methods("PUT","OPTIONS")
-
+	server.HandleFunc("/api/v1/settings", api.PhotoUpload).Methods("PUT", "OPTIONS")
 
 	http.ListenAndServe(":3001", server)
 
@@ -390,10 +392,11 @@ func SetCorsMiddleware(r *mux.Router) mux.MiddlewareFunc {
 			w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS, PUT, DELETE, POST")
 			w.Header().Set("Access-Control-Allow-Headers", "Origin, X-Login, Set-Cookie, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, csrf-token, Authorization")
 			w.Header().Set("Access-Control-Allow-Credentials", "true")
+			w.Header().Set("Vary", "Cookie")
 
-			if req.Method == http.MethodOptions{
+			if req.Method == http.MethodOptions {
 				w.WriteHeader(http.StatusOK)
-				return 
+				return
 			}
 
 			next.ServeHTTP(w, req)
