@@ -160,6 +160,8 @@ func (dh DataHandler) PhotoUpload(w http.ResponseWriter, r *http.Request) {
 
 	cookie, err := r.Cookie("session_id")
 
+	fmt.Println(r)
+
 	if err == http.ErrNoCookie {
 		SetErrors([]string{ET.CookieExpiredError}, http.StatusBadRequest, &w)
 		return
