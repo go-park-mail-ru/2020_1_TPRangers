@@ -22,24 +22,33 @@ type DataHandler struct {
 	cookieBase DataBase.CookieInterface
 }
 
-func getDataFromJson(r *http.Request) (data map[string]interface{}, errConvert error) {
+func getDataFromJson(jsonType string,r *http.Request) (data interface{}, errConvert error) {
 
 	decoder := json.NewDecoder(r.Body)
 	defer r.Body.Close()
 
-	var userData AP.JsonStruct
-	decoder.Decode(&userData)
 
-	defer func() {
+	switch jsonType{
 
-		if err := recover(); err != nil {
-			data = make(map[string]interface{})
-			errConvert = errors.New("decode err")
-		}
+	case "reg" :
+		data = new(AP.UserData)
+		decoder.Decode(&data)
+	case "log" :
+		data = new(AP.JsonResponceLogin)
+		decoder.Decode(&data)
+	}
 
-	}()
+	//defer func() {
+	//
+	//	if err := recover(); err != nil {
+	//		data = make(map[string]interface{})
+	//		errConvert = errors.New("decode err")
+	//	}
+	//
+	//}()
 
-	return userData.Body.([]interface{})[0].(map[string]interface{}), nil
+	errConvert = nil
+	return
 }
 
 func SetCookie(w *http.ResponseWriter, cookieValue string) {
@@ -85,13 +94,13 @@ func SetErrors(err []string, status int, w *http.ResponseWriter) {
 func (dh DataHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Print("=============REGISTER=============\n")
-	mapData, convertionError := getDataFromJson(r)
-
+	regData, convertionError := getDataFromJson("reg",r)
+	regData = regData.
 	if convertionError != nil {
 		return
 	}
 
-	login := mapData["email"].(string)
+	login := regData
 	println(login)
 
 	if dh.dataBase.CheckUser(login) {
