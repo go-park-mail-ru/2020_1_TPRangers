@@ -181,7 +181,6 @@ func (dh DataHandler) PhotoUpload(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(r)
 		file, _, err := r.FormFile("uploadedFile")
 
-
 		fmt.Println(r.Body)
 		defer r.Body.Close()
 		fmt.Println(file, err)
@@ -393,11 +392,13 @@ func SetCorsMiddleware(r *mux.Router) mux.MiddlewareFunc {
 
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-			(w).Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
-			(w).Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS, PUT, DELETE")
+			//TODO: убрать из корса
+			(w).Header().Set("Content-Type", "application/json; charset=utf-8")
+
+			(w).Header().Set("Access-Control-Allow-Origin", "https://social-hub.netlify.com")
+			(w).Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS, PUT, POST, DELETE")
 			(w).Header().Set("Access-Control-Allow-Headers", "Origin, X-Login, Set-Cookie, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, csrf-token, Authorization")
 			(w).Header().Set("Access-Control-Allow-Credentials", "true")
-			(w).Header().Set("Content-Type", "*")
 			w.Header().Set("Vary", "Accept, Cookie")
 
 			next.ServeHTTP(w, req)
