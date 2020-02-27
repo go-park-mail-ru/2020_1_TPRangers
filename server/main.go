@@ -68,6 +68,8 @@ func SetData(data []interface{}, jsonType []string, w *http.ResponseWriter) {
 			answer[val] = data[i].(DataBase.MetaData)
 		case "feed":
 			answer[val] = data[i].([]DataBase.Post)
+		case "login":
+			answer[val] = data[i].(string)
 
 		}
 	}
@@ -270,7 +272,7 @@ func (dh DataHandler) SettingsGet(w http.ResponseWriter, r *http.Request) {
 
 	if login, flag := dh.cookieBase.GetUser(cookie.Value); flag == nil {
 
-		sendData := make([]interface{}, 2)
+		sendData := make([]interface{}, 3)
 
 		sendData[0] = true
 		sendData[1] = (dh.dataBase).GetUserDataLogin(login)
@@ -310,13 +312,15 @@ func (dh DataHandler) SettingsPost(w http.ResponseWriter, r *http.Request) {
 		newData = DataBase.MergeData(dh.dataBase.GetUserDataLogin(login), newData)
 		dh.dataBase.EditUser(login, newData)
 
-		sendData := make([]interface{}, 2)
+		sendData := make([]interface{}, 3)
 
 		sendData[0] = true
 		sendData[1] = newData
 		sendData[2] = login
 
 		SetData(sendData, []string{"isAuth", "user","login"}, &w)
+
+		fmt.Println(w)
 
 	} else {
 		SetErrors([]string{ET.WrongCookie}, http.StatusBadRequest, &w)
@@ -338,7 +342,7 @@ func (dh DataHandler) SendCookieAfterSignIn(w http.ResponseWriter, r *http.Reque
 }
 
 func (dh DataHandler) OkStatusForOptions(w http.ResponseWriter, r *http.Request){
-
+	fmt.Print("=============OKSTATUSOPTIONS=============\n")
 	w.WriteHeader(http.StatusOK)
 }
 
