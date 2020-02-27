@@ -400,7 +400,7 @@ func main() {
 
 	server.HandleFunc("/api/v1/settings", api.OkStatusForOptions).Methods("OPTIONS")
 
-		http.ListenAndServe(":3001", server)
+	http.ListenAndServe(":3001", server)
 
 }
 
@@ -411,11 +411,10 @@ func SetCorsMiddleware(r *mux.Router) mux.MiddlewareFunc {
 			//TODO: убрать из корса
 			(w).Header().Set("Content-Type", "application/json; charset=utf-8")
 
-			(w).Header().Set("Access-Control-Allow-Origin", "https://social-hub.netlify.com")
-			(w).Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS, PUT, POST, DELETE")
+			(w).Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+			(w).Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS, PUT, DELETE, POST")
 			(w).Header().Set("Access-Control-Allow-Headers", "Origin, X-Login, Set-Cookie, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, csrf-token, Authorization")
 			(w).Header().Set("Access-Control-Allow-Credentials", "true")
-			w.Header().Set("Vary", "Accept, Cookie")
 
 			next.ServeHTTP(w, req)
 		})
