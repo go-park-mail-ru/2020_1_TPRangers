@@ -38,15 +38,6 @@ func getDataFromJson(jsonType string,r *http.Request) (data interface{}, errConv
 		decoder.Decode(&data)
 	}
 
-	//defer func() {
-	//
-	//	if err := recover(); err != nil {
-	//		data = make(map[string]interface{})
-	//		errConvert = errors.New("decode err")
-	//	}
-	//
-	//}()
-
 	errConvert = nil
 	return
 }
@@ -106,7 +97,7 @@ func (dh DataHandler) Register(w http.ResponseWriter, r *http.Request) {
 	if dh.dataBase.CheckUser(login) {
 		fmt.Println("already registered!")
 
-		SetErrors([]string{ET.AlreadyExistError}, http.StatusBadRequest, &w)
+		SetErrors([]string{ET.AlreadyExistError}, http.StatusConflict, &w)
 		return
 	}
 
@@ -115,13 +106,10 @@ func (dh DataHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Println("login err is : ", err)
 
-	sendData := make([]interface{}, 1)
-
 	cookie := (dh.cookieBase).SetCookie(login)
 	SetCookie(&w, cookie)
 
-	sendData[0] = info
-	SetData(sendData, []string{"user"}, &w)
+	w.WriteHeader(http.StatusOK)
 
 	fmt.Println("sucsessfully registered user :", info)
 
@@ -142,7 +130,7 @@ func (dh DataHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 	if dh.dataBase.CheckAuth(login,password) != nil {
 		fmt.Println("Doesn't exit")
-		SetErrors([]string{ET.WrongLogin}, http.StatusBadRequest, &w)
+		SetErrors([]string{ET.WrongLogin}, http.StatusUnauthorized, &w)
 		return
 	} else {
 		fmt.Println("OK")
@@ -160,8 +148,7 @@ func (dh DataHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("session_id")
 
 	if err == http.ErrNoCookie {
-		fmt.Print(err, "\n")
-		SetErrors([]string{ET.CookieExpiredError,}, http.StatusBadRequest, &w)
+		w.WriteHeader(http.StatusOK)
 		return
 	}
 
@@ -178,7 +165,7 @@ func (dh DataHandler) PhotoUpload(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(r)
 
 	if err == http.ErrNoCookie {
-		SetErrors([]string{ET.CookieExpiredError}, http.StatusBadRequest, &w)
+		SetErrors([]string{ET.CookieExpiredError}, http.StatusUnauthorized, &w)
 		return
 	}
 
@@ -188,7 +175,6 @@ func (dh DataHandler) PhotoUpload(w http.ResponseWriter, r *http.Request) {
 
 		if err != nil {
 			fmt.Println(err)
-			w.WriteHeader(http.StatusBadRequest)
 			SetErrors([]string{ET.FileError}, http.StatusBadRequest, &w)
 			return
 		}
@@ -225,7 +211,8 @@ func (dh DataHandler) PhotoUpload(w http.ResponseWriter, r *http.Request) {
 		SetData(sendData, []string{"user"}, &w)
 
 	} else {
-		SetErrors([]string{ET.WrongCookie}, http.StatusBadRequest, &w)
+		cookie.Expires = time.Now().AddDate(0, 0, -1)
+		SetErrors([]string{ET.WrongCookie}, http.StatusUnauthorized, &w)
 		return
 
 	}
@@ -237,7 +224,7 @@ func (dh DataHandler) Profile(w http.ResponseWriter, r *http.Request) {
 
 	if err == http.ErrNoCookie {
 		fmt.Print(err, "\n")
-		SetErrors([]string{ET.CookieExpiredError,}, http.StatusBadRequest, &w)
+		SetErrors([]string{ET.CookieExpiredError,}, http.StatusUnauthorized, &w)
 		return
 	}
 
@@ -251,8 +238,8 @@ func (dh DataHandler) Profile(w http.ResponseWriter, r *http.Request) {
 		SetData(sendData, []string{"user", "feed"}, &w)
 
 	} else {
-		fmt.Println(ET.WrongCookie)
-		SetErrors([]string{ET.WrongCookie}, http.StatusBadRequest, &w)
+		cookie.Expires = time.Now().AddDate(0, 0, -1)
+		SetErrors([]string{ET.WrongCookie}, http.StatusUnauthorized, &w)
 		return
 	}
 
@@ -265,7 +252,7 @@ func (dh DataHandler) Feed(w http.ResponseWriter, r *http.Request) {
 
 	if err == http.ErrNoCookie {
 		fmt.Print(err, "\n")
-		SetErrors([]string{ET.CookieExpiredError}, http.StatusBadRequest, &w)
+		SetErrors([]string{ET.CookieExpiredError}, http.StatusUnauthorized, &w)
 		return
 	}
 
@@ -278,7 +265,8 @@ func (dh DataHandler) Feed(w http.ResponseWriter, r *http.Request) {
 		SetData(sendData, []string{"feed"}, &w)
 
 	} else {
-		SetErrors([]string{ET.WrongCookie}, http.StatusBadRequest, &w)
+		cookie.Expires = time.Now().AddDate(0, 0, -1)
+		SetErrors([]string{ET.WrongCookie}, http.StatusUnauthorized, &w)
 		return
 	}
 
@@ -291,7 +279,7 @@ func (dh DataHandler) SettingsGet(w http.ResponseWriter, r *http.Request) {
 
 	if err == http.ErrNoCookie {
 		fmt.Print(err, "\n")
-		SetErrors([]string{ET.CookieExpiredError,}, http.StatusBadRequest, &w)
+		SetErrors([]string{ET.CookieExpiredError,}, http.StatusUnauthorized, &w)
 		return
 	}
 
@@ -304,8 +292,8 @@ func (dh DataHandler) SettingsGet(w http.ResponseWriter, r *http.Request) {
 		SetData(sendData, []string{"user"}, &w)
 
 	} else {
-		fmt.Println(ET.WrongCookie)
-		SetErrors([]string{ET.WrongCookie}, http.StatusBadRequest, &w)
+		cookie.Expires = time.Now().AddDate(0, 0, -1)
+		SetErrors([]string{ET.WrongCookie}, http.StatusUnauthorized, &w)
 		return
 	}
 
@@ -318,8 +306,7 @@ func (dh DataHandler) SettingsPost(w http.ResponseWriter, r *http.Request) {
 
 	if err == http.ErrNoCookie {
 		fmt.Print(err, "\n")
-		w.WriteHeader(http.StatusBadRequest)
-		SetErrors([]string{ET.CookieExpiredError}, http.StatusBadRequest, &w)
+		SetErrors([]string{ET.CookieExpiredError}, http.StatusUnauthorized, &w)
 		return
 	}
 
@@ -345,7 +332,8 @@ func (dh DataHandler) SettingsPost(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(w)
 
 	} else {
-		SetErrors([]string{ET.WrongCookie}, http.StatusBadRequest, &w)
+		cookie.Expires = time.Now().AddDate(0, 0, -1)
+		SetErrors([]string{ET.WrongCookie}, http.StatusUnauthorized, &w)
 		return
 	}
 
@@ -375,18 +363,18 @@ func main() {
 	api := &(DataHandler{dataBase: db, cookieBase: cb})
 	DataBase.FillDataBase(db)
 
-	server.HandleFunc("/api/v1/news", api.Feed).Methods("GET", "OPTIONS")
-	server.HandleFunc("/api/v1/profile", api.Profile).Methods("GET", "OPTIONS")
-	server.HandleFunc("/api/v1/settings", api.SettingsGet).Methods("GET", "OPTIONS")
-	server.HandleFunc("/api/v1/user", api.GetUser).Methods("GET", "OPTIONS")
+	server.HandleFunc("/api/v1/news", api.Feed).Methods("GET", "OPTIONS") //
+	server.HandleFunc("/api/v1/profile", api.Profile).Methods("GET", "OPTIONS") //
+	server.HandleFunc("/api/v1/settings", api.SettingsGet).Methods("GET", "OPTIONS") //
+	server.HandleFunc("/api/v1/user", api.GetUser).Methods("GET", "OPTIONS") //
 
-	server.HandleFunc("/api/v1/registration", api.Register).Methods("POST", "OPTIONS")
-	server.HandleFunc("/api/v1/login", api.Login).Methods("POST", "OPTIONS")
-	server.HandleFunc("/api/v1/settings", api.SettingsPost).Methods("POST", "OPTIONS")
+	server.HandleFunc("/api/v1/registration", api.Register).Methods("POST", "OPTIONS") //
+	server.HandleFunc("/api/v1/login", api.Login).Methods("POST", "OPTIONS") //
+	server.HandleFunc("/api/v1/settings", api.SettingsPost).Methods("POST", "OPTIONS") //
 
-	server.HandleFunc("/api/v1/login", api.Logout).Methods("DELETE", "OPTIONS")
+	server.HandleFunc("/api/v1/login", api.Logout).Methods("DELETE", "OPTIONS") //
 
-	server.HandleFunc("/api/v1/settings", api.PhotoUpload).Methods("PUT", "OPTIONS")
+	server.HandleFunc("/api/v1/settings", api.PhotoUpload).Methods("PUT", "OPTIONS") //
 
 	http.ListenAndServe(":3001", server)
 
