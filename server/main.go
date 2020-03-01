@@ -1,16 +1,19 @@
 package main
 
 import (
+	"encoding/json"
+
 	DataBase "./database"
 	ET "./errors"
 	AP "./json-answers"
-	"encoding/json"
+
 	//"errors"
 	"fmt"
-	"github.com/gorilla/mux"
 	"io/ioutil"
 	"net/http"
 	"time"
+
+	"github.com/gorilla/mux"
 )
 
 var FileMaxSize = int64(5 * 1024 * 1024)
@@ -22,19 +25,18 @@ type DataHandler struct {
 	cookieBase DataBase.CookieInterface
 }
 
-func getDataFromJson(jsonType string,r *http.Request) (data interface{}, errConvert error) {
+func getDataFromJson(jsonType string, r *http.Request) (data interface{}, errConvert error) {
 
 	decoder := json.NewDecoder(r.Body)
 	defer r.Body.Close()
 
+	switch jsonType {
 
-	switch jsonType{
-
-	case "reg","data" :
-		data = new(AP.UserData)
+	case "reg", "data":
+		data = new(AP.JsonUserData)
 		decoder.Decode(&data)
-	case "log" :
-		data = new(AP.JsonResponceLogin)
+	case "log":
+		data = new(AP.JsonRequestLogin)
 		decoder.Decode(&data)
 	}
 
@@ -85,8 +87,8 @@ func SetErrors(err []string, status int, w *http.ResponseWriter) {
 func (dh DataHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Print("=============REGISTER=============\n")
-	regData, convertionError := getDataFromJson("reg",r)
-	meta := regData.(*AP.UserData)
+	regData, convertionError := getDataFromJson("reg", r)
+	meta := regData.(*AP.JsonUserData)
 	if convertionError != nil {
 		return
 	}
@@ -102,7 +104,7 @@ func (dh DataHandler) Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := DataBase.NewMetaData(login, meta.Name, meta.Phone, meta.Password, meta.Date, make([]byte, 0))
-	err , info := (dh.dataBase).AddUser(login, *data)
+	err, info := (dh.dataBase).AddUser(login, *data)
 
 	fmt.Println("login err is : ", err)
 
@@ -118,8 +120,8 @@ func (dh DataHandler) Register(w http.ResponseWriter, r *http.Request) {
 func (dh DataHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Print("=============Login=============\n")
-	mapData, convertionError := getDataFromJson("log",r)
-	meta := mapData.(*AP.JsonResponceLogin)
+	mapData, convertionError := getDataFromJson("log", r)
+	meta := mapData.(*AP.JsonRequestLogin)
 
 	if convertionError != nil {
 		return
@@ -128,7 +130,7 @@ func (dh DataHandler) Login(w http.ResponseWriter, r *http.Request) {
 	login := meta.Login
 	password := meta.Password
 
-	if dh.dataBase.CheckAuth(login,password) != nil {
+	if dh.dataBase.CheckAuth(login, password) != nil {
 		fmt.Println("Doesn't exit")
 		SetErrors([]string{ET.WrongLogin}, http.StatusUnauthorized, &w)
 		return
@@ -192,7 +194,7 @@ func (dh DataHandler) PhotoUpload(w http.ResponseWriter, r *http.Request) {
 		}
 		defer file.Close()
 
-		userData := dh.dataBase.GetUserDataLogin(login)
+		JsonUserData := dh.dataBase.GetUserDataLogin(login)
 		photoByte, fileErr := ioutil.ReadAll(file)
 
 		if fileErr != nil {
@@ -201,8 +203,8 @@ func (dh DataHandler) PhotoUpload(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		userData.Photo = photoByte
-		dh.dataBase.EditUser(login, userData)
+		JsonUserData.Photo = photoByte
+		dh.dataBase.EditUser(login, JsonUserData)
 
 		sendData := make([]interface{}, 1)
 
@@ -224,7 +226,7 @@ func (dh DataHandler) Profile(w http.ResponseWriter, r *http.Request) {
 
 	if err == http.ErrNoCookie {
 		fmt.Print(err, "\n")
-		SetErrors([]string{ET.CookieExpiredError,}, http.StatusUnauthorized, &w)
+		SetErrors([]string{ET.CookieExpiredError}, http.StatusUnauthorized, &w)
 		return
 	}
 
@@ -279,7 +281,7 @@ func (dh DataHandler) SettingsGet(w http.ResponseWriter, r *http.Request) {
 
 	if err == http.ErrNoCookie {
 		fmt.Print(err, "\n")
-		SetErrors([]string{ET.CookieExpiredError,}, http.StatusUnauthorized, &w)
+		SetErrors([]string{ET.CookieExpiredError}, http.StatusUnauthorized, &w)
 		return
 	}
 
@@ -312,15 +314,15 @@ func (dh DataHandler) SettingsPost(w http.ResponseWriter, r *http.Request) {
 
 	if login, flag := dh.cookieBase.GetUser(cookie.Value); flag == nil {
 
-		mapData, convertionError := getDataFromJson("data",r)
-		meta := mapData.(*AP.UserData)
+		mapData, convertionError := getDataFromJson("data", r)
+		meta := mapData.(*AP.JsonUserData)
 
 		if convertionError != nil {
 			return
 		}
 
 		newData := *DataBase.NewMetaData(login, meta.Name, meta.Phone, meta.Password, meta.Date, make([]byte, 0))
-		newData = DataBase.MergeData(dh.dataBase.GetUserDataLogin(login), newData)
+		newData = DataBase.MergeData(dh.dataBase.GetJsonUserDataLogin(login), newData)
 		dh.dataBase.EditUser(login, newData)
 
 		sendData := make([]interface{}, 1)
@@ -345,7 +347,7 @@ func (dh DataHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 	login := r.Header.Get("X-User")
 
 	sendData := make([]interface{}, 2)
-	sendData[0] = (dh.dataBase).GetUserDataLogin(login)
+	sendData[0] = (dh.dataBase).GetJsonUserDataLogin(login)
 	sendData[1] = []DataBase.Post{post, post, post, post, post}
 
 	SetData(sendData, []string{"user", "feed"}, &w)
@@ -363,13 +365,13 @@ func main() {
 	api := &(DataHandler{dataBase: db, cookieBase: cb})
 	DataBase.FillDataBase(db)
 
-	server.HandleFunc("/api/v1/news", api.Feed).Methods("GET", "OPTIONS") //
-	server.HandleFunc("/api/v1/profile", api.Profile).Methods("GET", "OPTIONS") //
+	server.HandleFunc("/api/v1/news", api.Feed).Methods("GET", "OPTIONS")            //
+	server.HandleFunc("/api/v1/profile", api.Profile).Methods("GET", "OPTIONS")      //
 	server.HandleFunc("/api/v1/settings", api.SettingsGet).Methods("GET", "OPTIONS") //
-	server.HandleFunc("/api/v1/user", api.GetUser).Methods("GET", "OPTIONS") //
+	server.HandleFunc("/api/v1/user", api.GetUser).Methods("GET", "OPTIONS")         //
 
 	server.HandleFunc("/api/v1/registration", api.Register).Methods("POST", "OPTIONS") //
-	server.HandleFunc("/api/v1/login", api.Login).Methods("POST", "OPTIONS") //
+	server.HandleFunc("/api/v1/login", api.Login).Methods("POST", "OPTIONS")           //
 	server.HandleFunc("/api/v1/settings", api.SettingsPost).Methods("POST", "OPTIONS") //
 
 	server.HandleFunc("/api/v1/login", api.Logout).Methods("DELETE", "OPTIONS") //
