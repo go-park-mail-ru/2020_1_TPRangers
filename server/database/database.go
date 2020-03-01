@@ -2,8 +2,9 @@ package database
 
 import (
 	"errors"
-	uuid "github.com/satori/go.uuid"
 	"sync"
+
+	uuid "github.com/satori/go.uuid"
 )
 
 type DataInterface interface {
@@ -43,16 +44,17 @@ type DataBase struct {
 	UserCounter int64
 	mutex       sync.Mutex
 }
+
 type MetaData struct {
-	Email     string
-	Username  string
-	Photo     []byte
-	Telephone string
-	Password  string
-	Date      string
+	Email     string `json:"email,omitempty"`
+	Username  string `json:"username,omitempty"`
+	Photo     string `json:"photo,omitempty"`
+	Telephone string `json:"telephone,omitempty"`
+	Password  string `json:"password,omitempty"`
+	Date      string `json:"date,omitempty"`
 }
 
-func NewMetaData(login, name, tel, pass, date string, photo []byte) *MetaData {
+func NewMetaData(login, name, tel, pass, date, photo string) *MetaData {
 	return &MetaData{login, name, photo, tel, pass, date}
 }
 
@@ -182,7 +184,7 @@ func FillDataBase(dataInterface DataInterface) {
 	sliceMail := []string{"asdasd@yandex.ru", "123@yandex.ru", "znajderko@yandex.ru"}
 
 	for _, val := range sliceMail {
-		defData := NewMetaData(val, "TEST", "88005553535", "TEST", "00.00.2000", make([]byte, 16))
+		defData := NewMetaData(val, "TEST", "88005553535", "TEST", "00.00.2000", "./fileWay")
 		dataInterface.AddUser(val, *defData)
 	}
 

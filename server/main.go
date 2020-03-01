@@ -9,7 +9,6 @@ import (
 
 	//"errors"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"time"
 
@@ -103,7 +102,7 @@ func (dh DataHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := DataBase.NewMetaData(login, meta.Name, meta.Phone, meta.Password, meta.Date, make([]byte, 0))
+	data := DataBase.NewMetaData(login, meta.Name, meta.Phone, meta.Password, meta.Date, "default photo way")
 	err, info := (dh.dataBase).AddUser(login, *data)
 
 	fmt.Println("login err is : ", err)
@@ -157,67 +156,6 @@ func (dh DataHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	cookie.Expires = time.Now().AddDate(0, 0, -1)
 	http.SetCookie(w, cookie)
-}
-
-func (dh DataHandler) PhotoUpload(w http.ResponseWriter, r *http.Request) {
-	fmt.Print("=============PhotoUpload=============\n")
-
-	cookie, err := r.Cookie("session_id")
-
-	fmt.Println(r)
-
-	if err == http.ErrNoCookie {
-		SetErrors([]string{ET.CookieExpiredError}, http.StatusUnauthorized, &w)
-		return
-	}
-
-	if login, flag := dh.cookieBase.GetUser(cookie.Value); flag == nil {
-
-		err := r.ParseMultipartForm(FileMaxSize)
-
-		if err != nil {
-			fmt.Println(err)
-			SetErrors([]string{ET.FileError}, http.StatusBadRequest, &w)
-			return
-		}
-
-		fmt.Println(r)
-		file, _, err := r.FormFile("uploadedFile")
-
-		fmt.Println(r.Body)
-		defer r.Body.Close()
-		fmt.Println(file, err)
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			SetErrors([]string{ET.FileError}, http.StatusBadRequest, &w)
-			return
-		}
-		defer file.Close()
-
-		JsonUserData := dh.dataBase.GetUserDataLogin(login)
-		photoByte, fileErr := ioutil.ReadAll(file)
-
-		if fileErr != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			SetErrors([]string{ET.FileSavingError}, http.StatusBadRequest, &w)
-			return
-		}
-
-		JsonUserData.Photo = photoByte
-		dh.dataBase.EditUser(login, JsonUserData)
-
-		sendData := make([]interface{}, 1)
-
-		sendData[0] = DataBase.MetaData{}
-
-		SetData(sendData, []string{"user"}, &w)
-
-	} else {
-		cookie.Expires = time.Now().AddDate(0, 0, -1)
-		SetErrors([]string{ET.WrongCookie}, http.StatusUnauthorized, &w)
-		return
-
-	}
 }
 
 func (dh DataHandler) Profile(w http.ResponseWriter, r *http.Request) {
@@ -285,65 +223,26 @@ func (dh DataHandler) SettingsGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if login, flag := dh.cookieBase.GetUser(cookie.Value); flag == nil {
+	login, err := dh.cookieBase.GetUser(cookie.Value)
 
-		sendData := make([]interface{}, 1)
+	if err != nil {
 
-		sendData[0] = (dh.dataBase).GetUserDataLogin(login)
-
-		SetData(sendData, []string{"user"}, &w)
-
-	} else {
 		cookie.Expires = time.Now().AddDate(0, 0, -1)
 		SetErrors([]string{ET.WrongCookie}, http.StatusUnauthorized, &w)
 		return
+
 	}
 
-}
+	sendData := make([]interface{}, 1)
 
-func (dh DataHandler) SettingsPost(w http.ResponseWriter, r *http.Request) {
+	sendData[0] = (dh.dataBase).GetUserDataLogin(login)
 
-	fmt.Print("=============SettingsPOST=============\n")
-	cookie, err := r.Cookie("session_id")
-
-	if err == http.ErrNoCookie {
-		fmt.Print(err, "\n")
-		SetErrors([]string{ET.CookieExpiredError}, http.StatusUnauthorized, &w)
-		return
-	}
-
-	if login, flag := dh.cookieBase.GetUser(cookie.Value); flag == nil {
-
-		mapData, convertionError := getDataFromJson("data", r)
-		meta := mapData.(*AP.JsonUserData)
-
-		if convertionError != nil {
-			return
-		}
-
-		newData := *DataBase.NewMetaData(login, meta.Name, meta.Phone, meta.Password, meta.Date, make([]byte, 0))
-		newData = DataBase.MergeData(dh.dataBase.GetUserDataLogin(login), newData)
-		dh.dataBase.EditUser(login, newData)
-
-		sendData := make([]interface{}, 1)
-
-		sendData[0] = newData
-
-		SetData(sendData, []string{"user"}, &w)
-
-		fmt.Println(w)
-
-	} else {
-		cookie.Expires = time.Now().AddDate(0, 0, -1)
-		SetErrors([]string{ET.WrongCookie}, http.StatusUnauthorized, &w)
-		return
-	}
+	SetData(sendData, []string{"user"}, &w)
 
 }
 
 func (dh DataHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 	fmt.Print("=============GETUSER=============\n")
-	fmt.Println(r)
 	login := r.Header.Get("X-User")
 
 	sendData := make([]interface{}, 2)
@@ -352,6 +251,70 @@ func (dh DataHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 
 	SetData(sendData, []string{"user", "feed"}, &w)
 
+}
+
+func (dh DataHandler) SettingsUpload(w http.ResponseWriter, r *http.Request) {
+
+	fmt.Print("=============UploadSettings=============\n")
+
+	cookie, err := r.Cookie("session_id")
+
+	if err == http.ErrNoCookie {
+		SetErrors([]string{ET.CookieExpiredError}, http.StatusUnauthorized, &w)
+		return
+	}
+
+	login, err := dh.cookieBase.GetUser(cookie.Value)
+
+	if err != nil {
+		cookie.Expires = time.Now().AddDate(0, 0, -1)
+		SetErrors([]string{ET.WrongCookie}, http.StatusUnauthorized, &w)
+		return
+	}
+
+	err = r.ParseMultipartForm(FileMaxSize)
+
+	uploadDataFlags := []string{"uploadedFile", "email", "password", "name", "phone", "date"}
+
+	currentUserData := dh.dataBase.GetUserDataLogin(login)
+
+	for _, dataFlag := range uploadDataFlags {
+		switch dataFlag {
+		case "uploadedFile":
+			if _, header, errGetFile := r.FormFile(dataFlag); errGetFile != http.ErrMissingFile {
+				currentUserData.Photo = header.Filename
+			}
+		case "email":
+			if data := r.FormValue(dataFlag); data != "" {
+				currentUserData.Email = data
+			}
+		case "password":
+			if data := r.FormValue(dataFlag); data != "" {
+				currentUserData.Password = data
+			}
+		case "name":
+			if data := r.FormValue(dataFlag); data != "" {
+				currentUserData.Username = data
+			}
+		case "phone":
+			if data := r.FormValue(dataFlag); data != "" {
+				currentUserData.Telephone = data
+			}
+		case "date":
+			if data := r.FormValue(dataFlag); data != "" {
+				currentUserData.Date = data
+			}
+
+		}
+	}
+
+	dh.dataBase.EditUser(login, currentUserData)
+
+	sendData := make([]interface{}, 1)
+
+	sendData[0] = currentUserData
+
+	SetData(sendData, []string{"user"}, &w)
 }
 
 func main() {
@@ -372,11 +335,10 @@ func main() {
 
 	server.HandleFunc("/api/v1/registration", api.Register).Methods("POST", "OPTIONS") //
 	server.HandleFunc("/api/v1/login", api.Login).Methods("POST", "OPTIONS")           //
-	server.HandleFunc("/api/v1/settings", api.SettingsPost).Methods("POST", "OPTIONS") //
 
 	server.HandleFunc("/api/v1/login", api.Logout).Methods("DELETE", "OPTIONS") //
 
-	server.HandleFunc("/api/v1/settings", api.PhotoUpload).Methods("PUT", "OPTIONS") //
+	server.HandleFunc("/api/v1/settings", api.SettingsUpload).Methods("PUT", "OPTIONS") //
 
 	http.ListenAndServe(":3001", server)
 
