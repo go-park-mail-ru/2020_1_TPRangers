@@ -322,7 +322,7 @@ func (dh DataHandler) SettingsPost(w http.ResponseWriter, r *http.Request) {
 		}
 
 		newData := *DataBase.NewMetaData(login, meta.Name, meta.Phone, meta.Password, meta.Date, make([]byte, 0))
-		newData = DataBase.MergeData(dh.dataBase.GetJsonUserDataLogin(login), newData)
+		newData = DataBase.MergeData(dh.dataBase.GetUserDataLogin(login), newData)
 		dh.dataBase.EditUser(login, newData)
 
 		sendData := make([]interface{}, 1)
@@ -347,7 +347,7 @@ func (dh DataHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 	login := r.Header.Get("X-User")
 
 	sendData := make([]interface{}, 2)
-	sendData[0] = (dh.dataBase).GetJsonUserDataLogin(login)
+	sendData[0] = (dh.dataBase).GetUserDataLogin(login)
 	sendData[1] = []DataBase.Post{post, post, post, post, post}
 
 	SetData(sendData, []string{"user", "feed"}, &w)
