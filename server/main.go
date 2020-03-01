@@ -220,7 +220,7 @@ func (dh DataHandler) PhotoUpload(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (dh DataHandler) Profile(w http.ResponseWriter, r *http.Request) {
+func (dh DataHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
 	fmt.Print("=============Profile=============\n")
 	cookie, err := r.Cookie("session_id")
 
@@ -232,12 +232,37 @@ func (dh DataHandler) Profile(w http.ResponseWriter, r *http.Request) {
 
 	if login, flag := dh.cookieBase.GetUser(cookie.Value); flag == nil {
 
-		sendData := make([]interface{}, 2)
+		sendData := make([]interface{}, 1)
 
 		sendData[0] = (dh.dataBase).GetUserDataLogin(login)
-		sendData[1] = []DataBase.Post{post, post, post, post, post}
 
-		SetData(sendData, []string{"user", "feed"}, &w)
+		SetData(sendData, []string{"user"}, &w)
+
+	} else {
+		cookie.Expires = time.Now().AddDate(0, 0, -1)
+		SetErrors([]string{ET.WrongCookie}, http.StatusUnauthorized, &w)
+		return
+	}
+
+}
+
+func (dh DataHandler) GetNews(w http.ResponseWriter, r *http.Request) {
+	fmt.Print("=============Profile=============\n")
+	cookie, err := r.Cookie("session_id")
+
+	if err == http.ErrNoCookie {
+		fmt.Print(err, "\n")
+		SetErrors([]string{ET.CookieExpiredError}, http.StatusUnauthorized, &w)
+		return
+	}
+
+	if _, flag := dh.cookieBase.GetUser(cookie.Value); flag == nil {
+
+		sendData := make([]interface{}, 1)
+
+		sendData[0] = []DataBase.Post{post, post, post, post, post}
+
+		SetData(sendData, []string{"feed"}, &w)
 
 	} else {
 		cookie.Expires = time.Now().AddDate(0, 0, -1)
@@ -366,7 +391,8 @@ func main() {
 	DataBase.FillDataBase(db)
 
 	server.HandleFunc("/api/v1/news", api.Feed).Methods("GET", "OPTIONS")            //
-	server.HandleFunc("/api/v1/profile", api.Profile).Methods("GET", "OPTIONS")      //
+	server.HandleFunc("/api/v1/profileUser", api.GetProfile).Methods("GET", "OPTIONS")
+	server.HandleFunc("/api/v1/profileNews", api.GetNews).Methods("GET", "OPTIONS")
 	server.HandleFunc("/api/v1/settings", api.SettingsGet).Methods("GET", "OPTIONS") //
 	server.HandleFunc("/api/v1/user", api.GetUser).Methods("GET", "OPTIONS")         //
 
