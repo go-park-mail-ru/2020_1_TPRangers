@@ -318,7 +318,6 @@ func main() {
 	server := mux.NewRouter()
 	db := DataBase.NewDataBase()
 	cb := DataBase.NewCookieSession()
-	fmt.Printf("%T", post)
 	server.Use(SetCorsMiddleware(server))
 
 	api := &(DataHandler{dataBase: db, cookieSession: cb})
