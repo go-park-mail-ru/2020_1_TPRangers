@@ -1,16 +1,17 @@
 package main
 
 import (
-	DataBase "./database"
-	ET "./errors"
-	AP "./json-answers"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/gorilla/mux"
 	"io/ioutil"
 	"net/http"
 	"time"
+
+	DataBase "./database"
+	ET "./errors"
+	AP "./json-answers"
+	"github.com/gorilla/mux"
 )
 
 var FileMaxSize = int64(5 * 1024 * 1024)
@@ -18,8 +19,8 @@ var FileMaxSize = int64(5 * 1024 * 1024)
 var post = DataBase.Post{PostName: "Test Post Name", PostText: "Test Post Text", PostPhoto: "https://picsum.photos/200/300?grayscale"}
 
 type DataHandler struct {
-	dataBase   DataBase.DataInterface
-	cookieBase DataBase.CookieInterface
+	dataBase   DataBase.UserRepository
+	cookieBase DataBase.SessionRepository
 }
 
 func getDataFromJson(r *http.Request) (data map[string]interface{}, errConvert error) {
@@ -102,7 +103,7 @@ func (dh DataHandler) Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := DataBase.NewMetaData(login, mapData["name"].(string), mapData["phone"].(string), mapData["password"].(string), mapData["date"].(string), make([]byte, 0))
-	err , info := (dh.dataBase).AddUser(login, *data)
+	err, info := (dh.dataBase).AddUser(login, *data)
 
 	fmt.Println("login err is : ", err)
 
@@ -130,7 +131,7 @@ func (dh DataHandler) Login(w http.ResponseWriter, r *http.Request) {
 	login := mapData["login"].(string)
 	password := mapData["password"].(string)
 
-	if dh.dataBase.CheckAuth(login,password) != nil {
+	if dh.dataBase.CheckAuth(login, password) != nil {
 		fmt.Println("Doesn't exit")
 		SetErrors([]string{ET.WrongLogin}, http.StatusBadRequest, &w)
 		return
@@ -151,7 +152,7 @@ func (dh DataHandler) Logout(w http.ResponseWriter, r *http.Request) {
 
 	if err == http.ErrNoCookie {
 		fmt.Print(err, "\n")
-		SetErrors([]string{ET.CookieExpiredError,}, http.StatusBadRequest, &w)
+		SetErrors([]string{ET.CookieExpiredError}, http.StatusBadRequest, &w)
 		return
 	}
 
@@ -227,7 +228,7 @@ func (dh DataHandler) Profile(w http.ResponseWriter, r *http.Request) {
 
 	if err == http.ErrNoCookie {
 		fmt.Print(err, "\n")
-		SetErrors([]string{ET.CookieExpiredError,}, http.StatusBadRequest, &w)
+		SetErrors([]string{ET.CookieExpiredError}, http.StatusBadRequest, &w)
 		return
 	}
 
@@ -281,7 +282,7 @@ func (dh DataHandler) SettingsGet(w http.ResponseWriter, r *http.Request) {
 
 	if err == http.ErrNoCookie {
 		fmt.Print(err, "\n")
-		SetErrors([]string{ET.CookieExpiredError,}, http.StatusBadRequest, &w)
+		SetErrors([]string{ET.CookieExpiredError}, http.StatusBadRequest, &w)
 		return
 	}
 
@@ -357,7 +358,7 @@ func main() {
 	fmt.Print("main")
 	server := mux.NewRouter()
 	db := DataBase.NewDataBase()
-	cb := DataBase.NewCookieBase()
+	cb := DataBase.NewCookieSession()
 	fmt.Printf("%T", post)
 	server.Use(SetCorsMiddleware(server))
 

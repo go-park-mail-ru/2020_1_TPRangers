@@ -2,14 +2,15 @@ package database
 
 import (
 	"errors"
-	uuid "github.com/satori/go.uuid"
 	"sync"
+
+	uuid "github.com/satori/go.uuid"
 )
 
-type DataInterface interface {
-	AddUser(string, MetaData) (error, MetaData)
-	GetUserDataLogin(string) MetaData
-	GetUserDataId(int64) MetaData
+type UserRepository interface {
+	AddUser(string, MetaData)
+	GetUserDataByLogin(string) MetaData
+	GetUserDataById(int64) MetaData
 	DeleteUser(string) error
 	EditUser(string, MetaData)
 	CheckUser(string) bool
@@ -17,16 +18,15 @@ type DataInterface interface {
 	GetPasswordByLogin(string) string
 }
 
-type CookieInterface interface {
+type SessionRepository interface {
 	SetCookie(string) string
 	CheckCookie(string, string) bool
-	GetUser(string) (string, error)
+	GetUserByCookie(string) (string, error)
 }
 
-type CookieData struct {
+type SessionData struct {
+	mutex         sync.RWMutex
 	CookieSession map[string]string
-
-	mutex sync.Mutex
 }
 
 type Post struct {
@@ -37,47 +37,37 @@ type Post struct {
 
 //  хэшировать пароли
 type DataBase struct {
-	UserId map[string]int64
-	IdMeta map[int64]MetaData
+	mutex  sync.RWMutex
+	userId map[string]int64
+	idMeta map[int64]MetaData
 
 	UserCounter int64
-	mutex       sync.Mutex
 }
+
 type MetaData struct {
-	Email     string
-	Username  string
-	Photo     []byte
-	Telephone string
-	Password  string
-	Date      string
+	Email     string `json:"email,omitempty"`
+	Username  string `json:"username,omitempty"`
+	Photo     string `json:"photo,omitempty"`
+	Telephone string `json:"telephone,omitempty"`
+	Password  string `json:"password,omitempty"`
+	Date      string `json:"date,omitempty"`
 }
 
-func NewMetaData(login, name, tel, pass, date string, photo []byte) *MetaData {
+func NewMetaData(login, name, tel, pass, date, photo string) *MetaData {
 	return &MetaData{login, name, photo, tel, pass, date}
-}
-
-func MergeData(dataLeft, dataRight MetaData) MetaData {
-	dataLeft.Email = dataRight.Email
-	dataLeft.Password = dataRight.Password
-	dataLeft.Username = dataRight.Username
-	dataLeft.Telephone = dataRight.Telephone
-	dataLeft.Date = dataRight.Date
-
-	return dataLeft
-
 }
 
 func NewDataBase() *DataBase {
 
-	return &DataBase{UserId: make(map[string]int64), IdMeta: make(map[int64]MetaData), UserCounter: 0}
+	return &DataBase{userId: make(map[string]int64), idMeta: make(map[int64]MetaData), UserCounter: 0}
 
 }
 
-func NewCookieBase() *CookieData {
-	return &CookieData{CookieSession: make(map[string]string)}
+func NewCookieSession() *SessionData {
+	return &SessionData{CookieSession: make(map[string]string)}
 }
 
-func (db *CookieData) SetCookie(login string) string {
+func (db *SessionData) SetCookie(login string) string {
 
 	db.mutex.Lock()
 	info, _ := uuid.NewV4()
@@ -90,99 +80,124 @@ func (db *CookieData) SetCookie(login string) string {
 
 }
 
-func (db *DataBase) GetPasswordByLogin(login string) string {
-	return db.IdMeta[db.UserId[login]].Password
-}
+func (db *SessionData) GetUserByCookie(cookie string) (string, error) {
 
-func (db *CookieData) GetUser(cookie string) (string, error) {
+	db.mutex.RLock()
 
-	if val, _ := db.CookieSession[cookie]; val != "" {
-		return db.CookieSession[cookie], nil
+	userName, sessionExist := db.CookieSession[cookie]
 
+	db.mutex.RUnlock()
+
+	if sessionExist {
+		return userName, nil
 	}
+
 	return "", errors.New("неверные куки!")
 }
 
-func (db *CookieData) CheckCookie(cookie string, login string) bool {
+func (db *SessionData) CheckCookie(cookie string, login string) bool {
 
-	if val, flag := db.CookieSession[cookie]; val == login && flag {
-		return true
-	}
-	return false
+	db.mutex.RLock()
+	val, flag := db.CookieSession[cookie]
+	db.mutex.RUnlock()
 
+	return val == login && flag
 }
 
-func (db *DataBase) AddUser(login string, data MetaData) (error, MetaData) {
+func (db *DataBase) GetPasswordByLogin(login string) string {
 
-	if db.CheckUser(login) {
-		return errors.New(`{"error":"такой пользователь уже был зарегестрирован!"}`), MetaData{}
-	}
+	db.mutex.RLock()
+	password := db.idMeta[db.userId[login]].Password
+	db.mutex.RUnlock()
+
+	return password
+}
+
+func (db *DataBase) AddUser(login string, data MetaData) {
 
 	db.mutex.Lock()
-	db.UserId[login] = db.UserCounter
-	db.IdMeta[db.UserCounter] = data
+	db.userId[login] = db.UserCounter
+	db.idMeta[db.UserCounter] = data
 	db.UserCounter++
 	db.mutex.Unlock()
-	return nil, data
 
 }
 
-func (db *DataBase) GetUserDataLogin(login string) MetaData {
+func (db *DataBase) GetUserDataByLogin(login string) MetaData {
 
-	return db.IdMeta[db.UserId[login]]
+	db.mutex.RLock()
+	data := db.idMeta[db.userId[login]]
+	db.mutex.RUnlock()
+
+	return data
 
 }
 
-func (db *DataBase) GetUserDataId(id int64) MetaData {
+func (db *DataBase) GetUserDataById(id int64) MetaData {
 
-	return db.IdMeta[id]
+	db.mutex.RLock()
+	data := db.idMeta[id]
+	db.mutex.RUnlock()
+
+	return data
 
 }
 
 func (db *DataBase) DeleteUser(login string) error {
 
-	if !db.CheckUser(login) {
-		return errors.New("such user doesnt exist!")
+	existFlag := db.CheckUser(login)
+	db.mutex.Lock()
+	var err error
+	if !existFlag {
+		err = errors.New("такого пользователя не существует!")
+	} else {
+		delete(db.idMeta, db.userId[login])
+		delete(db.userId, login)
 	}
 
-	delete(db.IdMeta, db.UserId[login])
-	delete(db.UserId, login)
+	db.mutex.Unlock()
 
-	return nil
+	return err
 
 }
 
 func (db *DataBase) EditUser(login string, data MetaData) {
 	db.mutex.Lock()
-	db.IdMeta[db.UserId[login]] = data
+	db.idMeta[db.userId[login]] = data
 	db.mutex.Unlock()
 }
 
 func (db *DataBase) CheckUser(login string) bool {
 
-	if value, _ := db.UserId[login]; value != 0 {
-		return true
-	}
-	return false
+	db.mutex.RLock()
+	_, doesExist := db.userId[login]
+	db.mutex.RUnlock()
+
+	return doesExist
 }
 
 func (db *DataBase) CheckAuth(login, password string) error {
+
 	if !db.CheckUser(login) {
-		return errors.New(`{"error":"неправильные данные!"}`)
+		err := errors.New("неправильные данные!")
+		return err
 	}
 
-	if db.IdMeta[db.UserId[login]].Password != password {
-		return errors.New(`{"error":"неправильные данные!"}`)
+	db.mutex.RLock()
+	var err error
+	if db.idMeta[db.userId[login]].Password != password {
+		err = errors.New("неправильные данные!")
 	}
-	return nil
+	db.mutex.RUnlock()
+	return err
 }
 
-func FillDataBase(dataInterface DataInterface) {
+func FillDataBase(dataInterface UserRepository) {
 
 	sliceMail := []string{"asdasd@yandex.ru", "123@yandex.ru", "znajderko@yandex.ru"}
 
 	for _, val := range sliceMail {
-		defData := NewMetaData(val, "TEST", "88005553535", "TEST", "00.00.2000", make([]byte, 16))
+		defData := NewMetaData(val, "TEST", "88005553535", "TEST", "00.00.2000", "./fileWay")
 		dataInterface.AddUser(val, *defData)
 	}
 
