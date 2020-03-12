@@ -9,7 +9,7 @@ import (
 
 type UserRepository interface {
 	AddUser(string, MetaData)
-	GetUserDataByLogin(string) MetaData
+	GetUserDataByLogin(string) (MetaData ,error)
 	GetUserDataById(int64) MetaData
 	DeleteUser(string) error
 	EditUser(string, MetaData)
@@ -123,13 +123,18 @@ func (db *DataBase) AddUser(login string, data MetaData) {
 
 }
 
-func (db *DataBase) GetUserDataByLogin(login string) MetaData {
+func (db *DataBase) GetUserDataByLogin(login string) (MetaData , error) {
 
+	var existError error
 	db.mutex.RLock()
-	data := db.idMeta[db.userId[login]]
+	data , existFlag := db.idMeta[db.userId[login]]
+
+	if !existFlag{
+		existError = errors.New("doesnt exist")
+	}
 	db.mutex.RUnlock()
 
-	return data
+	return data , existError
 
 }
 
@@ -147,9 +152,9 @@ func (db *DataBase) DeleteUser(login string) error {
 
 	existFlag := db.CheckUser(login)
 	db.mutex.Lock()
-	var err error
+	var existError error
 	if !existFlag {
-		err = errors.New("такого пользователя не существует!")
+		existError = errors.New("такого пользователя не существует!")
 	} else {
 		delete(db.idMeta, db.userId[login])
 		delete(db.userId, login)
@@ -157,7 +162,7 @@ func (db *DataBase) DeleteUser(login string) error {
 
 	db.mutex.Unlock()
 
-	return err
+	return existError
 
 }
 
@@ -184,12 +189,12 @@ func (db *DataBase) CheckAuth(login, password string) error {
 	}
 
 	db.mutex.RLock()
-	var err error
+	var validError error
 	if db.idMeta[db.userId[login]].Password != password {
-		err = errors.New("неправильные данные!")
+		validError = errors.New("неправильные данные!")
 	}
 	db.mutex.RUnlock()
-	return err
+	return validError
 }
 
 func FillDataBase(dataInterface UserRepository) {

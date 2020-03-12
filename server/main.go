@@ -1,16 +1,17 @@
 package main
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/labstack/echo"
+	"github.com/satori/go.uuid"
+	"go.uber.org/zap"
 	"net/http"
 	"time"
 
 	DataBase "./database"
 	ET "./errors"
 	AP "./json-answers"
-	"github.com/gorilla/mux"
 )
 
 var FileMaxSize = int64(5 * 1024 * 1024)
@@ -20,39 +21,35 @@ var post = DataBase.Post{PostName: "Test Post Name", PostText: "Test Post Text",
 type DataHandler struct {
 	dataBase      DataBase.UserRepository
 	cookieSession DataBase.SessionRepository
+	logger        *zap.SugaredLogger
 }
 
-func getDataFromJson(jsonType string, r *http.Request) (data interface{}, errConvert error) {
-
-	decoder := json.NewDecoder(r.Body)
-	defer r.Body.Close()
+func getDataFromJson(jsonType string, r echo.Context) (data interface{}, errConvert error) {
 
 	switch jsonType {
 
 	case "reg", "data":
 		data = new(AP.JsonUserData)
-		decoder.Decode(&data)
 	case "log":
 		data = new(AP.JsonRequestLogin)
-		decoder.Decode(&data)
 	}
 
-	errConvert = nil
+	errConvert = r.Bind(data)
 	return
 }
 
-func SetCookie(w *http.ResponseWriter, cookieValue string) {
+func SetCookie(w echo.Context, cookieValue string) string {
 	cookie := http.Cookie{
 		Name:    "session_id",
 		Value:   cookieValue,
 		Expires: time.Now().Add(12 * time.Hour),
 	}
-	http.SetCookie(*w, &cookie)
+	w.SetCookie(&cookie)
 
-	fmt.Println("cookie value: ", cookie.Value)
+	return cookie.Value
 }
 
-func SetData(data []interface{}, jsonType []string, w http.ResponseWriter) {
+func SetData(data []interface{}, jsonType []string, write echo.Context) error {
 
 	answer := make(map[string]interface{})
 
@@ -71,152 +68,152 @@ func SetData(data []interface{}, jsonType []string, w http.ResponseWriter) {
 		}
 	}
 
-	json.NewEncoder(w).Encode(&AP.JsonStruct{Body: answer})
-	(w).WriteHeader(http.StatusOK)
+	return write.JSON(http.StatusOK, AP.JsonStruct{Body: answer})
+}
+
+func SetErrors(err error, status int, w echo.Context) error {
+	return w.JSON(status, &AP.JsonStruct{Err: err.Error()})
+}
+
+func (dh DataHandler) LogDevError(msg, uID, url, error string, status int) {
+
+	dh.logger.Debug(msg,
+		zap.String("ID", uID),
+		zap.String("URL", url),
+		zap.String("ERROR", error),
+		zap.Int("RESPONSE STATUS", status),
+	)
 
 }
 
-func SetErrors(err error, status int, w http.ResponseWriter) {
-	(w).WriteHeader(status)
-	json.NewEncoder(w).Encode(&AP.JsonStruct{Err: err.Error()})
+func (dh DataHandler) LogStartInfo(basicAction, uID, url, requestType, login string) {
+
+	dh.logger.Info(basicAction,
+		zap.String("ID", uID),
+		zap.String("URL", url),
+		zap.String("REQUEST TYPE", requestType),
+		zap.String("LOGIN/COOKIE", login),
+	)
+
 }
 
-func (dh DataHandler) Register(w http.ResponseWriter, r *http.Request) {
+func (dh DataHandler) LogFinalInfo(basicAction, uID, url, requestType, login, responseText string, responseStatus int, startTime time.Time) {
 
-	fmt.Print("=============REGISTER=============\n")
-	regData, convertionError := getDataFromJson("reg", r)
-	meta := regData.(*AP.JsonUserData)
+	dh.logger.Info(basicAction,
+		zap.String("ID", uID),
+		zap.String("URL", url),
+		zap.String("REQUEST TYPE", requestType),
+		zap.String("LOGIN/COOKIE", login),
+		zap.String("RESPONSE TEXT", responseText),
+		zap.Int("STATUS", responseStatus),
+		zap.Duration("DURATION TIME", time.Since(startTime)),
+	)
 
+}
+func (dh DataHandler) Login(rwContext echo.Context) error {
+
+	uniqueID, _ := uuid.NewV4()
+	start := time.Now()
+	rwContext.Response().Header().Set("REQUEST_ID", uniqueID.String())
+
+	jsonData, convertionError := getDataFromJson("log", rwContext)
 	if convertionError != nil {
-		return
+		dh.LogDevError("json error", uniqueID.String(), rwContext.Request().URL.Path, convertionError.Error(), http.StatusInternalServerError)
+		dh.logger.Error(zap.String("DECODE TYPE", "log"), )
+		return rwContext.NoContent(http.StatusInternalServerError)
 	}
 
-	login := meta.Email
-	println(login)
+	userData := jsonData.(*AP.JsonRequestLogin)
+	login := userData.Login
+	password := userData.Password
 
-	if dh.dataBase.CheckUser(login) {
-		fmt.Println("already registered!")
+	dh.LogStartInfo("LOGIN", uniqueID.String(), rwContext.Request().URL.Path, rwContext.Request().Method, login)
 
-		SetErrors(errors.New(ET.AlreadyExist), http.StatusConflict, w)
-		return
-	}
-
-	data := DataBase.NewMetaData(login, meta.Name, meta.Phone, meta.Password, meta.Date, "default photo way")
-
-	(dh.dataBase).AddUser(login, *data)
-
-	cookie := (dh.cookieSession).SetCookie(login)
-	SetCookie(&w, cookie)
-
-	w.WriteHeader(http.StatusOK)
-
-	fmt.Println("sucsessfully registered user :", *data)
-}
-
-func (dh DataHandler) Login(w http.ResponseWriter, r *http.Request) {
-
-	fmt.Print("=============Login=============\n")
-	mapData, convertionError := getDataFromJson("log", r)
-	meta := mapData.(*AP.JsonRequestLogin)
-
-	if convertionError != nil {
-		return
-	}
-
-	login := meta.Login
-	password := meta.Password
+	dh.logger.Debug(zap.String("PASSWORD", password), )
 
 	if dh.dataBase.CheckAuth(login, password) != nil {
-		fmt.Println("Doesn't exit")
-		SetErrors(errors.New(ET.WrongLogin), http.StatusUnauthorized, w)
-		return
-	} else {
-		fmt.Println("OK")
+		dh.LogFinalInfo("LOGIN", uniqueID.String(), rwContext.Request().URL.Path, rwContext.Request().Method, login, ET.WrongLogin+ET.WrongPassword, http.StatusUnauthorized, start)
+		return SetErrors(errors.New(ET.WrongLogin), http.StatusUnauthorized, rwContext)
 	}
 
 	cookie := (dh.cookieSession).SetCookie(login)
-	SetCookie(&w, cookie)
-	w.WriteHeader(http.StatusOK)
+	SetCookie(rwContext, cookie)
 
+	dh.LogFinalInfo("LOGIN", uniqueID.String(), rwContext.Request().URL.Path, rwContext.Request().Method, login, "login success", http.StatusOK, start)
+
+	return rwContext.NoContent(http.StatusOK)
 }
 
-func (dh DataHandler) Logout(w http.ResponseWriter, r *http.Request) {
+func (dh DataHandler) Register(rwContext echo.Context) error {
 
-	fmt.Println("===================LOGOUT===================")
-	cookie, err := r.Cookie("session_id")
+	uniqueID, _ := uuid.NewV4()
+	start := time.Now()
+	rwContext.Response().Header().Set("REQUEST_ID", uniqueID.String())
 
-	if err == http.ErrNoCookie {
-		w.WriteHeader(http.StatusOK)
-		return
+	jsonData, convertionError := getDataFromJson("reg", rwContext)
+	if convertionError != nil {
+		dh.LogDevError("json error", uniqueID.String(), rwContext.Request().URL.Path, convertionError.Error(), http.StatusInternalServerError)
+		dh.logger.Error(zap.String("DECODE TYPE", "reg"), )
+		return rwContext.String(http.StatusInternalServerError, "json error")
 	}
 
-	w.WriteHeader(http.StatusOK)
+	userData := jsonData.(*AP.JsonUserData)
+
+	login := userData.Email
+
+	dh.LogStartInfo("REGISTER", uniqueID.String(), rwContext.Request().URL.Path, rwContext.Request().Method, login)
+
+	dh.logger.Debug(zap.String("PASSWORD", userData.Password), )
+
+	if dh.dataBase.CheckUser(login) {
+		dh.LogFinalInfo("REGISTER", uniqueID.String(), rwContext.Request().URL.Path, rwContext.Request().Method, login, ET.AlreadyExist, http.StatusConflict, start)
+		return SetErrors(errors.New(ET.AlreadyExist), http.StatusConflict, rwContext)
+	}
+
+	data := DataBase.NewMetaData(login, userData.Name, userData.Phone, userData.Password, userData.Date, "default photo way")
+
+	(dh.dataBase).AddUser(login, *data)
+	dh.logger.Debug("USER ADDED", data, )
+
+	cookie := (dh.cookieSession).SetCookie(login)
+	SetCookie(rwContext, cookie)
+
+	dh.LogFinalInfo("REGISTER", uniqueID.String(), rwContext.Request().URL.Path, rwContext.Request().Method, login, "register success", http.StatusOK, start)
+
+	return rwContext.NoContent(http.StatusOK)
+}
+
+func (dh DataHandler) Logout(rwContext echo.Context) error {
+
+	uniqueID, _ := uuid.NewV4()
+	start := time.Now()
+	rwContext.Response().Header().Set("REQUEST_ID", uniqueID.String())
+	cookie, err := rwContext.Cookie("session_id")
+
+	dh.logger.Debug("LOGOUT", "COOKIE", cookie)
+
+	if err == http.ErrNoCookie {
+		dh.LogFinalInfo("LOGOUT", uniqueID.String(), rwContext.Request().URL.Path, rwContext.Request().Method, "cookie are empty", "no cookie - success logout", http.StatusOK, start)
+		return rwContext.NoContent(http.StatusOK)
+	}
+
 	cookie.Expires = time.Now().AddDate(0, 0, -1)
-	http.SetCookie(w, cookie)
+	rwContext.SetCookie(cookie)
+	dh.LogFinalInfo("LOGOUT", uniqueID.String(), rwContext.Request().URL.Path, rwContext.Request().Method, cookie.Value, "cookie dropped", http.StatusOK, start)
+	return rwContext.NoContent(http.StatusOK)
 }
 
-func (dh DataHandler) Profile(w http.ResponseWriter, r *http.Request) {
-	fmt.Print("=============Profile=============\n")
-	cookie, err := r.Cookie("session_id")
+func (dh DataHandler) Profile(rwContext echo.Context) error {
+	uniqueID, _ := uuid.NewV4()
+	start := time.Now()
+	rwContext.Response().Header().Set("REQUEST_ID", uniqueID.String())
+	cookie, err := rwContext.Cookie("session_id")
+
+	dh.logger.Debug("PROFILE", "COOKIE", cookie)
 
 	if err == http.ErrNoCookie {
-		fmt.Print(err, "\n")
-		SetErrors(errors.New(ET.CookieExpired), http.StatusUnauthorized, w)
-		return
-	}
-
-	if login, flag := dh.cookieSession.GetUserByCookie(cookie.Value); flag == nil {
-
-		sendData := make([]interface{}, 1)
-
-		sendData[0] = (dh.dataBase).GetUserDataByLogin(login)
-
-		SetData(sendData, []string{"user"}, w)
-
-	} else {
-		cookie.Expires = time.Now().AddDate(0, 0, -1)
-		SetErrors(errors.New(ET.InvalidCookie), http.StatusUnauthorized, w)
-		return
-	}
-
-}
-
-func (dh DataHandler) Feed(w http.ResponseWriter, r *http.Request) {
-
-	fmt.Print("=============Feed=============\n")
-	cookie, err := r.Cookie("session_id")
-
-	if err == http.ErrNoCookie {
-		fmt.Print(err, "\n")
-		SetErrors(errors.New(ET.CookieExpired), http.StatusUnauthorized, w)
-		return
-	}
-
-	if _, flag := dh.cookieSession.GetUserByCookie(cookie.Value); flag == nil {
-
-		sendData := make([]interface{}, 1)
-
-		sendData[0] = []DataBase.Post{post, post, post, post, post}
-
-		SetData(sendData, []string{"feed"}, w)
-
-	} else {
-		cookie.Expires = time.Now().AddDate(0, 0, -1)
-		SetErrors(errors.New(ET.InvalidCookie), http.StatusUnauthorized, w)
-		return
-	}
-
-}
-
-func (dh DataHandler) SettingsGet(w http.ResponseWriter, r *http.Request) {
-
-	fmt.Print("=============SettingsGET=============\n")
-	cookie, err := r.Cookie("session_id")
-
-	if err == http.ErrNoCookie {
-		fmt.Print(err, "\n")
-		SetErrors(errors.New(ET.CookieExpired), http.StatusUnauthorized, w)
-		return
+		dh.LogFinalInfo("PROFILE", uniqueID.String(), rwContext.Request().URL.Path, rwContext.Request().Method, "cookie are empty", ET.CookieExpired, http.StatusUnauthorized, start)
+		return SetErrors(errors.New(ET.CookieExpired), http.StatusUnauthorized, rwContext)
 	}
 
 	login, err := dh.cookieSession.GetUserByCookie(cookie.Value)
@@ -224,80 +221,177 @@ func (dh DataHandler) SettingsGet(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 
 		cookie.Expires = time.Now().AddDate(0, 0, -1)
-		SetErrors(errors.New(ET.InvalidCookie), http.StatusUnauthorized, w)
-		return
+		rwContext.SetCookie(cookie)
 
+		dh.LogFinalInfo("PROFILE", uniqueID.String(), rwContext.Request().URL.Path, rwContext.Request().Method, "wrong cookie", ET.InvalidCookie, http.StatusUnauthorized, start)
+
+		return SetErrors(errors.New(ET.InvalidCookie), http.StatusUnauthorized, rwContext)
+	}
+
+	sendData := make([]interface{}, 1)
+	sendData[0] ,_  = (dh.dataBase).GetUserDataByLogin(login)
+
+	dh.logger.Debug("PROFILE", "USER DATA", sendData[0])
+	dh.LogFinalInfo("PROFILE", uniqueID.String(), rwContext.Request().URL.Path, rwContext.Request().Method, login , "profile success", http.StatusOK, start)
+
+	return SetData(sendData, []string{"user"}, rwContext)
+
+}
+
+func (dh DataHandler) Feed(rwContext echo.Context) error {
+
+	uniqueID, _ := uuid.NewV4()
+	start := time.Now()
+	rwContext.Response().Header().Set("REQUEST_ID", uniqueID.String())
+	cookie, err := rwContext.Cookie("session_id")
+
+	dh.logger.Debug("FEED", "COOKIE", cookie)
+
+	if err == http.ErrNoCookie {
+		dh.LogFinalInfo("FEED", uniqueID.String(), rwContext.Request().URL.Path, rwContext.Request().Method, "cookie are empty", ET.CookieExpired, http.StatusUnauthorized, start)
+		return SetErrors(errors.New(ET.CookieExpired), http.StatusUnauthorized, rwContext)
+	}
+
+	login , err := dh.cookieSession.GetUserByCookie(cookie.Value)
+
+	if err != nil {
+
+		cookie.Expires = time.Now().AddDate(0, 0, -1)
+		rwContext.SetCookie(cookie)
+
+		dh.LogFinalInfo("FEED", uniqueID.String(), rwContext.Request().URL.Path, rwContext.Request().Method, "wrong cookie", ET.InvalidCookie, http.StatusUnauthorized, start)
+
+		return SetErrors(errors.New(ET.InvalidCookie), http.StatusUnauthorized, rwContext)
 	}
 
 	sendData := make([]interface{}, 1)
 
-	sendData[0] = (dh.dataBase).GetUserDataByLogin(login)
+	sendData[0] = []DataBase.Post{post, post, post, post, post}
 
-	SetData(sendData, []string{"user"}, w)
+	dh.logger.Debug("FEED", "USER FEED", sendData[0])
+	dh.LogFinalInfo("FEED", uniqueID.String(), rwContext.Request().URL.Path, rwContext.Request().Method, login , "feed success", http.StatusOK, start)
 
-}
-
-func (dh DataHandler) GetUser(w http.ResponseWriter, r *http.Request) {
-	fmt.Print("=============GETUSER=============\n")
-	login := r.Header.Get("X-User")
-
-	sendData := make([]interface{}, 2)
-	sendData[0] = (dh.dataBase).GetUserDataByLogin(login)
-	sendData[1] = []DataBase.Post{post, post, post, post, post}
-
-	SetData(sendData, []string{"user", "feed"}, w)
+	return SetData(sendData, []string{"feed"}, rwContext)
 
 }
 
-func (dh DataHandler) SettingsUpload(w http.ResponseWriter, r *http.Request) {
+func (dh DataHandler) SettingsGet(rwContext echo.Context) error {
 
-	fmt.Print("=============UploadSettings=============\n")
+	uniqueID, _ := uuid.NewV4()
+	start := time.Now()
+	rwContext.Response().Header().Set("REQUEST_ID", uniqueID.String())
+	cookie, err := rwContext.Cookie("session_id")
 
-	cookie, err := r.Cookie("session_id")
+	dh.logger.Debug("SETTINGS", "COOKIE", cookie)
 
 	if err == http.ErrNoCookie {
-		SetErrors(errors.New(ET.CookieExpired), http.StatusUnauthorized, w)
-		return
+		dh.LogFinalInfo("SETTINGS", uniqueID.String(), rwContext.Request().URL.Path, rwContext.Request().Method, "cookie are empty", ET.CookieExpired, http.StatusUnauthorized, start)
+		return SetErrors(errors.New(ET.CookieExpired), http.StatusUnauthorized, rwContext)
 	}
 
 	login, err := dh.cookieSession.GetUserByCookie(cookie.Value)
 
 	if err != nil {
 		cookie.Expires = time.Now().AddDate(0, 0, -1)
-		SetErrors(errors.New(ET.InvalidCookie), http.StatusUnauthorized, w)
-		return
+		rwContext.SetCookie(cookie)
+
+		dh.LogFinalInfo("SETTINGS", uniqueID.String(), rwContext.Request().URL.Path, rwContext.Request().Method, "wrong cookie", ET.InvalidCookie, http.StatusUnauthorized, start)
+
+		return SetErrors(errors.New(ET.InvalidCookie), http.StatusUnauthorized, rwContext)
 	}
 
-	err = r.ParseMultipartForm(FileMaxSize)
+	sendData := make([]interface{}, 1)
+
+	sendData[0] , _ = (dh.dataBase).GetUserDataByLogin(login)
+
+	dh.logger.Debug("SETTINGS", "USER SETTINGS", sendData[0])
+	dh.LogFinalInfo("SETTINGS", uniqueID.String(), rwContext.Request().URL.Path, rwContext.Request().Method, login , "settings success", http.StatusOK, start)
+
+
+	return SetData(sendData, []string{"user"}, rwContext)
+}
+
+func (dh DataHandler) GetUser(rwContext echo.Context) error {
+	uniqueID, _ := uuid.NewV4()
+	start := time.Now()
+	rwContext.Response().Header().Set("REQUEST_ID", uniqueID.String())
+	login := rwContext.Param("id")
+
+	dh.logger.Info("GET USER", "USER LOGIN", login)
+
+	userData , existError := (dh.dataBase).GetUserDataByLogin(login)
+
+	if existError != nil {
+		dh.LogFinalInfo("GET USER", uniqueID.String(), rwContext.Request().URL.Path, rwContext.Request().Method, "doesnt matter", ET.NotExist, http.StatusNotFound, start)
+		return SetErrors(errors.New(ET.NotExist), http.StatusNotFound, rwContext)
+	}
+
+	sendData := make([]interface{}, 2)
+	sendData[0] = userData
+	sendData[1] = []DataBase.Post{post, post, post, post, post}
+
+	dh.logger.Debug("GET USER", "USER DATA", sendData[0], "USER FEED" , sendData[1])
+	dh.LogFinalInfo("GET USER", uniqueID.String(), rwContext.Request().URL.Path, rwContext.Request().Method, "doesnt matter" , "other profile success", http.StatusOK, start)
+
+	return SetData(sendData, []string{"user", "feed"}, rwContext)
+}
+
+func (dh DataHandler) SettingsUpload(rwContext echo.Context) error {
+
+	uniqueID, _ := uuid.NewV4()
+	start := time.Now()
+	rwContext.Response().Header().Set("REQUEST_ID", uniqueID.String())
+	cookie, err := rwContext.Cookie("session_id")
+
+	dh.logger.Debug("SETTINGS UPLOAD", "COOKIE", cookie)
+
+	if err == http.ErrNoCookie {
+		dh.LogFinalInfo("SETTINGS UPLOAD", uniqueID.String(), rwContext.Request().URL.Path, rwContext.Request().Method, "cookie are empty", ET.CookieExpired, http.StatusUnauthorized, start)
+		return SetErrors(errors.New(ET.CookieExpired), http.StatusUnauthorized, rwContext)
+	}
+
+	login, err := dh.cookieSession.GetUserByCookie(cookie.Value)
+
+
+	if err != nil {
+		cookie.Expires = time.Now().AddDate(0, 0, -1)
+		rwContext.SetCookie(cookie)
+
+		dh.LogFinalInfo("SETTINGS UPLOAD", uniqueID.String(), rwContext.Request().URL.Path, rwContext.Request().Method, "wrong cookie", ET.InvalidCookie, http.StatusUnauthorized, start)
+
+		return SetErrors(errors.New(ET.InvalidCookie), http.StatusUnauthorized, rwContext)
+	}
+
 
 	uploadDataFlags := []string{"uploadedFile", "email", "password", "name", "phone", "date"}
 
-	currentUserData := dh.dataBase.GetUserDataByLogin(login)
+	currentUserData , _ := dh.dataBase.GetUserDataByLogin(login)
+	dh.logger.Debug("SETTINGS UPLOAD", "CURRENT DATA" , currentUserData)
 
 	for _, dataFlag := range uploadDataFlags {
 		switch dataFlag {
 		case "uploadedFile":
-			if data := r.FormValue(dataFlag); data != "" {
+			if data := rwContext.FormValue(dataFlag); data != "" {
 				currentUserData.Photo = data
 			}
 		case "email":
-			if data := r.FormValue(dataFlag); data != "" {
+			if data := rwContext.FormValue(dataFlag); data != "" {
 				currentUserData.Email = data
 			}
 		case "password":
-			if data := r.FormValue(dataFlag); data != "" {
+			if data := rwContext.FormValue(dataFlag); data != "" {
 				currentUserData.Password = data
 			}
 		case "name":
-			if data := r.FormValue(dataFlag); data != "" {
+			if data := rwContext.FormValue(dataFlag); data != "" {
 				currentUserData.Username = data
 			}
 		case "phone":
-			if data := r.FormValue(dataFlag); data != "" {
+			if data := rwContext.FormValue(dataFlag); data != "" {
 				currentUserData.Telephone = data
 			}
 		case "date":
-			if data := r.FormValue(dataFlag); data != "" {
+			if data := rwContext.FormValue(dataFlag); data != "" {
 				currentUserData.Date = data
 			}
 
@@ -307,58 +401,79 @@ func (dh DataHandler) SettingsUpload(w http.ResponseWriter, r *http.Request) {
 	dh.dataBase.EditUser(login, currentUserData)
 
 	sendData := make([]interface{}, 1)
-
 	sendData[0] = currentUserData
 
-	SetData(sendData, []string{"user"}, w)
+	dh.logger.Debug("SETTINGS UPLOAD", "UPDATED DATA" , sendData[0])
+	dh.LogFinalInfo("SETTINGS UPLOAD", uniqueID.String(), rwContext.Request().URL.Path, rwContext.Request().Method, login , "settings update success", http.StatusOK, start)
+
+	return SetData(sendData, []string{"user"}, rwContext)
 }
 
 func main() {
 	fmt.Print("main")
-	server := mux.NewRouter()
+	server := echo.New()
+
+	server.Use(SetCorsMiddleware)
+	server.Use(PanicMiddleWare)
+
+	prLogger, _ := zap.NewDevelopment()
+	logger := prLogger.Sugar()
+	defer prLogger.Sync()
+
 	db := DataBase.NewDataBase()
 	cb := DataBase.NewCookieSession()
-	server.Use(SetCorsMiddleware(server))
-
-	api := &(DataHandler{dataBase: db, cookieSession: cb})
+	api := &(DataHandler{dataBase: db, cookieSession: cb, logger: logger})
 	DataBase.FillDataBase(db)
 
-	server.HandleFunc("/api/v1/news", api.Feed).Methods("GET", "OPTIONS")
-	server.HandleFunc("/api/v1/profile", api.Profile).Methods("GET", "OPTIONS")
-	server.HandleFunc("/api/v1/settings", api.SettingsGet).Methods("GET", "OPTIONS")
-	server.HandleFunc("/api/v1/user", api.GetUser).Methods("GET", "OPTIONS")
+	server.POST("/api/v1/login", api.Login)
+	server.POST("/api/v1/registration", api.Login)
 
-	server.HandleFunc("/api/v1/registration", api.Register).Methods("POST", "OPTIONS")
-	server.HandleFunc("/api/v1/login", api.Login).Methods("POST", "OPTIONS")
+	server.PUT("/api/v1/settings", api.Login)
 
-	server.HandleFunc("/api/v1/login", api.Logout).Methods("DELETE", "OPTIONS")
+	server.GET("/api/v1/news", api.Feed)
+	server.GET("/api/v1/profile", api.Profile)
+	server.GET("/api/v1/settings",  api.SettingsGet)
+	server.GET("/api/v1/user/:id", api.GetUser)
 
-	server.HandleFunc("/api/v1/settings", api.SettingsUpload).Methods("PUT", "OPTIONS")
+	server.DELETE("/api/v1/login", api.Logout)
 
-	http.ListenAndServe(":3001", server)
-
+	server.Logger.Fatal(server.Start(":3001"))
 }
 
-func SetCorsMiddleware(r *mux.Router) mux.MiddlewareFunc {
+func SetCorsMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-			//TODO: убрать из корса
-			w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	return func(c echo.Context) error {
 
-			w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
-			w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS, PUT, DELETE, POST")
-			w.Header().Set("Access-Control-Allow-Headers", "Origin, X-Login, Set-Cookie, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, csrf-token, Authorization")
-			w.Header().Set("Access-Control-Allow-Credentials", "true")
-			w.Header().Set("Vary", "Cookie")
+		//TODO: убрать из корса
+		c.Response().Header().Set("Content-Type", "application/json; charset=utf-8")
 
-			if req.Method == http.MethodOptions {
-				w.WriteHeader(http.StatusOK)
-				return
-			}
+		c.Response().Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+		c.Response().Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS, PUT, DELETE, POST")
+		c.Response().Header().Set("Access-Control-Allow-Headers", "Origin, X-Login, Set-Cookie, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, csrf-token, Authorization")
+		c.Response().Header().Set("Access-Control-Allow-Credentials", "true")
+		c.Response().Header().Set("Vary", "Cookie")
 
-			next.ServeHTTP(w, req)
-		})
+		if c.Request().Method == http.MethodOptions {
+			c.String(http.StatusOK, "OPTIONS")
+		}
+
+		return next(c)
+
 	}
+}
 
+func PanicMiddleWare(next echo.HandlerFunc) echo.HandlerFunc {
+
+	return func(c echo.Context) error {
+
+		defer func() error {
+			if err := recover(); err != nil {
+				fmt.Println("recovered", err)
+				return echo.NewHTTPError(http.StatusInternalServerError, "panic")
+			}
+			return nil
+		}()
+		return next(c)
+
+	}
 }
