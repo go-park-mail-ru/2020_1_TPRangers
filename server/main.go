@@ -6,6 +6,7 @@ import (
 	"github.com/labstack/echo"
 	"github.com/satori/go.uuid"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	"net/http"
 	"time"
 
@@ -416,7 +417,9 @@ func main() {
 	server.Use(SetCorsMiddleware)
 	server.Use(PanicMiddleWare)
 
-	prLogger, _ := zap.NewDevelopment()
+	config := zap.NewDevelopmentConfig()
+	config.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
+	prLogger, _ := config.Build()
 	logger := prLogger.Sugar()
 	defer prLogger.Sync()
 
@@ -426,9 +429,9 @@ func main() {
 	DataBase.FillDataBase(db)
 
 	server.POST("/api/v1/login", api.Login)
-	server.POST("/api/v1/registration", api.Login)
+	server.POST("/api/v1/registration", api.Register)
 
-	server.PUT("/api/v1/settings", api.Login)
+	server.PUT("/api/v1/settings", api.SettingsUpload)
 
 	server.GET("/api/v1/news", api.Feed)
 	server.GET("/api/v1/profile", api.Profile)
