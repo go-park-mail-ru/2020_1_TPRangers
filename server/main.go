@@ -15,7 +15,6 @@ import (
 	AP "./json-answers"
 )
 
-var FileMaxSize = int64(5 * 1024 * 1024)
 
 var post = DataBase.Post{PostName: "Test Post Name", PostText: "Test Post Text", PostPhoto: "https://picsum.photos/200/300?grayscale"}
 
@@ -63,7 +62,7 @@ func SetData(data []interface{}, jsonType []string, write echo.Context) error {
 			answer[val] = data[i].([]DataBase.Post)
 
 		// TODO : change case
-		case "login":
+		case "auth":
 			answer[val] = data[i].(string)
 
 		}
@@ -140,7 +139,7 @@ func (dh DataHandler) Login(rwContext echo.Context) error {
 	cookie := (dh.cookieSession).SetCookie(login)
 	SetCookie(rwContext, cookie)
 
-	dh.LogFinalInfo("LOGIN", uniqueID.String(), rwContext.Request().URL.Path, rwContext.Request().Method, login, "login success", http.StatusOK, start)
+	dh.LogFinalInfo("LOGIN", uniqueID.String(), rwContext.Request().URL.Path, rwContext.Request().Method, login, "auth success", http.StatusOK, start)
 
 	return rwContext.NoContent(http.StatusOK)
 }
@@ -428,17 +427,17 @@ func main() {
 	api := &(DataHandler{dataBase: db, cookieSession: cb, logger: logger})
 	DataBase.FillDataBase(db)
 
-	server.POST("/api/v1/login", api.Login)
-	server.POST("/api/v1/registration", api.Register)
+	server.POST("/api/v1/auth", api.Login) //
+	server.POST("/api/v1/registration", api.Register) //
 
-	server.PUT("/api/v1/settings", api.SettingsUpload)
+	server.PUT("/api/v1/settings", api.SettingsUpload) //
 
 	server.GET("/api/v1/news", api.Feed)
 	server.GET("/api/v1/profile", api.Profile)
-	server.GET("/api/v1/settings",  api.SettingsGet)
+	server.GET("/api/v1/settings",  api.SettingsGet) //
 	server.GET("/api/v1/user/:id", api.GetUser)
 
-	server.DELETE("/api/v1/login", api.Logout)
+	server.DELETE("/api/v1/auth", api.Logout) //
 
 	server.Logger.Fatal(server.Start(":3001"))
 }
