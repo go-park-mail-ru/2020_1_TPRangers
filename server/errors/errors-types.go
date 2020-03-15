@@ -11,5 +11,7 @@ var (
 	AlreadyExist   = errors.New("Такой пользователь уже сушествует")
 	NotExist       = errors.New("Такого пользователя не существует")
 	WrongPassword  = errors.New("Неправильный пароль")
-	WrongLogin     = errors.New("Неправильные данные"_
+	WrongLogin     = errors.New("Неправильные данные")
+	FailConnect	   = errors.New("Ошибка подключения к базе данных")
+	FailSendToDB   = errors.New("Ошибка записи в базе данных")
 )

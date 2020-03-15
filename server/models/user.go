@@ -8,5 +8,4 @@ type User struct {
 	Password  string `json:"password,omitempty"`
 	Surname   string `json:"email,omitempty"`
 	Date      string `json:"date,omitempty"`
-	Photo     string `json:"photo,omitempty"`
 }
