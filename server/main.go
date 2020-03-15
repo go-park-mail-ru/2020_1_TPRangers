@@ -432,7 +432,7 @@ func main() {
 
 	server.PUT("/api/v1/settings", api.SettingsUpload) //
 
-	server.GET("/api/v1/news", api.Feed)
+	server.GET("/api/v1/news", api.Feed) //
 	server.GET("/api/v1/profile", api.Profile)
 	server.GET("/api/v1/settings",  api.SettingsGet) //
 	server.GET("/api/v1/user/:id", api.GetUser)
