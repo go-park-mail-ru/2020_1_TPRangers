@@ -427,17 +427,17 @@ func main() {
 	api := &(DataHandler{dataBase: db, cookieSession: cb, logger: logger})
 	DataBase.FillDataBase(db)
 
-	server.POST("/api/v1/auth", api.Login) //
+	server.POST("/api/v1/auth", api.Login) // //
 	server.POST("/api/v1/registration", api.Register) //
 
 	server.PUT("/api/v1/settings", api.SettingsUpload) //
 
 	server.GET("/api/v1/news", api.Feed) //
-	server.GET("/api/v1/profile", api.Profile)
+	server.GET("/api/v1/profile", api.Profile) //
 	server.GET("/api/v1/settings",  api.SettingsGet) //
-	server.GET("/api/v1/user/:id", api.GetUser)
+	server.GET("/api/v1/user/:id", api.GetUser) //
 
-	server.DELETE("/api/v1/auth", api.Logout) //
+	server.DELETE("/api/v1/auth", api.Logout) // //
 
 	server.Logger.Fatal(server.Start(":3001"))
 }

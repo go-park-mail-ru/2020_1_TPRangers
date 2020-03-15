@@ -30,7 +30,5 @@ func (feed FeedRealisation) Feed(rwContext echo.Context) (error, models.JsonStru
 
 	sendData["feed"] = feed.feedDB.GetUserFeed(login, 30)
 
-
-
-	return nil, models.JsonStruct{Body:sendData}
+	return nil, models.JsonStruct{Body: sendData}
 }
