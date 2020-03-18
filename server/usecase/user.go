@@ -7,4 +7,5 @@ import (
 
 type UserUseCase interface {
 	GetUser(echo.Context) (error, models.JsonStruct)
+	Profile(echo.Context) (error , models.JsonStruct)
 }

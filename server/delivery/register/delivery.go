@@ -3,22 +3,23 @@ package register
 import (
 	"../../errors"
 	"../../usecase"
+	"../../usecase/register"
 	"github.com/labstack/echo"
 	uuid "github.com/satori/go.uuid"
 	"net/http"
-	"time"
 )
 
-type RegisterDelivery struct {
+type RegisterDeliveryRealisation struct {
 	registerLogic usecase.RegisterUseCase
 }
 
-func (rDev RegisterDelivery) Register(rwContext echo.Context) error {
+func (regDev RegisterDeliveryRealisation) Register(rwContext echo.Context) error {
+
 	uniqueID, _ := uuid.NewV4()
 	//start := time.Now()
 	rwContext.Response().Header().Set("REQUEST_ID", uniqueID.String())
 
-	err, cookieValue := rDev.registerLogic.Register(rwContext)
+	err := regDev.registerLogic.Register(rwContext)
 
 	switch err {
 	case errors.AlreadyExist:
@@ -29,12 +30,11 @@ func (rDev RegisterDelivery) Register(rwContext echo.Context) error {
 		return rwContext.NoContent(http.StatusInternalServerError)
 	}
 
-	cookie := http.Cookie{
-		Name:    "session_id",
-		Value:   cookieValue,
-		Expires: time.Now().Add(12 * time.Hour),
-	}
-	rwContext.SetCookie(&cookie)
-
 	return rwContext.NoContent(http.StatusOK)
+}
+
+
+func NewRegisterDelivery() RegisterDeliveryRealisation {
+	regHandler := register.RegisterUseCaseRealisation{}
+	return RegisterDeliveryRealisation{registerLogic:regHandler}
 }
