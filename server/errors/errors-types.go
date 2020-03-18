@@ -14,4 +14,7 @@ var (
 	WrongLogin     = errors.New("Неправильные данные")
 	FailConnect	   = errors.New("Ошибка подключения к базе данных")
 	FailSendToDB   = errors.New("Ошибка записи в базе данных")
+	FailReadFromDB = errors.New("Ошибка чтения из базы данных")
+	FailReadToVar  = errors.New("Ошибка записи данных в переменные")
+
 )
