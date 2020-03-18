@@ -5,52 +5,59 @@ import (
 	"../../models"
 	"github.com/labstack/echo"
 	"net/http"
+	"time"
 )
 
-type SettingsRealisation struct {
+type SettingsUseCaseRealisation struct {
 	settingsDB REPOSITORYCASETYPE
 	sessionDB  REPOSITORYSESSIONTYPE
 }
 
-func (stng SettingsRealisation) GetSettings(rwContext echo.Context) (error, models.JsonStruct) {
+func (stngR SettingsUseCaseRealisation) GetSettings(rwContext echo.Context) (error, models.JsonStruct) {
 
 	cookie, err := rwContext.Cookie("session_id")
 
 	if err == http.ErrNoCookie {
-		return errors.CookieExpired, models.JsonStruct{}
+		return errors.CookieExpired, models.JsonStruct{Err: errors.CookieExpired.Error()}
 	}
 
-	login, err := stng.sessionDB.GetUserByCookie(cookie.Value)
+	login, err := stngR.sessionDB.GetUserByCookie(cookie.Value)
 
 	if err != nil {
-		return errors.InvalidCookie, models.JsonStruct{}
+		cookie.Expires = time.Now().AddDate(0, 0, -1)
+		rwContext.SetCookie(cookie)
+
+		return errors.InvalidCookie, models.JsonStruct{Err: errors.InvalidCookie.Error()}
 	}
 
 	sendData := make(map[string]interface{})
 
-	sendData["user"], _ = stng.settingsDB.GetUserDataByLogin(login)
+	sendData["user"], _ = stngR.settingsDB.GetUserDataByLogin(login)
 
 	return nil, models.JsonStruct{Body: sendData}
 
 }
 
-func (stng SettingsRealisation) UploadSettings(rwContext echo.Context) (error, models.JsonStruct) {
+func (stngR SettingsUseCaseRealisation) UploadSettings(rwContext echo.Context) (error, models.JsonStruct) {
 
 	cookie, err := rwContext.Cookie("session_id")
 
 	if err == http.ErrNoCookie {
-		return errors.CookieExpired, models.JsonStruct{}
+		return errors.CookieExpired, models.JsonStruct{Err: errors.CookieExpired.Error()}
 	}
 
-	login, err := stng.sessionDB.GetUserByCookie(cookie.Value)
+	login, err := stngR.sessionDB.GetUserByCookie(cookie.Value)
 
 	if err != nil {
-		return errors.InvalidCookie, models.JsonStruct{}
+		cookie.Expires = time.Now().AddDate(0, 0, -1)
+		rwContext.SetCookie(cookie)
+
+		return errors.InvalidCookie, models.JsonStruct{Err: errors.InvalidCookie.Error()}
 	}
 
 	uploadDataFlags := []string{"uploadedFile", "email", "login", "password", "name", "surname", "phone", "date"}
 
-	currentUserData, _ := stng.settingsDB.GetUserDataByLogin(login)
+	currentUserData, _ := stngR.settingsDB.GetUserDataByLogin(login)
 
 	for _, dataFlag := range uploadDataFlags {
 		switch dataFlag {
@@ -90,11 +97,11 @@ func (stng SettingsRealisation) UploadSettings(rwContext echo.Context) (error, m
 		}
 	}
 
-	stng.settingsDB.UploadSettings(login, currentUserData)
+	stngR.settingsDB.UploadSettings(login, currentUserData)
 
 	sendData := make(map[string]interface{})
 
-	sendData["user"], _ = stng.settingsDB.GetUserDataByLogin(login)
+	sendData["user"], _ = stngR.settingsDB.GetUserDataByLogin(login)
 
 	return nil, models.JsonStruct{Body: sendData}
 }

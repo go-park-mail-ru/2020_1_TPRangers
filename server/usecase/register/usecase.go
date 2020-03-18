@@ -6,27 +6,29 @@ import (
 	"../../models"
 	"github.com/labstack/echo"
 	uuid "github.com/satori/go.uuid"
+	"net/http"
+	"time"
 )
 
-type RegisterRealisation struct {
+type RegisterUseCaseRealisation struct {
 	registerDB REPOSITORYCASETYPE
 	sessionDB  REPOSITORYSESSIONTYPE
 }
 
-func (reg RegisterRealisation) Register(rwContext echo.Context) (error, string) {
+func (regR RegisterUseCaseRealisation) Register(rwContext echo.Context) error {
 
 	jsonData, convertionError := usecase.GetDataFromJson("reg", rwContext)
 
 	if convertionError != nil {
-		return convertionError, ""
+		return convertionError
 	}
 
 	userData := jsonData.(*models.Register)
 
 	login := userData.Email
 
-	if reg.registerDB.CheckExistnig(login) == false {
-		return errors.AlreadyExist, ""
+	if regR.registerDB.CheckExistnig(login) == false {
+		return errors.AlreadyExist
 	}
 
 	data := models.User{
@@ -40,13 +42,20 @@ func (reg RegisterRealisation) Register(rwContext echo.Context) (error, string) 
 		Photo:     "default",
 	}
 
-	reg.registerDB.AddNewUser(data)
+	regR.registerDB.AddNewUser(data)
 
-	id := reg.registerDB.GetIdByLogin(login)
+	id := regR.registerDB.GetIdByLogin(login)
 	info, _ := uuid.NewV4()
-	cookie := info.String()
-	reg.sessionDB.SetCookie(id, cookie)
+	cookieValue := info.String()
+	regR.sessionDB.SetCookie(id, cookie)
 
-	return nil, cookie
+	cookie := http.Cookie{
+		Name:    "session_id",
+		Value:   cookieValue,
+		Expires: time.Now().Add(12 * time.Hour),
+	}
+	rwContext.SetCookie(&cookie)
+
+	return nil
 
 }

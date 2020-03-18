@@ -5,32 +5,33 @@ import (
 	"../../models"
 	"github.com/labstack/echo"
 	"net/http"
+	"time"
 )
 
-type FeedRealisation struct {
+type FeedUseCaseRealisation struct {
 	feedDB    REPOSITORYCASETYPE
 	sessionDB REPOSITORYSESSIONTYPE
 }
 
-func (feed FeedRealisation) Feed(rwContext echo.Context) (error, models.JsonStruct) {
+func (feedR FeedUseCaseRealisation) Feed(rwContext echo.Context) (error, models.JsonStruct) {
 
 	cookie, err := rwContext.Cookie("session_id")
 
 	if err == http.ErrNoCookie {
-		return errors.CookieExpired, models.JsonStruct{}
+		return errors.CookieExpired, models.JsonStruct{Err:errors.CookieExpired.Error()}
 	}
 
-	login, err := feed.sessionDB.GetUserByCookie(cookie.Value)
+	login, err := feedR.sessionDB.GetUserByCookie(cookie.Value)
 
 	if err != nil {
-		return errors.InvalidCookie, models.JsonStruct{}
+		cookie.Expires = time.Now().AddDate(0, 0, -1)
+		rwContext.SetCookie(cookie)
+		return errors.InvalidCookie, models.JsonStruct{Err : errors.InvalidCookie.Error()}
 	}
 
 	sendData := make(map[string]interface{})
 
-	sendData["feed"] = feed.feedDB.GetUserFeed(login, 30)
+	sendData["feed"] = feedR.feedDB.GetUserFeed(login, 30)
 
-
-
-	return nil, models.JsonStruct{Body:sendData}
+	return nil, models.JsonStruct{Body: sendData}
 }
