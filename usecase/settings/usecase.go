@@ -4,9 +4,8 @@ import (
 	"../../errors"
 	"../../models"
 	"../../repository"
-	"../../usecase"
-	UserRep "../../repository/user"
 	SessRep "../../repository/cookie"
+	UserRep "../../repository/user"
 	"github.com/labstack/echo"
 	"go.uber.org/zap"
 	"net/http"
@@ -55,7 +54,7 @@ func (stngR SettingsUseCaseRealisation) GetSettings(rwContext echo.Context, uId 
 
 	sendData := make(map[string]interface{})
 
-	sendData["user"], err = stngR.settingsDB.GetUserDataById(id)
+	sendData["user"], err = stngR.settingsDB.GetUserProfileSettingsById(id)
 
 	if err != nil {
 
@@ -71,7 +70,7 @@ func (stngR SettingsUseCaseRealisation) GetSettings(rwContext echo.Context, uId 
 	stngR.logger.Debug(
 		zap.String("ID", uId),
 		sendData["user"],
-		)
+	)
 
 	return nil, models.JsonStruct{Body: sendData}
 
@@ -115,9 +114,9 @@ func (stngR SettingsUseCaseRealisation) UploadSettings(rwContext echo.Context, u
 
 	currentUserData, _ := stngR.settingsDB.GetUserDataById(id)
 
-	jsonData, convertionError := usecase.GetDataFromJson("data", rwContext)
+	jsonData := new(models.Settings)
 
-	userData := jsonData.(models.User)
+	convertionError :=  rwContext.Bind(jsonData)
 
 	//когда нам будут высылать закэшированные настройки
 	//if userData.Password == "" {
@@ -127,47 +126,48 @@ func (stngR SettingsUseCaseRealisation) UploadSettings(rwContext echo.Context, u
 	//currentUserData = userData
 
 	if convertionError != nil {
-		return convertionError , models.JsonStruct{}
+		return convertionError, models.JsonStruct{}
 	}
 
-	if userData.Login != "" {
-		currentUserData.Login = userData.Login
+	if jsonData.Login != "" {
+		currentUserData.Login = jsonData.Login
 	}
 
-	if userData.Password != "" {
-		currentUserData.Password = userData.Password
+	if jsonData.Password != "" {
+		currentUserData.Password = jsonData.Password
 	}
 
-	if userData.Date != "" {
-		currentUserData.Date = userData.Date
+	if jsonData.Date != "" {
+		currentUserData.Date = jsonData.Date
 	}
 
-	if userData.Surname != ""{
-		currentUserData.Surname = userData.Surname
+	if jsonData.Surname != "" {
+		currentUserData.Surname = jsonData.Surname
 	}
 
-	if userData.Name != ""{
-		currentUserData.Name = userData.Name
+	if jsonData.Name != "" {
+		currentUserData.Name = jsonData.Name
 	}
 
-	if userData.Photo != ""{
-		currentUserData.Photo = userData.Photo
+	if jsonData.Photo != "" {
+		photoId, _ := stngR.settingsDB.UploadPhoto(jsonData.Photo)
+
+		currentUserData.Photo = photoId
 	}
 
-	if userData.Telephone != ""{
-		currentUserData.Telephone = userData.Telephone
+	if jsonData.Telephone != "" {
+		currentUserData.Telephone = jsonData.Telephone
 	}
 
-	if userData.Email != "" {
-		currentUserData.Email = userData.Email
+	if jsonData.Email != "" {
+		currentUserData.Email = jsonData.Email
 	}
-
 
 	stngR.settingsDB.UploadSettings(id, currentUserData)
 
 	sendData := make(map[string]interface{})
 
-	sendData["user"], _ = stngR.settingsDB.GetUserDataById(id)
+	sendData["user"], _ = stngR.settingsDB.GetUserProfileSettingsById(id)
 
 	return nil, models.JsonStruct{Body: sendData}
 }

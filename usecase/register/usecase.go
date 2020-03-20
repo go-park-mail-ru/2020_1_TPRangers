@@ -44,6 +44,8 @@ func (regR RegisterUseCaseRealisation) Register(rwContext echo.Context, uId stri
 
 	uniqueUserLogin , _ := uuid.NewV4()
 
+	defaultPhotoId , _:= regR.registerDB.GetDefaultProfilePhotoId()
+
 	data := models.User{
 		Login:     uniqueUserLogin.String(),
 		Telephone: userData.Phone,
@@ -52,7 +54,7 @@ func (regR RegisterUseCaseRealisation) Register(rwContext echo.Context, uId stri
 		Password:  userData.Password,
 		Surname:   userData.Surname,
 		Date:      userData.Date,
-		Photo:     "default",
+		Photo:     defaultPhotoId,
 	}
 
 	regR.registerDB.AddNewUser(data)

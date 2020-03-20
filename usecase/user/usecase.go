@@ -24,7 +24,7 @@ func (userR UserUseCaseRealisation) GetUser(rwContext echo.Context, uId string) 
 
 	login := rwContext.Param("id")
 
-	userData, existError := userR.userDB.GetUserDataByLogin(login)
+	userData, existError := userR.userDB.GetUserProfileSettingsByLogin(login)
 
 	if existError != nil {
 
@@ -87,7 +87,7 @@ func (userR UserUseCaseRealisation) Profile(rwContext echo.Context, uId string) 
 	)
 
 	sendData := make(map[string]interface{})
-	sendData["user"], _ = userR.userDB.GetUserDataById(id)
+	sendData["user"], _ = userR.userDB.GetUserProfileSettingsById(id)
 
 	return nil, models.JsonStruct{Body: sendData}
 }

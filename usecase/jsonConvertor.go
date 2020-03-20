@@ -12,7 +12,7 @@ func GetDataFromJson(jsonType string, r echo.Context) (data interface{}, errConv
 	case "reg":
 		data = new(models.Register)
 	case "data":
-		data = new(models.User)
+		data = new(models.Settings)
 	case "log":
 		data = new(models.Auth)
 	}
