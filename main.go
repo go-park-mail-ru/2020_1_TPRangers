@@ -7,6 +7,7 @@ import (
 	deliveryRegister "./delivery/register"
 	deliverySettings "./delivery/settings"
 	deliveryUser "./delivery/user"
+	deliveryFriend "./delivery/friend"
 	"database/sql"
 
 	usecaseAuth "./usecase/auth"
@@ -14,12 +15,14 @@ import (
 	usecaseRegister "./usecase/register"
 	usecaseSettings "./usecase/settings"
 	usecaseUser "./usecase/user"
+	usecaseFriend "./usecase/friend"
 
 	repositoryAuth "./repository/auth"
 	repositoryCookie "./repository/cookie"
 	repositoryFeed "./repository/feed"
 	repositoryRegister "./repository/register"
 	repositoryUser "./repository/user"
+	repositoryFriend "./repository/friend"
 
 	"./middleware"
 	"github.com/labstack/echo"
@@ -41,6 +44,7 @@ type RequestHandlers struct {
 	settingHandler delivery.SettingsDelivery
 	userHandler    delivery.UserDelivery
 	feedHandler    delivery.FeedDelivery
+	friendHandler  delivery.FriendDelivery
 }
 
 func NewRequestHandler(db *sql.DB) *RequestHandlers {
@@ -56,6 +60,7 @@ func NewRequestHandler(db *sql.DB) *RequestHandlers {
 	registerDB := repositoryRegister.NewRegisterRepositoryRealisation(db)
 	feedDB := repositoryFeed.NewFeedRepositoryRealisation(db)
 	userDB := repositoryUser.NewUserRepositoryRealisation(db)
+	friendDB := repositoryFriend.NewFriendRepositoryRealisation(db)
 
 
 	authUseCase := usecaseAuth.NewAuthUseCaseRealisation(authDB, sessionDB, logger)
@@ -63,12 +68,14 @@ func NewRequestHandler(db *sql.DB) *RequestHandlers {
 	feedUseCase := usecaseFeed.NewFeedUseCaseRealisation(feedDB, sessionDB, logger)
 	settingsUseCase := usecaseSettings.NewSetUseCaseRealisation(userDB, sessionDB, logger)
 	userUseCase := usecaseUser.NewUserUseCaseRealisation(userDB, feedDB, sessionDB, logger)
+	friendUseCase := usecaseFriend.NewFriendUseCaseRealisation(userDB,friendDB,sessionDB,logger)
 
 	authH := deliveryAuth.NewLoginDelivery(logger, authUseCase)
 	regH := deliveryRegister.NewRegisterDelivery(logger, registerUseCase)
 	userH := deliveryUser.NewUserDelivery(logger, userUseCase)
 	setH := deliverySettings.NewSettingsDelivery(logger, settingsUseCase)
 	feedH := deliveryFeed.NewFeedDelivery(logger, feedUseCase)
+	friendH := deliveryFriend.NewRegisterDelivery(logger,friendUseCase)
 
 	api := &(RequestHandlers{
 		regHandler:     regH,
@@ -76,6 +83,7 @@ func NewRequestHandler(db *sql.DB) *RequestHandlers {
 		settingHandler: setH,
 		userHandler:    userH,
 		feedHandler:    feedH,
+		friendHandler:friendH,
 	})
 
 	return api
@@ -102,6 +110,7 @@ func main() {
 	server.POST("/api/v1/registration", api.regHandler.Register) // //
 
 	server.PUT("/api/v1/settings", api.settingHandler.UploadSettings) // //
+	server.PUT("/api/v1/user/:id", api.friendHandler.AddFriend)        // //
 
 	server.GET("/api/v1/news", api.feedHandler.Feed)               // //
 	server.GET("/api/v1/profile", api.userHandler.Profile)         //
