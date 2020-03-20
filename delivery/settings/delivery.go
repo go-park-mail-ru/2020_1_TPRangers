@@ -55,6 +55,21 @@ func (setD SettingsDeliveryRealisation) GetSettings(rwContext echo.Context) erro
 		return rwContext.JSON(http.StatusInternalServerError, jsonAnswer)
 	}
 
+	if err != nil {
+
+		setD.logger.Info(
+			zap.String("ID", uniqueID.String()),
+			zap.String("URL", rwContext.Request().URL.Path),
+			zap.String("METHOD", rwContext.Request().Method),
+			zap.String("ERROR", err.Error()),
+			zap.Int("ANSWER STATUS", http.StatusInternalServerError),
+			zap.Duration("TIME FOR ANSWER", time.Since(start)),
+		)
+
+		return rwContext.JSON(http.StatusInternalServerError, jsonAnswer)
+
+	}
+
 	setD.logger.Info(
 		zap.String("ID", uniqueID.String()),
 		zap.String("URL", rwContext.Request().URL.Path),

@@ -4,6 +4,7 @@ import (
 	"../../errors"
 	"../../models"
 	"../../repository"
+	"../../usecase"
 	UserRep "../../repository/user"
 	SessRep "../../repository/cookie"
 	"github.com/labstack/echo"
@@ -112,47 +113,55 @@ func (stngR SettingsUseCaseRealisation) UploadSettings(rwContext echo.Context, u
 		zap.Int("USER-ID", id),
 	)
 
-	uploadDataFlags := []string{"uploadedFile", "email", "login", "password", "name", "surname", "phone", "date"}
-
 	currentUserData, _ := stngR.settingsDB.GetUserDataById(id)
 
-	for _, dataFlag := range uploadDataFlags {
-		switch dataFlag {
-		case "uploadedFile":
-			if data := rwContext.FormValue(dataFlag); data != "" {
-				currentUserData.Photo = data
-			}
-		case "email":
-			if data := rwContext.FormValue(dataFlag); data != "" {
-				currentUserData.Email = data
-			}
-		case "password":
-			if data := rwContext.FormValue(dataFlag); data != "" {
-				currentUserData.Password = data
-			}
-		case "name":
-			if data := rwContext.FormValue(dataFlag); data != "" {
-				currentUserData.Name = data
-			}
-		case "phone":
-			if data := rwContext.FormValue(dataFlag); data != "" {
-				currentUserData.Telephone = data
-			}
-		case "date":
-			if data := rwContext.FormValue(dataFlag); data != "" {
-				currentUserData.Date = data
-			}
-		case "login":
-			if data := rwContext.FormValue(dataFlag); data != "" {
-				currentUserData.Login = data
-			}
-		case "surname":
-			if data := rwContext.FormValue(dataFlag); data != "" {
-				currentUserData.Surname = data
-			}
+	jsonData, convertionError := usecase.GetDataFromJson("data", rwContext)
 
-		}
+	userData := jsonData.(models.User)
+
+	//когда нам будут высылать закэшированные настройки
+	//if userData.Password == "" {
+	//	userData.Password = currentUserData.Password
+	//}
+	//
+	//currentUserData = userData
+
+	if convertionError != nil {
+		return convertionError , models.JsonStruct{}
 	}
+
+	if userData.Login != "" {
+		currentUserData.Login = userData.Login
+	}
+
+	if userData.Password != "" {
+		currentUserData.Password = userData.Password
+	}
+
+	if userData.Date != "" {
+		currentUserData.Date = userData.Date
+	}
+
+	if userData.Surname != ""{
+		currentUserData.Surname = userData.Surname
+	}
+
+	if userData.Name != ""{
+		currentUserData.Name = userData.Name
+	}
+
+	if userData.Photo != ""{
+		currentUserData.Photo = userData.Photo
+	}
+
+	if userData.Telephone != ""{
+		currentUserData.Telephone = userData.Telephone
+	}
+
+	if userData.Email != "" {
+		currentUserData.Email = userData.Email
+	}
+
 
 	stngR.settingsDB.UploadSettings(id, currentUserData)
 
