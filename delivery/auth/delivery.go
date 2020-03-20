@@ -49,7 +49,7 @@ func (logD LoginDeliveryRealisation) Login(rwContext echo.Context) error {
 			zap.String("ID", uniqueID.String()),
 			zap.String("URL", rwContext.Request().URL.Path),
 			zap.String("METHOD", rwContext.Request().Method),
-			zap.String("ERROR", "convertion error"),
+			zap.String("ERROR", err.Error()),
 			zap.Int("ANSWER STATUS", http.StatusInternalServerError),
 			zap.Duration("TIME FOR ANSWER", time.Since(start)),
 		)

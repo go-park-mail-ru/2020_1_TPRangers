@@ -7,6 +7,7 @@ import (
 	deliveryRegister "./delivery/register"
 	deliverySettings "./delivery/settings"
 	deliveryUser "./delivery/user"
+	"database/sql"
 
 	usecaseAuth "./usecase/auth"
 	usecaseFeed "./usecase/feed"
@@ -28,7 +29,7 @@ import (
 
 const (
 	usernameDB = "postgres"
-	passwordDB = "nikita2003"
+	passwordDB = "071299"
 	nameDB     = "vk"
 	redisPas   = ""
 	redisPort  = "127.0.0.1:6379"
@@ -42,7 +43,7 @@ type RequestHandlers struct {
 	feedHandler    delivery.FeedDelivery
 }
 
-func NewRequestHandler() *RequestHandlers {
+func NewRequestHandler(db *sql.DB) *RequestHandlers {
 
 	config := zap.NewDevelopmentConfig()
 	config.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
@@ -51,37 +52,11 @@ func NewRequestHandler() *RequestHandlers {
 	defer prLogger.Sync()
 
 	sessionDB := repositoryCookie.NewCookieRepositoryRealisation(redisPort, redisPas)
-	authDB, err := repositoryAuth.NewAuthRepositoryRealisation(usernameDB, passwordDB, nameDB)
+	authDB := repositoryAuth.NewAuthRepositoryRealisation(db)
+	registerDB := repositoryRegister.NewRegisterRepositoryRealisation(db)
+	feedDB := repositoryFeed.NewFeedRepositoryRealisation(db)
+	userDB := repositoryUser.NewUserRepositoryRealisation(db)
 
-	if err != nil {
-		logger.Debug(
-			zap.String("AUTH DB STARTING ERROR", err.Error()),
-		)
-	}
-
-	registerDB, err := repositoryRegister.NewRegisterRepositoryRealisation(usernameDB, passwordDB, nameDB)
-
-	if err != nil {
-		logger.Debug(
-			zap.String("REGISTER DB STARTING ERROR", err.Error()),
-		)
-	}
-
-	feedDB, err := repositoryFeed.NewFeedRepositoryRealisation(usernameDB, passwordDB, nameDB)
-
-	if err != nil {
-		logger.Debug(
-			zap.String("FEED DB STARTING ERROR", err.Error()),
-		)
-	}
-
-	userDB, err := repositoryUser.NewUserRepositoryRealisation(usernameDB, passwordDB, nameDB)
-
-	if err != nil {
-		logger.Debug(
-			zap.String("USER DB STARTING ERROR", err.Error()),
-		)
-	}
 
 	authUseCase := usecaseAuth.NewAuthUseCaseRealisation(authDB, sessionDB, logger)
 	registerUseCase := usecaseRegister.NewRegisterUseCaseRealisation(registerDB, sessionDB, logger)
@@ -113,9 +88,17 @@ func main() {
 	server.Use(middleware.PanicMiddleWare)
 	server.Use(middleware.SetCorsMiddleware)
 
-	api := NewRequestHandler()
+	connectString := "user=" + usernameDB + " password=" + passwordDB + " dbname=" + nameDB + " sslmode=disable"
 
-	server.POST("/api/v1/auth", api.authHandler.Login)           // //
+	db, err := sql.Open("postgres", connectString)
+	defer db.Close()
+	if err != nil {
+		server.Logger.Fatal("NO CONNECTION TO BD" , err.Error())
+	}
+
+	api := NewRequestHandler(db)
+
+	server.POST("/api/v1/login", api.authHandler.Login)           // //
 	server.POST("/api/v1/registration", api.regHandler.Register) // //
 
 	server.PUT("/api/v1/settings", api.settingHandler.UploadSettings) // //

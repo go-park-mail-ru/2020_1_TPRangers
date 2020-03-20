@@ -54,7 +54,23 @@ func (stngR SettingsUseCaseRealisation) GetSettings(rwContext echo.Context, uId 
 
 	sendData := make(map[string]interface{})
 
-	sendData["user"], _ = stngR.settingsDB.GetUserDataById(id)
+	sendData["user"], err = stngR.settingsDB.GetUserDataById(id)
+
+	if err != nil {
+
+		stngR.logger.Debug(
+			zap.String("ID", uId),
+			zap.String("COOKIE", cookie.Value),
+			zap.String("ID", "db error"),
+		)
+
+		return errors.FailReadFromDB, models.JsonStruct{Err: errors.FailReadFromDB.Error()}
+	}
+
+	stngR.logger.Debug(
+		zap.String("ID", uId),
+		sendData["user"],
+		)
 
 	return nil, models.JsonStruct{Body: sendData}
 

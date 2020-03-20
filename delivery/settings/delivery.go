@@ -1,6 +1,7 @@
 package settings
 
 import (
+	"../../errors"
 	"../../usecase"
 	"../../usecase/settings"
 	"github.com/labstack/echo"
@@ -26,10 +27,10 @@ func (setD SettingsDeliveryRealisation) GetSettings(rwContext echo.Context) erro
 		zap.String("METHOD", rwContext.Request().Method),
 	)
 
-	err, jsonAnswer := setD.settingsLogic.GetSettings(rwContext , uniqueID.String())
+	err, jsonAnswer := setD.settingsLogic.GetSettings(rwContext, uniqueID.String())
 
-	if err != nil {
-
+	switch err {
+	case errors.InvalidCookie:
 		setD.logger.Info(
 			zap.String("ID", uniqueID.String()),
 			zap.String("URL", rwContext.Request().URL.Path),
@@ -40,6 +41,18 @@ func (setD SettingsDeliveryRealisation) GetSettings(rwContext echo.Context) erro
 		)
 
 		return rwContext.JSON(http.StatusUnauthorized, jsonAnswer)
+
+	case errors.FailReadFromDB:
+		setD.logger.Info(
+			zap.String("ID", uniqueID.String()),
+			zap.String("URL", rwContext.Request().URL.Path),
+			zap.String("METHOD", rwContext.Request().Method),
+			zap.String("ERROR", err.Error()),
+			zap.Int("ANSWER STATUS", http.StatusInternalServerError),
+			zap.Duration("TIME FOR ANSWER", time.Since(start)),
+		)
+
+		return rwContext.JSON(http.StatusInternalServerError, jsonAnswer)
 	}
 
 	setD.logger.Info(
@@ -65,10 +78,10 @@ func (setD SettingsDeliveryRealisation) UploadSettings(rwContext echo.Context) e
 		zap.String("METHOD", rwContext.Request().Method),
 	)
 
-	err, jsonAnswer := setD.settingsLogic.UploadSettings(rwContext , uniqueID.String())
+	err, jsonAnswer := setD.settingsLogic.UploadSettings(rwContext, uniqueID.String())
 
-	if err != nil {
-
+	switch err {
+	case errors.InvalidCookie:
 		setD.logger.Info(
 			zap.String("ID", uniqueID.String()),
 			zap.String("URL", rwContext.Request().URL.Path),
@@ -79,6 +92,18 @@ func (setD SettingsDeliveryRealisation) UploadSettings(rwContext echo.Context) e
 		)
 
 		return rwContext.JSON(http.StatusUnauthorized, jsonAnswer)
+
+	case errors.FailReadFromDB:
+		setD.logger.Info(
+			zap.String("ID", uniqueID.String()),
+			zap.String("URL", rwContext.Request().URL.Path),
+			zap.String("METHOD", rwContext.Request().Method),
+			zap.String("ERROR", err.Error()),
+			zap.Int("ANSWER STATUS", http.StatusInternalServerError),
+			zap.Duration("TIME FOR ANSWER", time.Since(start)),
+		)
+
+		return rwContext.JSON(http.StatusInternalServerError, jsonAnswer)
 	}
 
 	setD.logger.Info(
@@ -93,6 +118,6 @@ func (setD SettingsDeliveryRealisation) UploadSettings(rwContext echo.Context) e
 
 }
 
-func NewSettingsDelivery(log *zap.SugaredLogger , setRealisation settings.SettingsUseCaseRealisation) SettingsDeliveryRealisation {
+func NewSettingsDelivery(log *zap.SugaredLogger, setRealisation settings.SettingsUseCaseRealisation) SettingsDeliveryRealisation {
 	return SettingsDeliveryRealisation{settingsLogic: setRealisation, logger: log}
 }

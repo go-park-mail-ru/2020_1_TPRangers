@@ -4,6 +4,7 @@ import (
 	"../../errors"
 	"../../models"
 	"database/sql"
+	"fmt"
 	_ "github.com/lib/pq"
 )
 
@@ -11,30 +12,23 @@ type UserRepositoryRealisation struct {
 	userDB *sql.DB
 }
 
-func NewUserRepositoryRealisation(username, password, dbName string) (UserRepositoryRealisation, error) {
-	connectString := "user=" + username + " password=" + password + " dbname=" + dbName + " sslmode=disable"
-
-	db, err := sql.Open("postgres", connectString)
-
-	if err != nil {
-		return UserRepositoryRealisation{}, errors.FailConnect
-	}
-
-	defer db.Close()
-
-	return UserRepositoryRealisation{userDB: db}, nil
+func NewUserRepositoryRealisation(db *sql.DB) UserRepositoryRealisation {
+	return UserRepositoryRealisation{userDB: db}
 
 }
 
 func (Data UserRepositoryRealisation) GetUserDataById(id int) (models.User, error) {
 	user := models.User{}
 
+
 	row := Data.userDB.QueryRow("SELECT login, phone, mail, name, surname, birthdate FROM users WHERE u_id=$1", id)
 	errScan := row.Scan(&user.Login, &user.Telephone, &user.Email, &user.Name, &user.Surname, &user.Date)
 
 	if errScan != nil {
+		fmt.Println("ERROR",errScan.Error())
 		return models.User{}, errors.FailReadToVar
 	}
+
 	return user, nil
 }
 

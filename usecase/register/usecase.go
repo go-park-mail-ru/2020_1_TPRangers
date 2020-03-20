@@ -38,12 +38,14 @@ func (regR RegisterUseCaseRealisation) Register(rwContext echo.Context, uId stri
 		zap.String("PASSWORD", userData.Password),
 	)
 
-	if flag, _ := regR.registerDB.IsUserExist(login); flag == false {
+	if flag, _ := regR.registerDB.IsUserExist(login); flag == true {
 		return errors.AlreadyExist
 	}
 
+	uniqueUserLogin , _ := uuid.NewV4()
+
 	data := models.User{
-		Login:     login,
+		Login:     uniqueUserLogin.String(),
 		Telephone: userData.Phone,
 		Email:     login,
 		Name:      userData.Name,

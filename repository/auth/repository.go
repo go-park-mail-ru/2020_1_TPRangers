@@ -10,18 +10,8 @@ type AuthRepositoryRealisation struct {
 	authDB *sql.DB
 }
 
-func NewAuthRepositoryRealisation(username, password, dbName string) (AuthRepositoryRealisation, error) {
-	connectString := "user=" + username + " password=" + password + " dbname=" + dbName + " sslmode=disable"
-
-	db, err := sql.Open("postgres", connectString)
-
-	if err != nil {
-		return AuthRepositoryRealisation{}, errors.FailConnect
-	}
-
-	defer db.Close()
-
-	return AuthRepositoryRealisation{authDB: db}, nil
+func NewAuthRepositoryRealisation(db *sql.DB) AuthRepositoryRealisation {
+	return AuthRepositoryRealisation{authDB: db}
 
 }
 

@@ -11,7 +11,7 @@ func SetCorsMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 
 		//TODO: убрать из корса
-		c.Response().Header().Set("Content-Type", "application/json; charset=utf-8")
+		//c.Response().Header().Set("Content-Type", "application/json; charset=utf-8")
 
 		c.Response().Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
 		c.Response().Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS, PUT, DELETE, POST")

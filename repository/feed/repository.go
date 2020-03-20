@@ -6,22 +6,13 @@ import (
 	"database/sql"
 	_ "github.com/lib/pq"
 )
+
 type FeedRepositoryRealisation struct {
 	feedDB *sql.DB
 }
 
-func NewFeedRepositoryRealisation(username, password, dbName string) (FeedRepositoryRealisation, error) {
-	connectString := "user=" + username + " password=" + password + " dbname=" + dbName + " sslmode=disable"
-
-	db, err := sql.Open("postgres", connectString)
-
-	if err != nil {
-		return FeedRepositoryRealisation{}, errors.FailConnect
-	}
-
-	defer db.Close()
-
-	return FeedRepositoryRealisation{feedDB: db}, nil
+func NewFeedRepositoryRealisation(db *sql.DB) FeedRepositoryRealisation {
+	return FeedRepositoryRealisation{feedDB: db}
 
 }
 
@@ -35,17 +26,17 @@ func (Data FeedRepositoryRealisation) GetUserFeedById(id int, count int) (models
 	var photowasLike interface{}
 	var photoLikes interface{}
 	var postAttachments interface{}
-	var postWasLike interface {}
-	var postLikes interface {}
-	var postText interface {}
+	var postWasLike interface{}
+	var postLikes interface{}
+	var postText interface{}
 	var i int
-	for rows.Next(){
+	for rows.Next() {
 		if i > count {
 			break
 		}
 		post := models.Post{}
 		err := rows.Scan(&postText, &photoUrl, &photoLikes, &photowasLike, &postLikes, &postAttachments, &postWasLike)
-		if err != nil{
+		if err != nil {
 			return models.Feed{}, errors.FailReadToVar
 		}
 
@@ -105,17 +96,17 @@ func (Data FeedRepositoryRealisation) GetUserFeedByEmail(email string, count int
 	var photowasLike interface{}
 	var photoLikes interface{}
 	var postAttachments interface{}
-	var postWasLike interface {}
-	var postLikes interface {}
-	var postText interface {}
+	var postWasLike interface{}
+	var postLikes interface{}
+	var postText interface{}
 	var i int
-	for rows.Next(){
+	for rows.Next() {
 		if i > count {
 			break
 		}
 		post := models.Post{}
 		err := rows.Scan(&postText, &photoUrl, &photoLikes, &photowasLike, &postLikes, &postAttachments, &postWasLike)
-		if err != nil{
+		if err != nil {
 			return models.Feed{}, errors.FailReadToVar
 		}
 

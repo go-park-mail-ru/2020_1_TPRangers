@@ -6,7 +6,7 @@ type User struct {
 	Email     string `json:"email,omitempty"`
 	Name      string `json:"username,omitempty"`
 	Password  string `json:"password,omitempty"`
-	Surname   string `json:"email,omitempty"`
+	Surname   string `json:"surname,omitempty"`
 	Date      string `json:"date,omitempty"`
-	Photo      string `json:"photo,omitempty"`
+	Photo     string `json:"photo,omitempty"`
 }

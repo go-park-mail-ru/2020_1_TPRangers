@@ -25,6 +25,12 @@ func (logR AuthUseCaseRealisation) Login(rwContext echo.Context, uId string) err
 	jsonData, convertionError := usecase.GetDataFromJson("log", rwContext)
 
 	if convertionError != nil {
+
+		logR.logger.Debug(
+			zap.String("ID" , uId),
+			zap.String("CONVERTION ERROR" , convertionError.Error()),
+			)
+
 		return convertionError
 	}
 
