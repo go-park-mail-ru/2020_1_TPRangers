@@ -1,10 +1,5 @@
 package usecase
 
-import (
-	"../models"
-	"github.com/labstack/echo"
-)
-
 type FeedUseCase interface {
-	Feed(echo.Context , string) (error, models.JsonStruct)
+	Feed(string) (map[string]interface{} , error)
 }

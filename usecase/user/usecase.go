@@ -4,12 +4,10 @@ import (
 	"../../errors"
 	"../../models"
 	"../../repository"
+	SessRep "../../repository/cookie"
 	FeedRep "../../repository/feed"
 	UserRep "../../repository/user"
-	SessRep "../../repository/cookie"
-	"github.com/labstack/echo"
-	"go.uber.org/zap"
-	"net/http"
+	uuid "github.com/satori/go.uuid"
 	"time"
 )
 
@@ -17,86 +15,220 @@ type UserUseCaseRealisation struct {
 	userDB    repository.UserRepository
 	feedDB    repository.FeedRepository
 	sessionDB repository.CookieRepository
-	logger    *zap.SugaredLogger
 }
 
-func (userR UserUseCaseRealisation) GetUser(rwContext echo.Context, uId string) (error, models.JsonStruct) {
+func (userR UserUseCaseRealisation) GetUser(userLogin string) (map[string]interface{}, error) {
 
-	login := rwContext.Param("id")
-
-	userData, existError := userR.userDB.GetUserProfileSettingsByLogin(login)
+	userData, existError := userR.userDB.GetUserProfileSettingsByLogin(userLogin)
 
 	if existError != nil {
-
-		userR.logger.Debug(
-			zap.String("ID", uId),
-			zap.String("LOGIN", "user doesnt exist"),
-		)
-
-		return errors.NotExist, models.JsonStruct{Err: errors.NotExist.Error()}
+		return nil, errors.NotExist
 	}
-
-	userR.logger.Debug(
-		zap.String("ID", uId),
-		zap.String("LOGIN", login),
-	)
 
 	sendData := make(map[string]interface{})
 
-	sendData["feed"], _ = userR.feedDB.GetUserFeedByEmail(login, 30)
+	sendData["feed"], _ = userR.feedDB.GetUserFeedByEmail(userLogin, 30)
 	sendData["user"] = userData
 
-	return nil, models.JsonStruct{Body: sendData}
+	return sendData, nil
 
 }
 
-func (userR UserUseCaseRealisation) Profile(rwContext echo.Context, uId string) (error, models.JsonStruct) {
-	cookie, err := rwContext.Cookie("session_id")
+func (userR UserUseCaseRealisation) Profile(cookie string) (map[string]interface{}, error) {
 
-	if err == http.ErrNoCookie {
-
-		userR.logger.Debug(
-			zap.String("ID", uId),
-			zap.String("COOKIE", "no-cookie"),
-		)
-
-		return errors.CookieExpired, models.JsonStruct{Err: errors.CookieExpired.Error()}
-	}
-
-	id, err := userR.sessionDB.GetUserIdByCookie(cookie.Value)
+	id, err := userR.sessionDB.GetUserIdByCookie(cookie)
 
 	if err != nil {
-
-		userR.logger.Debug(
-			zap.String("ID", uId),
-			zap.String("COOKIE", cookie.Value),
-			zap.String("USER ID", "no such user"),
-		)
-
-
-		cookie.Expires = time.Now().AddDate(0, 0, -1)
-		rwContext.SetCookie(cookie)
-
-		return errors.InvalidCookie, models.JsonStruct{Err: errors.CookieExpired.Error()}
+		return nil, errors.InvalidCookie
 	}
-
-	userR.logger.Debug(
-		zap.String("ID", uId),
-		zap.String("COOKIE", cookie.Value),
-		zap.Int("USER ID", id),
-	)
 
 	sendData := make(map[string]interface{})
 	sendData["user"], _ = userR.userDB.GetUserProfileSettingsById(id)
 
-	return nil, models.JsonStruct{Body: sendData}
+	return sendData, nil
 }
 
-func NewUserUseCaseRealisation(userDB UserRep.UserRepositoryRealisation, feedDB FeedRep.FeedRepositoryRealisation, sesDB SessRep.CookieRepositoryRealisation, log *zap.SugaredLogger) UserUseCaseRealisation {
+func (userR UserUseCaseRealisation) GetSettings(cookie string) (map[string]interface{}, error) {
+
+
+	id, err := userR.sessionDB.GetUserIdByCookie(cookie)
+
+	if err != nil {
+		return nil , errors.InvalidCookie
+	}
+
+	sendData := make(map[string]interface{})
+
+	sendData["user"], err = userR.userDB.GetUserProfileSettingsById(id)
+
+	if err != nil {
+		return nil, errors.FailReadFromDB
+	}
+
+	return sendData, nil
+
+}
+
+func (userR UserUseCaseRealisation) UploadSettings(cookie string , newUserSettings models.Settings) (map[string]interface{} , error) {
+
+	id, err := userR.sessionDB.GetUserIdByCookie(cookie)
+
+	if err != nil {
+		return  nil ,errors.InvalidCookie
+	}
+
+	currentUserData, _ := userR.userDB.GetUserDataById(id)
+
+	jsonData := newUserSettings
+
+	//когда нам будут высылать закэшированные настройки
+	//if userData.Password == "" {
+	//	userData.Password = currentUserData.Password
+	//}
+	//
+	//currentUserData = userData
+
+
+	if jsonData.Login != "" {
+		currentUserData.Login = jsonData.Login
+	}
+
+	if jsonData.Password != "" {
+		currentUserData.Password = jsonData.Password
+	}
+
+	if jsonData.Date != "" {
+		currentUserData.Date = jsonData.Date
+	}
+
+	if jsonData.Surname != "" {
+		currentUserData.Surname = jsonData.Surname
+	}
+
+	if jsonData.Name != "" {
+		currentUserData.Name = jsonData.Name
+	}
+
+	if jsonData.Photo != "" {
+		photoId, _ := userR.userDB.UploadPhoto(jsonData.Photo)
+
+		currentUserData.Photo = photoId
+	}
+
+	if jsonData.Telephone != "" {
+		currentUserData.Telephone = jsonData.Telephone
+	}
+
+	if jsonData.Email != "" {
+		currentUserData.Email = jsonData.Email
+	}
+
+	userR.userDB.UploadSettings(id, currentUserData)
+
+	sendData := make(map[string]interface{})
+
+	sendData["user"], _ = userR.userDB.GetUserProfileSettingsById(id)
+
+	return sendData , nil
+}
+
+func (userR UserUseCaseRealisation) Login(userData models.Auth , cookieValue string,exprTime time.Duration) error {
+
+
+	login := userData.Login
+	password := userData.Password
+	dbPassword, existErr := userR.userDB.GetPassword(login)
+
+	if existErr != nil {
+		return errors.WrongLogin
+	}
+
+	if password != dbPassword {
+		return errors.WrongPassword
+	}
+
+	id, existErr := userR.userDB.GetIdByEmail(login)
+
+	if existErr != nil {
+		return errors.WrongLogin
+	}
+
+	userR.sessionDB.AddCookie(id, cookieValue ,exprTime)
+
+	return nil
+
+}
+
+func (userR UserUseCaseRealisation) Register(userData models.Register, cookieValue string , exprTime time.Duration) error {
+
+
+	email := userData.Email
+
+
+	if flag, _ := userR.userDB.IsUserExist(email); flag == true {
+		return errors.AlreadyExist
+	}
+
+	uniqueUserLogin , _ := uuid.NewV4()
+
+	defaultPhotoId , _:= userR.userDB.GetDefaultProfilePhotoId()
+
+	data := models.User{
+		Login:     uniqueUserLogin.String(),
+		Telephone: userData.Phone,
+		Email:     email,
+		Name:      userData.Name,
+		Password:  userData.Password,
+		Surname:   userData.Surname,
+		Date:      userData.Date,
+		Photo:     defaultPhotoId,
+	}
+
+	userR.userDB.AddNewUser(data)
+
+	id, err := userR.userDB.GetIdByEmail(email)
+
+	if err != nil {
+		return errors.FailReadFromDB
+	}
+
+	userR.sessionDB.AddCookie(id, cookieValue, exprTime)
+
+	return nil
+
+}
+
+func (userR UserUseCaseRealisation) Logout(cookie string) error {
+
+	err := userR.sessionDB.DeleteCookie(cookie)
+
+	return err
+}
+
+func (userR UserUseCaseRealisation) AddFriend(cookie , friendLogin string) error {
+
+
+	id, err := userR.sessionDB.GetUserIdByCookie(cookie)
+
+	if err != nil {
+		return errors.InvalidCookie
+	}
+
+	friendId, _ := userR.userDB.GetFriendIdByLogin(friendLogin)
+
+	err = userR.userDB.AddFriend(id, friendId)
+
+	if err != nil {
+		return errors.FailAddFriend
+	}
+
+	return err
+}
+
+func NewUserUseCaseRealisation(userDB UserRep.UserRepositoryRealisation, feedDB FeedRep.FeedRepositoryRealisation, sesDB SessRep.CookieRepositoryRealisation) UserUseCaseRealisation {
 	return UserUseCaseRealisation{
 		userDB:    userDB,
 		feedDB:    feedDB,
 		sessionDB: sesDB,
-		logger:    log,
 	}
 }

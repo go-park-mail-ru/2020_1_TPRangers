@@ -20,14 +20,14 @@ func NewCookieRepositoryRealisation(addr, pass string) CookieRepositoryRealisati
 	return CookieRepositoryRealisation{sessionDB: client}
 }
 
-func (cookR CookieRepositoryRealisation) SetCookie(id int, cookieValue string, exprTime time.Duration) error {
+func (cookR CookieRepositoryRealisation) AddCookie(id int, cookieValue string, exprTime time.Duration) error {
 
 	err := cookR.sessionDB.Set(cookieValue, id, exprTime).Err()
 
 	return err
 }
 
-func (cookR CookieRepositoryRealisation) ExpireCookie(cookieValue string) error {
+func (cookR CookieRepositoryRealisation) DeleteCookie(cookieValue string) error {
 
 	err := cookR.sessionDB.Del(cookieValue).Err()
 

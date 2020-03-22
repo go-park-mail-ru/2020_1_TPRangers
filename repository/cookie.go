@@ -3,7 +3,7 @@ package repository
 import "time"
 
 type CookieRepository interface {
-	SetCookie(int, string, time.Duration) error
-	ExpireCookie(string) error
+	AddCookie(int, string, time.Duration) error
+	DeleteCookie(string) error
 	GetUserIdByCookie(string) (int, error)
 }

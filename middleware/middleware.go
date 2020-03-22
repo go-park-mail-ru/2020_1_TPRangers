@@ -3,7 +3,10 @@ package middleware
 import (
 	"../models"
 	"github.com/labstack/echo"
+	uuid "github.com/satori/go.uuid"
+	"go.uber.org/zap"
 	"net/http"
+	"time"
 )
 
 func SetCorsMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
@@ -42,4 +45,35 @@ func PanicMiddleWare(next echo.HandlerFunc) echo.HandlerFunc {
 		return next(c)
 
 	}
+}
+
+func AccessLog(logs *zap.SugaredLogger) echo.MiddlewareFunc {
+
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		logger := logs
+
+		return func(rwContext echo.Context) error {
+
+			uniqueID, _ := uuid.NewV4()
+			start := time.Now()
+			rwContext.Response().Header().Set("REQUEST_ID", uniqueID.String())
+
+			logger.Info(
+				zap.String("ID", uniqueID.String()),
+				zap.String("URL", rwContext.Request().URL.Path),
+				zap.String("METHOD", rwContext.Request().Method),
+			)
+
+			err := next(rwContext)
+
+			logger.Info(
+				zap.String("ID", uniqueID.String()),
+				zap.Duration("TIME FOR ANSWER", time.Since(start)),
+			)
+
+			return err
+
+		}
+	}
+
 }

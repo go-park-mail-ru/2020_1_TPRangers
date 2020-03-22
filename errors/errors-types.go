@@ -16,5 +16,6 @@ var (
 	FailSendToDB   = errors.New("Ошибка записи в базе данных")
 	FailReadFromDB = errors.New("Ошибка чтения из базы данных")
 	FailReadToVar  = errors.New("Ошибка записи данных в переменные")
+	FailAddFriend = errors.New("Ошибка при добавлении друга")
 
 )
