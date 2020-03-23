@@ -1,24 +1,24 @@
 package main
 
 import (
-	deliveryFeed "main/internal/feeds/delivery"
-	deliveryUser "main/internal/users/delivery"
-	"main/internal/middleware"
-	repositoryCookie "main/internal/cookies/repository"
-	repositoryFeed "main/internal/feeds/repository"
-	repositoryUser "main/internal/users/repository"
-	usecaseFeed "main/internal/feeds/usecase"
-	usecaseUser "main/internal/users/usecase"
 	"database/sql"
 	"github.com/labstack/echo"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	repositoryCookie "main/internal/cookies/repository"
+	deliveryFeed "main/internal/feeds/delivery"
+	repositoryFeed "main/internal/feeds/repository"
+	usecaseFeed "main/internal/feeds/usecase"
+	"main/internal/middleware"
+	deliveryUser "main/internal/users/delivery"
+	repositoryUser "main/internal/users/repository"
+	usecaseUser "main/internal/users/usecase"
 )
 
 const (
-	usernameDB = "alexandr"
-	passwordDB = "nikita2003"
-	nameDB     = "VK"
+	usernameDB = "postgres"
+	passwordDB = "071299"
+	nameDB     = "vk"
 	redisPas   = ""
 	redisPort  = "127.0.0.1:6379"
 )
@@ -61,6 +61,7 @@ func main() {
 	server.Use(middleware.PanicMiddleWare)
 	server.Use(middleware.SetCorsMiddleware)
 
+
 	logFunc := middleware.AccessLog(logger)
 
 	server.Use(logFunc)
@@ -79,4 +80,5 @@ func main() {
 	api.feedHandler.InitHandlers(server)
 
 	server.Logger.Fatal(server.Start(":3001"))
+	//server.Logger.Fatal(server.StartTLS(":3001","./internal/tools/ssl/bundle.pem","./internal/tools/ssl/private.key"))
 }
