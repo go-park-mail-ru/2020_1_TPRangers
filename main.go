@@ -1,14 +1,14 @@
 package main
 
 import (
-	deliveryFeed "./delivery/feed"
-	deliveryUser "./delivery/user"
-	"./middleware"
-	repositoryCookie "./repository/cookie"
-	repositoryFeed "./repository/feed"
-	repositoryUser "./repository/user"
-	usecaseFeed "./usecase/feed"
-	usecaseUser "./usecase/user"
+	deliveryFeed "./internal/feeds/delivery"
+	deliveryUser "./internal/users/delivery"
+	"./internal/middleware"
+	repositoryCookie "./internal/cookies/repository"
+	repositoryFeed "./internal/feeds/repository"
+	repositoryUser "./internal/users/repository"
+	usecaseFeed "./internal/feeds/usecase"
+	usecaseUser "./internal/users/usecase"
 	"database/sql"
 	"github.com/labstack/echo"
 	"go.uber.org/zap"
@@ -16,9 +16,9 @@ import (
 )
 
 const (
-	usernameDB = "postgres"
-	passwordDB = "071299"
-	nameDB     = "vk"
+	usernameDB = "alexandr"
+	passwordDB = "nikita2003"
+	nameDB     = "VK"
 	redisPas   = ""
 	redisPort  = "127.0.0.1:6379"
 )
