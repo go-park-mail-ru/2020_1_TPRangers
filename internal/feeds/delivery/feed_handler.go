@@ -1,10 +1,10 @@
 package delivery
 
 import (
-	"../../tools/errors"
-	"../../models"
-	"../../feeds"
-	"../usecase"
+	"main/internal/tools/errors"
+	"main/internal/models"
+	"main/internal/feeds"
+	"main/internal/feeds/usecase"
 	"github.com/labstack/echo"
 	"go.uber.org/zap"
 	"net/http"

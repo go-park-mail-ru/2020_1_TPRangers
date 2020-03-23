@@ -1,11 +1,11 @@
 package usecase
 
 import (
-	Ckie "../../cookies/repository"
-	SessRep "../../cookies"
-	"../../feeds"
-	FeedRep "../../feeds/repository"
-	"../../tools/errors"
+	Ckie "main/internal/cookies/repository"
+	SessRep "main/internal/cookies"
+	"main/internal/feeds"
+	FeedRep "main/internal/feeds/repository"
+	"main/internal/tools/errors"
 )
 
 type FeedUseCaseRealisation struct {

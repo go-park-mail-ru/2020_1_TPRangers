@@ -1,10 +1,10 @@
 package delivery
 
 import (
-	"../../tools/errors"
-	"../../models"
-	"../../users"
-	"../../users/usecase"
+	"main/internal/tools/errors"
+	"main/internal/models"
+	"main/internal/users"
+	"main/internal/users/usecase"
 	"github.com/labstack/echo"
 	uuid "github.com/satori/go.uuid"
 	"go.uber.org/zap"
@@ -210,7 +210,7 @@ func (userD UserDeliveryRealisation) Login(rwContext echo.Context) error {
 		return rwContext.NoContent(http.StatusInternalServerError)
 	}
 
-	info, _ := uuid.NewV4()
+	info := uuid.NewV4()
 	exprTime := 12 * time.Hour
 	cookieValue := info.String()
 
@@ -292,7 +292,7 @@ func (userD UserDeliveryRealisation) Register(rwContext echo.Context) error {
 		return rwContext.NoContent(http.StatusInternalServerError)
 	}
 
-	info, _ := uuid.NewV4()
+	info := uuid.NewV4()
 	exprTime := 12 * time.Hour
 	cookieValue := info.String()
 

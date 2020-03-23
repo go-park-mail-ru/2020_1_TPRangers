@@ -1,7 +1,7 @@
 package users
 
 import (
-	"../models"
+	"main/internal/models"
 	"time"
 )
 

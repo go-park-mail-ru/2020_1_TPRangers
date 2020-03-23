@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"../models"
+	"main/internal/models"
 	"github.com/labstack/echo"
 	uuid "github.com/satori/go.uuid"
 	"go.uber.org/zap"
@@ -54,7 +54,7 @@ func AccessLog(logs *zap.SugaredLogger) echo.MiddlewareFunc {
 
 		return func(rwContext echo.Context) error {
 
-			uniqueID, _ := uuid.NewV4()
+			uniqueID := uuid.NewV4()
 			start := time.Now()
 			rwContext.Response().Header().Set("REQUEST_ID", uniqueID.String())
 

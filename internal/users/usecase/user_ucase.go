@@ -1,14 +1,14 @@
 package usecase
 
 import (
-	"../../tools/errors"
-	"../../models"
-	"../../users"
-	SessRep "../../cookies/repository"
-	Sess "../../cookies"
-	FeedRep "../../feeds"
-	"../../feeds/repository"
-	UserRep "../../users/repository"
+	"main/internal/tools/errors"
+	"main/internal/models"
+	"main/internal/users"
+	SessRep "main/internal/cookies/repository"
+	Sess "main/internal/cookies"
+	FeedRep "main/internal/feeds"
+	"main/internal/feeds/repository"
+	UserRep "main/internal/users/repository"
 	uuid "github.com/satori/go.uuid"
 	"time"
 )
@@ -171,7 +171,7 @@ func (userR UserUseCaseRealisation) Register(userData models.Register, cookieVal
 		return errors.AlreadyExist
 	}
 
-	uniqueUserLogin , _ := uuid.NewV4()
+	uniqueUserLogin := uuid.NewV4()
 
 	defaultPhotoId , _:= userR.userDB.GetDefaultProfilePhotoId()
 

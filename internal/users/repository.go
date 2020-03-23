@@ -1,6 +1,6 @@
 package users
 
-import "../models"
+import "main/internal/models"
 
 type UserRepository interface {
 	GetUserDataByLogin(string) (models.User, error)

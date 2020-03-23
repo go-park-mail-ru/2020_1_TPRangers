@@ -1,8 +1,8 @@
 package repository
 
 import (
-	"../../tools/errors"
-	"../../models"
+	"main/internal/tools/errors"
+	"main/internal/models"
 	"database/sql"
 	_ "github.com/lib/pq"
 )

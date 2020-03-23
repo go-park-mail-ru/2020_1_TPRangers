@@ -1,14 +1,14 @@
 package main
 
 import (
-	deliveryFeed "./internal/feeds/delivery"
-	deliveryUser "./internal/users/delivery"
-	"./internal/middleware"
-	repositoryCookie "./internal/cookies/repository"
-	repositoryFeed "./internal/feeds/repository"
-	repositoryUser "./internal/users/repository"
-	usecaseFeed "./internal/feeds/usecase"
-	usecaseUser "./internal/users/usecase"
+	deliveryFeed "main/internal/feeds/delivery"
+	deliveryUser "main/internal/users/delivery"
+	"main/internal/middleware"
+	repositoryCookie "main/internal/cookies/repository"
+	repositoryFeed "main/internal/feeds/repository"
+	repositoryUser "main/internal/users/repository"
+	usecaseFeed "main/internal/feeds/usecase"
+	usecaseUser "main/internal/users/usecase"
 	"database/sql"
 	"github.com/labstack/echo"
 	"go.uber.org/zap"
