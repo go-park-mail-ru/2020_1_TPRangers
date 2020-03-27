@@ -13,5 +13,6 @@ type UserUseCase interface {
 	Logout(string) error
 	Login(models.Auth, string, time.Duration) error
 	AddFriend(string, string) error
+	GetAllFriends(string) (map[string]interface{},error)
 	Register(models.Register, string, time.Duration) error
 }

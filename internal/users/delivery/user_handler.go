@@ -42,6 +42,34 @@ func (userD UserDeliveryRealisation) GetUser(rwContext echo.Context) error {
 	return rwContext.JSON(http.StatusOK, models.JsonStruct{Body: userData})
 }
 
+func (userD UserDeliveryRealisation) FriendList(rwContext echo.Context) error {
+
+	uId := rwContext.Response().Header().Get("REQUEST_ID")
+
+	login := rwContext.Param("id")
+
+	friendList , err := userD.userLogic.GetAllFriends(login)
+
+	if err != nil {
+
+		userD.logger.Info(
+			zap.String("ID" , uId),
+			zap.String("ERROR" , err.Error()),
+			zap.Int("ASNWER STATUS", http.StatusNotFound),
+			)
+
+		return rwContext.JSON(http.StatusNotFound,models.JsonStruct{Err: err.Error()})
+	}
+
+	userD.logger.Info(
+		zap.String("ID", uId),
+		zap.Int("ANSWER STATUS", http.StatusOK),
+	)
+
+	return rwContext.JSON(http.StatusOK, models.JsonStruct{Body: friendList})
+
+}
+
 func (userD UserDeliveryRealisation) Profile(rwContext echo.Context) error {
 	uId := rwContext.Response().Header().Get("REQUEST_ID")
 

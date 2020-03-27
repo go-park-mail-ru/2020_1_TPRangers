@@ -136,6 +136,16 @@ func (userR UserUseCaseRealisation) UploadSettings(cookie string , newUserSettin
 	return sendData , nil
 }
 
+func (userR UserUseCaseRealisation) GetAllFriends(login string) (map[string]interface{},error) {
+
+	sendData := make(map[string]interface{})
+	var err error
+	sendData["friends"] , err = userR.userDB.GetAllFriendsByLogin(login)
+
+	return sendData, err
+
+}
+
 func (userR UserUseCaseRealisation) Login(userData models.Auth , cookieValue string,exprTime time.Duration) error {
 
 

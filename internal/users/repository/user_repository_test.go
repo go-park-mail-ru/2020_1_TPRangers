@@ -50,3 +50,22 @@ func TestUserRepositoryRealisation_GetUserFriendsByLogin(t *testing.T) {
 	fmt.Println(testValue , err)
 
 }
+
+func TestUserRepositoryRealisation_GetAllUserFriendsByLogin(t *testing.T) {
+
+	connectString := "user=" + usernameDB + " password=" + passwordDB + " dbname=" + nameDB + " sslmode=disable"
+
+	db, err := sql.Open("postgres", connectString)
+	defer db.Close()
+	if err != nil {
+		fmt.Println("NO DB")
+	}
+
+	testHandler := NewUserRepositoryRealisation(db)
+
+
+	testValue , err :=testHandler.GetAllFriendsByLogin("f154eb1e-c271-46cb-b86d-8122e3c41a72")
+
+	fmt.Println(testValue , err)
+
+}

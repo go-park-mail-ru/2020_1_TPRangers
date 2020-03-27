@@ -15,6 +15,7 @@ type UserRepository interface {
 	GetDefaultProfilePhotoId() (int, error)
 	IsUserExist(string) (bool, error)
 	AddFriend(int, int) error
+	GetAllFriendsByLogin(string) ([]models.FriendLandingInfo, error)
 	GetFriendIdByLogin(string) (int, error)
 	GetUserFriendsById(int, int) ([]models.FriendLandingInfo, error)
 	GetUserFriendsByLogin(string, int) ([]models.FriendLandingInfo, error)
