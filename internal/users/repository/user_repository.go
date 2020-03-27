@@ -1,11 +1,11 @@
 package repository
 
 import (
-	"main/internal/tools/errors"
-	"main/internal/models"
 	"database/sql"
 	"fmt"
 	_ "github.com/lib/pq"
+	"main/internal/models"
+	"main/internal/tools/errors"
 )
 
 type UserRepositoryRealisation struct {
@@ -15,6 +15,47 @@ type UserRepositoryRealisation struct {
 func NewUserRepositoryRealisation(db *sql.DB) UserRepositoryRealisation {
 	return UserRepositoryRealisation{userDB: db}
 
+}
+
+func (Data UserRepositoryRealisation) GetUserFriendsById(id, friendsCount int) ([]models.FriendLandingInfo, error) {
+	userFriends := make([]models.FriendLandingInfo, friendsCount)
+
+	row, err := Data.userDB.Query("select name, url from friends F inner join users U on F.f_id=U.u_id INNER JOIN photos P ON U.photo_id=P.photo_id "+
+		"WHERE F.u_id=$1 GROUP BY F.u_id,F.f_id,U.u_id,P.photo_id LIMIT $2", id, friendsCount)
+	defer row.Close()
+
+	if err != nil {
+		return nil, errors.FailReadFromDB
+	}
+
+	i := 0
+
+	for row.Next() {
+		err = row.Scan(&userFriends[i].Name, &userFriends[i].Photo)
+
+		if err != nil {
+			fmt.Println(err)
+			return nil, errors.FailReadToVar
+		}
+
+	}
+
+	return userFriends, nil
+}
+
+func (Data UserRepositoryRealisation) GetUserFriendsByLogin(login string, friendsCount int) ([]models.FriendLandingInfo, error) {
+
+	id := -1
+
+	row := Data.userDB.QueryRow("select u_id FROM users where login = $1",login)
+
+	err := row.Scan(&id)
+
+	if err != nil {
+		return nil , errors.FailReadFromDB
+	}
+
+	return Data.GetUserFriendsById(id , friendsCount)
 }
 
 // фотка !!!
@@ -45,7 +86,7 @@ func (Data UserRepositoryRealisation) GetUserDataByLogin(email string) (models.U
 }
 
 func (Data UserRepositoryRealisation) UploadSettings(id int, currentUserData models.User) error {
-	_, err := Data.userDB.Exec("update users set login = $1, phone = $2, mail = $3, name = $4, surname = $5, birthdate = $6, password = $7 , photo_id = $8 WHERE u_id=$9", currentUserData.Login, currentUserData.Telephone, currentUserData.Email, currentUserData.Name, currentUserData.Surname, currentUserData.Date, currentUserData.Password , currentUserData.Photo, id)
+	_, err := Data.userDB.Exec("update users set login = $1, phone = $2, mail = $3, name = $4, surname = $5, birthdate = $6, password = $7 , photo_id = $8 WHERE u_id=$9", currentUserData.Login, currentUserData.Telephone, currentUserData.Email, currentUserData.Name, currentUserData.Surname, currentUserData.Date, currentUserData.Password, currentUserData.Photo, id)
 	if err != nil {
 		return errors.FailSendToDB
 	}
@@ -65,7 +106,7 @@ func (Data UserRepositoryRealisation) GetUserProfileSettingsByLogin(login string
 	user := models.Settings{}
 
 	row := Data.userDB.QueryRow("SELECT U.login, U.phone, U.mail, U.name, U.surname, U.birthdate , P.url FROM users U INNER JOIN photos P USING (photo_id) WHERE U.login=$1 GROUP BY U.login, U.phone, U.mail, U.name, U.surname, U.birthdate , P.url", login)
-	errScan := row.Scan(&user.Login, &user.Telephone, &user.Email, &user.Name, &user.Surname, &user.Date , &user.Photo)
+	errScan := row.Scan(&user.Login, &user.Telephone, &user.Email, &user.Name, &user.Surname, &user.Date, &user.Photo)
 
 	return user, errScan
 }
@@ -74,7 +115,7 @@ func (Data UserRepositoryRealisation) GetUserProfileSettingsById(id int) (models
 	user := models.Settings{}
 
 	row := Data.userDB.QueryRow("SELECT U.login, U.phone, U.mail, U.name, U.surname, U.birthdate , P.url FROM users U INNER JOIN photos P USING (photo_id) WHERE U.u_id=$1 GROUP BY U.login, U.phone, U.mail, U.name, U.surname, U.birthdate , P.url", id)
-	errScan := row.Scan(&user.Login, &user.Telephone, &user.Email, &user.Name, &user.Surname, &user.Date , &user.Photo)
+	errScan := row.Scan(&user.Login, &user.Telephone, &user.Email, &user.Name, &user.Surname, &user.Date, &user.Photo)
 
 	return user, errScan
 }
@@ -99,18 +140,18 @@ func (Data UserRepositoryRealisation) GetPassword(email string) (string, error) 
 	return password, nil
 }
 
-func (Data UserRepositoryRealisation) GetDefaultProfilePhotoId() (int , error) {
+func (Data UserRepositoryRealisation) GetDefaultProfilePhotoId() (int, error) {
 	row := Data.userDB.QueryRow("SELECT photo_id FROM photos WHERE url=$1", "defaults/profile/avatar")
 
 	var photo_id int
 	errScan := row.Scan(&photo_id)
 
-	return photo_id , errScan
+	return photo_id, errScan
 }
 
 func (Data UserRepositoryRealisation) AddNewUser(userData models.User) error {
 	//result
-	_, err := Data.userDB.Exec("insert into Users (phone, mail, name, surname, password, birthdate, login, photo_id) values ($1, $2, $3, $4, $5, $6, $7, $8)", userData.Telephone, userData.Email, userData.Name, userData.Surname, userData.Password, userData.Date, userData.Login , userData.Photo)
+	_, err := Data.userDB.Exec("insert into Users (phone, mail, name, surname, password, birthdate, login, photo_id) values ($1, $2, $3, $4, $5, $6, $7, $8)", userData.Telephone, userData.Email, userData.Name, userData.Surname, userData.Password, userData.Date, userData.Login, userData.Photo)
 	if err != nil {
 		return errors.FailSendToDB
 	}

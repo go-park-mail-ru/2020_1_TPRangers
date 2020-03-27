@@ -21,9 +21,9 @@ type UserUseCaseRealisation struct {
 
 func (userR UserUseCaseRealisation) GetUser(userLogin string) (map[string]interface{}, error) {
 
-	userData, existError := userR.userDB.GetUserProfileSettingsByLogin(userLogin)
+	userData, err := userR.userDB.GetUserProfileSettingsByLogin(userLogin)
 
-	if existError != nil {
+	if err != nil {
 		return nil, errors.NotExist
 	}
 
@@ -31,8 +31,9 @@ func (userR UserUseCaseRealisation) GetUser(userLogin string) (map[string]interf
 
 	sendData["feed"], _ = userR.feedDB.GetUserFeedByEmail(userLogin, 30)
 	sendData["user"] = userData
+	sendData["friends"] , err = userR.userDB.GetUserFriendsByLogin(userLogin,6)
 
-	return sendData, nil
+	return sendData, err
 
 }
 
@@ -46,8 +47,9 @@ func (userR UserUseCaseRealisation) Profile(cookie string) (map[string]interface
 
 	sendData := make(map[string]interface{})
 	sendData["user"], _ = userR.userDB.GetUserProfileSettingsById(id)
+	sendData["friends"] , err = userR.userDB.GetUserFriendsById(id,6)
 
-	return sendData, nil
+	return sendData, err
 }
 
 func (userR UserUseCaseRealisation) GetSettings(cookie string) (map[string]interface{}, error) {
