@@ -204,10 +204,10 @@ func (userD UserDeliveryRealisation) Login(rwContext echo.Context) error {
 		userD.logger.Debug(
 			zap.String("ID", uId),
 			zap.String("ERROR", err.Error()),
-			zap.Int("ANSWER STATUS", http.StatusInternalServerError),
+			zap.Int("ANSWER STATUS", http.StatusConflict),
 		)
 
-		return rwContext.NoContent(http.StatusInternalServerError)
+		return rwContext.NoContent(http.StatusConflict)
 	}
 
 	info := uuid.NewV4()
