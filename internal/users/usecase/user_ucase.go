@@ -1,15 +1,16 @@
 package usecase
 
 import (
-	"main/internal/tools/errors"
-	"main/internal/models"
-	"main/internal/users"
-	SessRep "main/internal/cookies/repository"
+	"fmt"
+	uuid "github.com/satori/go.uuid"
 	Sess "main/internal/cookies"
+	SessRep "main/internal/cookies/repository"
 	FeedRep "main/internal/feeds"
 	"main/internal/feeds/repository"
+	"main/internal/models"
+	"main/internal/tools/errors"
+	"main/internal/users"
 	UserRep "main/internal/users/repository"
-	uuid "github.com/satori/go.uuid"
 	"time"
 )
 
@@ -83,6 +84,8 @@ func (userR UserUseCaseRealisation) UploadSettings(cookie string , newUserSettin
 
 	currentUserData, _ := userR.userDB.GetUserDataById(id)
 
+	fmt.Println(currentUserData)
+
 	jsonData := newUserSettings
 
 	//когда нам будут высылать закэшированные настройки
@@ -114,6 +117,9 @@ func (userR UserUseCaseRealisation) UploadSettings(cookie string , newUserSettin
 	}
 
 	if jsonData.Photo != "" {
+
+		fmt.Println(jsonData.Photo)
+
 		photoId, _ := userR.userDB.UploadPhoto(jsonData.Photo)
 
 		currentUserData.Photo = photoId
@@ -127,6 +133,8 @@ func (userR UserUseCaseRealisation) UploadSettings(cookie string , newUserSettin
 		currentUserData.Email = jsonData.Email
 	}
 
+	fmt.Println(currentUserData)
+
 	userR.userDB.UploadSettings(id, currentUserData)
 
 	sendData := make(map[string]interface{})
@@ -134,6 +142,30 @@ func (userR UserUseCaseRealisation) UploadSettings(cookie string , newUserSettin
 	sendData["user"], _ = userR.userDB.GetUserProfileSettingsById(id)
 
 	return sendData , nil
+}
+
+func (userR UserUseCaseRealisation) CheckFriendship(cookie , friendLogin string , answer map[string]interface{}) (map[string]interface{} , error){
+
+	mainUserId, err := userR.sessionDB.GetUserIdByCookie(cookie)
+
+	if err != nil {
+		return answer , errors.FailReadFromDB
+	}
+
+	friendId , err := userR.userDB.GetFriendIdByLogin(friendLogin)
+
+	if err != nil {
+		return answer , errors.FailReadFromDB
+	}
+
+
+	answer["isFriends"] , err = userR.userDB.CheckFriendship(mainUserId , friendId)
+
+	if err != nil {
+		return answer , errors.FailReadFromDB
+	}
+
+	return answer , nil
 }
 
 func (userR UserUseCaseRealisation) GetAllFriends(login string) (map[string]interface{},error) {

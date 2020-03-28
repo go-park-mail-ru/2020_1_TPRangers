@@ -18,7 +18,7 @@ func NewUserRepositoryRealisation(db *sql.DB) UserRepositoryRealisation {
 }
 
 func (Data UserRepositoryRealisation) GetUserFriendsById(id, friendsCount int) ([]models.FriendLandingInfo, error) {
-	userFriends := make([]models.FriendLandingInfo, friendsCount)
+	userFriends := make([]models.FriendLandingInfo, 0, 6)
 
 	row, err := Data.userDB.Query("select name, url , login from friends F inner join users U on F.f_id=U.u_id INNER JOIN photos P ON U.photo_id=P.photo_id "+
 		"WHERE F.u_id=$1 GROUP BY F.u_id,F.f_id,U.u_id,P.photo_id LIMIT $2", id, friendsCount)
@@ -28,15 +28,18 @@ func (Data UserRepositoryRealisation) GetUserFriendsById(id, friendsCount int) (
 		return nil, errors.FailReadFromDB
 	}
 
-	i := 0
-
 	for row.Next() {
-		err = row.Scan(&userFriends[i].Name, &userFriends[i].Photo, &userFriends[i].Login)
+
+		var friendInfo models.FriendLandingInfo
+
+		err = row.Scan(&friendInfo.Name, &friendInfo.Photo, &friendInfo.Login)
 
 		if err != nil {
 			fmt.Println(err)
 			return nil, errors.FailReadToVar
 		}
+
+		userFriends = append(userFriends , friendInfo)
 
 	}
 
@@ -61,7 +64,7 @@ func (Data UserRepositoryRealisation) GetIdByLogin(login string) (int , error) {
 }
 
 func (Data UserRepositoryRealisation) GetAllFriendsByLogin(login string) ([]models.FriendLandingInfo, error){
-	userFriends := make([]models.FriendLandingInfo,20)
+	userFriends := make([]models.FriendLandingInfo,0, 20)
 
 	id , err := Data.GetIdByLogin(login)
 
@@ -77,25 +80,22 @@ func (Data UserRepositoryRealisation) GetAllFriendsByLogin(login string) ([]mode
 		return nil, errors.FailReadFromDB
 	}
 
-	i := 0
-
 	for row.Next() {
 
-		if i >= cap(userFriends) {
-			buf := make([]models.FriendLandingInfo, (cap(userFriends)+1)*2)
-			copy(buf,userFriends)
+		var friendInfo models.FriendLandingInfo
 
-			userFriends = buf
-		}
-
-		err = row.Scan(&userFriends[i].Name, &userFriends[i].Photo, &userFriends[i].Login , &userFriends[i].Surname)
+		err = row.Scan(&friendInfo.Name, &friendInfo.Photo, &friendInfo.Login , &friendInfo.Surname)
 
 		if err != nil {
 			fmt.Println(err)
 			return nil, errors.FailReadToVar
 		}
 
+		userFriends = append(userFriends,friendInfo)
+
 	}
+
+	fmt.Println(userFriends)
 
 	return userFriends, nil
 }
@@ -115,8 +115,8 @@ func (Data UserRepositoryRealisation) GetUserFriendsByLogin(login string, friend
 func (Data UserRepositoryRealisation) GetUserDataById(id int) (models.User, error) {
 	user := models.User{}
 
-	row := Data.userDB.QueryRow("SELECT login, phone, mail, name, surname, birthdate FROM users WHERE u_id=$1", id)
-	errScan := row.Scan(&user.Login, &user.Telephone, &user.Email, &user.Name, &user.Surname, &user.Date)
+	row := Data.userDB.QueryRow("SELECT login, phone, mail, name, surname, birthdate , photo_id FROM users WHERE u_id=$1", id)
+	errScan := row.Scan(&user.Login, &user.Telephone, &user.Email, &user.Name, &user.Surname, &user.Date, &user.Photo)
 
 	if errScan != nil {
 		fmt.Println("ERROR", errScan.Error())
@@ -129,8 +129,8 @@ func (Data UserRepositoryRealisation) GetUserDataById(id int) (models.User, erro
 func (Data UserRepositoryRealisation) GetUserDataByLogin(email string) (models.User, error) {
 	user := models.User{}
 
-	row := Data.userDB.QueryRow("SELECT login, phone, mail, name, surname, birthdate FROM users WHERE mail=$1", email)
-	errScan := row.Scan(&user.Login, &user.Telephone, &user.Email, &user.Name, &user.Surname, &user.Date)
+	row := Data.userDB.QueryRow("SELECT login, phone, mail, name, surname, birthdate , photo_id FROM users WHERE mail=$1", email)
+	errScan := row.Scan(&user.Login, &user.Telephone, &user.Email, &user.Name, &user.Surname, &user.Date, &user.Photo)
 
 	if errScan != nil {
 		return models.User{}, errors.FailReadToVar
@@ -169,6 +169,8 @@ func (Data UserRepositoryRealisation) GetUserProfileSettingsById(id int) (models
 
 	row := Data.userDB.QueryRow("SELECT U.login, U.phone, U.mail, U.name, U.surname, U.birthdate , P.url FROM users U INNER JOIN photos P USING (photo_id) WHERE U.u_id=$1 GROUP BY U.login, U.phone, U.mail, U.name, U.surname, U.birthdate , P.url", id)
 	errScan := row.Scan(&user.Login, &user.Telephone, &user.Email, &user.Name, &user.Surname, &user.Date, &user.Photo)
+
+	fmt.Println(errScan)
 
 	return user, errScan
 }
@@ -217,7 +219,7 @@ func (Data UserRepositoryRealisation) IsUserExist(email string) (bool, error) {
 	var u_id int
 	errScan := row.Scan(&u_id)
 	if errScan != nil {
-		return false, nil
+		return false, errScan
 	}
 	return true, nil
 }
@@ -238,4 +240,24 @@ func (Data UserRepositoryRealisation) GetFriendIdByLogin(login string) (int, err
 	scanErr := row.Scan(&friend_id)
 
 	return friend_id, scanErr
+}
+
+func (Data UserRepositoryRealisation) CheckFriendship(id1 , id2 int) (bool , error) {
+	row := Data.userDB.QueryRow("SELECT f_id FROM friends WHERE u_id=$1 AND f_id=$2", id1 , id2)
+
+	f_id := -1
+
+	errScan := row.Scan(&f_id)
+
+	if errScan == sql.ErrNoRows {
+		return false , nil
+	}
+
+	if errScan != nil {
+		return false , errScan
+	}
+
+
+	return true, nil
+
 }

@@ -1,13 +1,13 @@
 package delivery
 
 import (
-	"main/internal/tools/errors"
-	"main/internal/models"
-	"main/internal/users"
-	"main/internal/users/usecase"
 	"github.com/labstack/echo"
 	uuid "github.com/satori/go.uuid"
 	"go.uber.org/zap"
+	"main/internal/models"
+	"main/internal/tools/errors"
+	"main/internal/users"
+	"main/internal/users/usecase"
 	"net/http"
 	"time"
 )
@@ -34,6 +34,22 @@ func (userD UserDeliveryRealisation) GetUser(rwContext echo.Context) error {
 		return rwContext.JSON(http.StatusNotFound, models.JsonStruct{Err: err.Error()})
 	}
 
+	cookie, err := rwContext.Cookie("session_id")
+
+	if err == nil {
+		userData, err = userD.userLogic.CheckFriendship(cookie.Value, login, userData)
+	}
+
+	if err != nil {
+
+		userD.logger.Info(
+			zap.String("ID", uId),
+			zap.Int("ANSWER STATUS", http.StatusUnauthorized),
+		)
+
+		return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Body: userData, Err: err.Error()})
+	}
+
 	userD.logger.Info(
 		zap.String("ID", uId),
 		zap.Int("ANSWER STATUS", http.StatusOK),
@@ -48,17 +64,17 @@ func (userD UserDeliveryRealisation) FriendList(rwContext echo.Context) error {
 
 	login := rwContext.Param("id")
 
-	friendList , err := userD.userLogic.GetAllFriends(login)
+	friendList, err := userD.userLogic.GetAllFriends(login)
 
 	if err != nil {
 
 		userD.logger.Info(
-			zap.String("ID" , uId),
-			zap.String("ERROR" , err.Error()),
+			zap.String("ID", uId),
+			zap.String("ERROR", err.Error()),
 			zap.Int("ANSWER STATUS", http.StatusNotFound),
-			)
+		)
 
-		return rwContext.JSON(http.StatusNotFound,models.JsonStruct{Err: err.Error()})
+		return rwContext.JSON(http.StatusNotFound, models.JsonStruct{Err: err.Error()})
 	}
 
 	userD.logger.Info(
