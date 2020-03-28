@@ -425,6 +425,7 @@ func (userD UserDeliveryRealisation) InitHandlers(server *echo.Echo) {
 	server.GET("/api/v1/profile", userD.Profile)
 	server.GET("/api/v1/settings", userD.GetSettings)
 	server.GET("/api/v1/user/:id", userD.GetUser)
+	server.GET("api/v1/friends/:id", userD.FriendList)
 
 	server.DELETE("/api/v1/auth", userD.Logout)
 }
