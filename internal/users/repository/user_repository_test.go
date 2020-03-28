@@ -64,7 +64,7 @@ func TestUserRepositoryRealisation_GetAllUserFriendsByLogin(t *testing.T) {
 	testHandler := NewUserRepositoryRealisation(db)
 
 
-	testValue , err :=testHandler.GetAllFriendsByLogin("TEST@yandex.ru")
+	testValue , err :=testHandler.GetAllFriendsByLogin("123124TEST@yandex.ru")
 
 	fmt.Println(testValue , err)
 

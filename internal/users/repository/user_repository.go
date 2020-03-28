@@ -52,6 +52,8 @@ func (Data UserRepositoryRealisation) GetIdByLogin(login string) (int , error) {
 	err := row.Scan(&i)
 	if err != nil {
 		fmt.Println(err.Error())
+
+		return 0 , err
 	}
 
 
