@@ -55,7 +55,7 @@ func (userD UserDeliveryRealisation) FriendList(rwContext echo.Context) error {
 		userD.logger.Info(
 			zap.String("ID" , uId),
 			zap.String("ERROR" , err.Error()),
-			zap.Int("ASNWER STATUS", http.StatusNotFound),
+			zap.Int("ANSWER STATUS", http.StatusNotFound),
 			)
 
 		return rwContext.JSON(http.StatusNotFound,models.JsonStruct{Err: err.Error()})

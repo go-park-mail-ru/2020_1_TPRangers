@@ -47,7 +47,7 @@ func (Data UserRepositoryRealisation) GetIdByLogin(login string) (int , error) {
 
 	var i *int
 
-	row := Data.userDB.QueryRow("select users.login from users where users.login = $1","f154eb1e-c271-46cb-b86d-8122e3c41a72")
+	row := Data.userDB.QueryRow("select users.u_id from users where users.login = $1",login)
 
 	err := row.Scan(&i)
 	if err != nil {
