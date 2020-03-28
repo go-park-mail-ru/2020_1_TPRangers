@@ -18,7 +18,7 @@ func SetCorsMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 
 		c.Response().Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
 		c.Response().Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS, PUT, DELETE, POST")
-		c.Response().Header().Set("Set-Cookie", "HttpOnly, Secure, SameSite=Strict")
+		//c.Response().Header().Set("Set-Cookie", "HttpOnly, Secure, SameSite=Strict")
 		c.Response().Header().Set("Access-Control-Allow-Headers", "Origin, X-Login, Set-Cookie, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, csrf-token, Authorization")
 		c.Response().Header().Set("Access-Control-Allow-Credentials", "true")
 		c.Response().Header().Set("Vary", "Cookie")
@@ -40,10 +40,10 @@ func PanicMiddleWare(next echo.HandlerFunc) echo.HandlerFunc {
 			if err := recover(); err != nil {
 				return c.JSON(http.StatusInternalServerError, models.JsonStruct{Err: "server panic ! "})
 			}
-			return next(c)
+			return nil
 		}()
-		return next(c)
 
+		return next(c)
 	}
 }
 
