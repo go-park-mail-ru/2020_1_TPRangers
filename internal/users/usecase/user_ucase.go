@@ -30,7 +30,7 @@ func (userR UserUseCaseRealisation) GetUser(userLogin string) (map[string]interf
 
 	sendData := make(map[string]interface{})
 
-	sendData["feed"], _ = userR.feedDB.GetUserFeedByEmail(userLogin, 30)
+	sendData["feed"], _ = userR.feedDB.GetUserPostsByLogin(userLogin)
 	sendData["user"] = userData
 	sendData["friends"] , err = userR.userDB.GetUserFriendsByLogin(userLogin,6)
 

@@ -6,6 +6,7 @@ import (
 	_ "github.com/lib/pq"
 	"main/internal/models"
 	"main/internal/tools/errors"
+	"time"
 )
 
 type FeedRepositoryRealisation struct {
@@ -190,21 +191,27 @@ func (Data FeedRepositoryRealisation) GetUserPostsById(id int) (models.Feed, err
 
 	for row.Next() {
 		post := new(models.Post)
-		likeId := -1
-		err = row.Scan(&post.Text, &post.Likes, &post.Creation, &post.Attachments, &likeId, &post.Photo)
+		var likeId sql.NullInt32
+		likeId.Scan(-1)
+
+		err = row.Scan(&post.Text, &post.Likes, &post.Creation, &post.Attachments, &likeId, &post.Photo.Url)
 
 		if err != nil {
 			fmt.Println(err.Error(), "USER POSTS BY ID")
 		}
 
-		if likeId == -1 {
+		value , _ := likeId.Value()
+
+		if value == nil {
 			post.WasLike = false
 		} else {
 			post.WasLike = true
 		}
+
+		feed = append(feed , *post)
 	}
 
-	return feed, nil
+	return models.Feed{Posts:feed}, nil
 
 }
 
@@ -212,7 +219,12 @@ func (Data FeedRepositoryRealisation) GetUserPostsByLogin(login string) (models.
 
 	feed := make([]models.Post, 0)
 
-	row, err := Data.feedDB.Query("SELECT P.txt_data, P.posts_likes_count, P.creation_date,P.attachments,UPL.postlike_id,PH.url FROM UsersPosts UP INNER JOIN Posts P ON(P.post_id=UP.post_id) LEFT JOIN Photos PH ON(PH.photo_id=P.photo_id) LEFT JOIN UsersPostsLikes UPL ON(UPL.u_id = UP.u_id AND P.post_id = UPL.post_id) WHERE UP.login = $1", login)
+	userRow := Data.feedDB.QueryRow("SELECT u_id FROM Users WHERE login = $1",login)
+
+	userId := 0
+	userRow.Scan(&userId)
+
+	row, err := Data.feedDB.Query("SELECT P.txt_data, P.posts_likes_count, P.creation_date,P.attachments,UPL.postlike_id,PH.url FROM UsersPosts UP INNER JOIN Posts P ON(P.post_id=UP.post_id) LEFT JOIN Photos PH ON(PH.photo_id=P.photo_id) LEFT JOIN UsersPostsLikes UPL ON(UPL.u_id = UP.u_id AND P.post_id = UPL.post_id) WHERE UP.u_id = $1", userId)
 	if err != nil {
 		fmt.Println(err, "USER POSTS ERROR")
 		return models.Feed{Posts: feed}, err
@@ -220,21 +232,28 @@ func (Data FeedRepositoryRealisation) GetUserPostsByLogin(login string) (models.
 
 	for row.Next() {
 		post := new(models.Post)
-		likeId := -1
-		err = row.Scan(&post.Text, &post.Likes, &post.Creation, &post.Attachments, &likeId, &post.Photo)
+
+		var likeId sql.NullInt32
+		likeId.Scan(-1)
+
+		err = row.Scan(&post.Text, &post.Likes, &post.Creation, &post.Attachments, &likeId, &post.Photo.Url)
 
 		if err != nil {
 			fmt.Println(err.Error(), "USER POSTS BY ID")
 		}
 
-		if likeId == -1 {
+		value , _ := likeId.Value()
+
+		if value == nil {
 			post.WasLike = false
 		} else {
 			post.WasLike = true
 		}
+
+		feed = append(feed , *post)
 	}
 
-	return feed, nil
+	return models.Feed{Posts:feed}, nil
 
 }
 
@@ -243,7 +262,7 @@ func (Data FeedRepositoryRealisation) CreatePost(uId int,newPost models.Post) er
 	photo_id := 0
 
 	if newPost.Photo.Url != "" {
-		row := Data.feedDB.QueryRow("INSERT INTO photos (url, photos_likes_count) VALUES ($1 , 0) RETURNING photo_id", newPost.Photo)
+		row := Data.feedDB.QueryRow("INSERT INTO photos (url, photos_likes_count) VALUES ($1 , 0) RETURNING photo_id", newPost.Photo.Url)
 
 		errScan := row.Scan(&photo_id)
 
@@ -252,7 +271,7 @@ func (Data FeedRepositoryRealisation) CreatePost(uId int,newPost models.Post) er
 		}
 	}
 
-	postRow , err := Data.feedDB.Query("INSERT INTO Posts (txt_data,photo_id,posts_likes_count,creation_date, attachments) VALUES($1 , $2 , 43 , $4 , $5) RETURNING post_id", newPost.Text, photo_id, 0 , newPost.Creation, newPost.Attachments)
+	postRow , err := Data.feedDB.Query("INSERT INTO Posts (txt_data,photo_id,posts_likes_count,creation_date, attachments) VALUES($1 , $2 , $3 , $4 , $5) RETURNING post_id", newPost.Text, photo_id, 0 , time.Now(), newPost.Attachments)
 
 	if err != nil {
 		fmt.Println(err , "ERROR ON ADDING NEW POST TO DATABASE")

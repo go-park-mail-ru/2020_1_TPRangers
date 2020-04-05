@@ -481,7 +481,7 @@ func (userD UserDeliveryRealisation) InitHandlers(server *echo.Echo) {
 	server.GET("/api/v1/settings", userD.GetSettings)
 	server.GET("/api/v1/user/:id", userD.GetUser)
 	server.GET("api/v1/friends/:id", userD.FriendList)
-	server.GET("api/v1/friends/", userD.GetMainUserFriends)
+	server.GET("api/v1/friends", userD.GetMainUserFriends)
 
 	server.DELETE("/api/v1/login", userD.Logout)
 }
