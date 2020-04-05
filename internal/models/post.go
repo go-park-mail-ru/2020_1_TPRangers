@@ -6,4 +6,5 @@ type Post struct {
 	Attachments string `json:"attachments,omitempty"`
 	Likes       int    `json:"likes,omitempty"`
 	WasLike     bool   `json:"wasLike,omitempty"`
+	Creation	string `json:"date,omitempty"`
 }

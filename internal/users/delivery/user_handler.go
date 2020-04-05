@@ -86,6 +86,45 @@ func (userD UserDeliveryRealisation) FriendList(rwContext echo.Context) error {
 
 }
 
+func (userD UserDeliveryRealisation) GetMainUserFriends(rwContext echo.Context) error {
+
+	uId := rwContext.Response().Header().Get("REQUEST_ID")
+
+	cookie, err := rwContext.Cookie("session_id")
+
+	if err != nil {
+
+		userD.logger.Debug(
+			zap.String("ID", uId),
+			zap.String("COOKIE", err.Error()),
+		)
+		return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: errors.CookieExpired.Error()})
+	}
+
+
+	login , err := userD.userLogic.GetUserLoginByCookie(cookie.Value)
+	friendList, err := userD.userLogic.GetAllFriends(login)
+
+	if err != nil {
+
+		userD.logger.Info(
+			zap.String("ID", uId),
+			zap.String("ERROR", err.Error()),
+			zap.Int("ANSWER STATUS", http.StatusNotFound),
+		)
+
+		return rwContext.JSON(http.StatusNotFound, models.JsonStruct{Err: err.Error()})
+	}
+
+	userD.logger.Info(
+		zap.String("ID", uId),
+		zap.Int("ANSWER STATUS", http.StatusOK),
+	)
+
+	return rwContext.JSON(http.StatusOK, models.JsonStruct{Body: friendList})
+
+}
+
 func (userD UserDeliveryRealisation) Profile(rwContext echo.Context) error {
 	uId := rwContext.Response().Header().Get("REQUEST_ID")
 
@@ -376,7 +415,7 @@ func (userD UserDeliveryRealisation) Register(rwContext echo.Context) error {
 	return rwContext.NoContent(http.StatusOK)
 }
 
-func (userD UserDeliveryRealisation) AddFriend(rwContext echo.Context) error {
+func (userD UserDeliveryRealisation)  AddFriend(rwContext echo.Context) error {
 
 	uId := rwContext.Response().Header().Get("REQUEST_ID")
 
@@ -442,6 +481,7 @@ func (userD UserDeliveryRealisation) InitHandlers(server *echo.Echo) {
 	server.GET("/api/v1/settings", userD.GetSettings)
 	server.GET("/api/v1/user/:id", userD.GetUser)
 	server.GET("api/v1/friends/:id", userD.FriendList)
+	server.GET("api/v1/friends/", userD.GetMainUserFriends)
 
-	server.DELETE("/api/v1/auth", userD.Logout)
+	server.DELETE("/api/v1/login", userD.Logout)
 }

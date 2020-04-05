@@ -13,6 +13,10 @@ import (
 	deliveryUser "main/internal/users/delivery"
 	repositoryUser "main/internal/users/repository"
 	usecaseUser "main/internal/users/usecase"
+
+	repositoryLikes "main/internal/like/repository"
+	usecaseLikes "main/internal/like/usecase"
+	deliveryLikes "main/internal/like/delivery"
 )
 
 const (
@@ -26,13 +30,20 @@ const (
 type RequestHandlers struct {
 	userHandler deliveryUser.UserDeliveryRealisation
 	feedHandler deliveryFeed.FeedDeliveryRealisation
+	likeHandler deliveryLikes.LikeDelivery
 }
 
 func NewRequestHandler(db *sql.DB, logger *zap.SugaredLogger) *RequestHandlers {
 
+
+
 	sessionDB := repositoryCookie.NewCookieRepositoryRealisation(redisPort, redisPas)
 	feedDB := repositoryFeed.NewFeedRepositoryRealisation(db)
 	userDB := repositoryUser.NewUserRepositoryRealisation(db)
+
+	likesDB := repositoryLikes.NewLikeRepositoryRealisation(db)
+	likesUse := usecaseLikes.NewLikeUseRealisation(likesDB,sessionDB)
+	likeH := deliveryLikes.NewLikeDelivery(logger , likesUse)
 
 	feedUseCase := usecaseFeed.NewFeedUseCaseRealisation(feedDB, sessionDB)
 	userUseCase := usecaseUser.NewUserUseCaseRealisation(userDB, feedDB, sessionDB)
@@ -43,6 +54,7 @@ func NewRequestHandler(db *sql.DB, logger *zap.SugaredLogger) *RequestHandlers {
 	api := &(RequestHandlers{
 		userHandler: userH,
 		feedHandler: feedH,
+		likeHandler: likeH,
 	})
 
 	return api

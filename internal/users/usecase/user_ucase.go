@@ -46,9 +46,12 @@ func (userR UserUseCaseRealisation) Profile(cookie string) (map[string]interface
 		return nil, errors.InvalidCookie
 	}
 
+
+
 	sendData := make(map[string]interface{})
 	sendData["user"], _ = userR.userDB.GetUserProfileSettingsById(id)
 	sendData["friends"] , err = userR.userDB.GetUserFriendsById(id,6)
+	sendData["feed"] , err = userR.feedDB.GetUserPostsById(id)
 
 	return sendData, err
 }
@@ -269,6 +272,12 @@ func (userR UserUseCaseRealisation) AddFriend(cookie , friendLogin string) error
 	}
 
 	return err
+}
+
+func (userR UserUseCaseRealisation) GetUserLoginByCookie(cookieValue string) (string, error) {
+	id , _ := userR.sessionDB.GetUserIdByCookie(cookieValue)
+
+	return userR.userDB.GetUserLoginById(id)
 }
 
 func NewUserUseCaseRealisation(userDB UserRep.UserRepositoryRealisation, feedDB repository.FeedRepositoryRealisation, sesDB SessRep.CookieRepositoryRealisation) UserUseCaseRealisation {

@@ -17,6 +17,15 @@ func NewUserRepositoryRealisation(db *sql.DB) UserRepositoryRealisation {
 
 }
 
+func (Data UserRepositoryRealisation) GetUserLoginById(userId int) (string, error) {
+	row := Data.userDB.QueryRow("SELECT login FROM Users WHERE u_id = $1", userId)
+	login := ""
+
+	err := row.Scan(&login)
+
+	return login , err
+}
+
 func (Data UserRepositoryRealisation) GetUserFriendsById(id, friendsCount int) ([]models.FriendLandingInfo, error) {
 	userFriends := make([]models.FriendLandingInfo, 0, 6)
 
@@ -39,37 +48,36 @@ func (Data UserRepositoryRealisation) GetUserFriendsById(id, friendsCount int) (
 			return nil, errors.FailReadToVar
 		}
 
-		userFriends = append(userFriends , friendInfo)
+		userFriends = append(userFriends, friendInfo)
 
 	}
 
 	return userFriends, nil
 }
 
-func (Data UserRepositoryRealisation) GetIdByLogin(login string) (int , error) {
+func (Data UserRepositoryRealisation) GetIdByLogin(login string) (int, error) {
 
 	var i *int
 
-	row := Data.userDB.QueryRow("select users.u_id from users where users.login = $1",login)
+	row := Data.userDB.QueryRow("select users.u_id from users where users.login = $1", login)
 
 	err := row.Scan(&i)
 	if err != nil {
 		fmt.Println(err.Error())
 
-		return 0 , err
+		return 0, err
 	}
 
-
-	return *i , err
+	return *i, err
 }
 
-func (Data UserRepositoryRealisation) GetAllFriendsByLogin(login string) ([]models.FriendLandingInfo, error){
-	userFriends := make([]models.FriendLandingInfo,0, 20)
+func (Data UserRepositoryRealisation) GetAllFriendsByLogin(login string) ([]models.FriendLandingInfo, error) {
+	userFriends := make([]models.FriendLandingInfo, 0, 20)
 
-	id , err := Data.GetIdByLogin(login)
+	id, err := Data.GetIdByLogin(login)
 
 	if err != nil {
-		return nil , errors.FailReadFromDB
+		return nil, errors.FailReadFromDB
 	}
 
 	row, err := Data.userDB.Query("select name, url , login , surname from friends F inner join users U on F.f_id=U.u_id INNER JOIN photos P ON U.photo_id=P.photo_id "+
@@ -84,14 +92,14 @@ func (Data UserRepositoryRealisation) GetAllFriendsByLogin(login string) ([]mode
 
 		var friendInfo models.FriendLandingInfo
 
-		err = row.Scan(&friendInfo.Name, &friendInfo.Photo, &friendInfo.Login , &friendInfo.Surname)
+		err = row.Scan(&friendInfo.Name, &friendInfo.Photo, &friendInfo.Login, &friendInfo.Surname)
 
 		if err != nil {
 			fmt.Println(err)
 			return nil, errors.FailReadToVar
 		}
 
-		userFriends = append(userFriends,friendInfo)
+		userFriends = append(userFriends, friendInfo)
 
 	}
 
@@ -102,13 +110,13 @@ func (Data UserRepositoryRealisation) GetAllFriendsByLogin(login string) ([]mode
 
 func (Data UserRepositoryRealisation) GetUserFriendsByLogin(login string, friendsCount int) ([]models.FriendLandingInfo, error) {
 
-	id , err := Data.GetIdByLogin(login)
+	id, err := Data.GetIdByLogin(login)
 
 	if err != nil {
-		return nil , errors.FailReadFromDB
+		return nil, errors.FailReadFromDB
 	}
 
-	return Data.GetUserFriendsById(id , friendsCount)
+	return Data.GetUserFriendsById(id, friendsCount)
 }
 
 // фотка !!!
@@ -147,6 +155,7 @@ func (Data UserRepositoryRealisation) UploadSettings(id int, currentUserData mod
 }
 
 func (Data UserRepositoryRealisation) UploadPhoto(photoUrl string) (int, error) {
+
 	row := Data.userDB.QueryRow("INSERT INTO photos (url, photos_likes_count) VALUES ($1 , 0) RETURNING photo_id", photoUrl)
 	var photo_id int
 
@@ -242,21 +251,20 @@ func (Data UserRepositoryRealisation) GetFriendIdByLogin(login string) (int, err
 	return friend_id, scanErr
 }
 
-func (Data UserRepositoryRealisation) CheckFriendship(id1 , id2 int) (bool , error) {
-	row := Data.userDB.QueryRow("SELECT f_id FROM friends WHERE u_id=$1 AND f_id=$2", id1 , id2)
+func (Data UserRepositoryRealisation) CheckFriendship(id1, id2 int) (bool, error) {
+	row := Data.userDB.QueryRow("SELECT f_id FROM friends WHERE u_id=$1 AND f_id=$2", id1, id2)
 
 	f_id := -1
 
 	errScan := row.Scan(&f_id)
 
 	if errScan == sql.ErrNoRows {
-		return false , nil
+		return false, nil
 	}
 
 	if errScan != nil {
-		return false , errScan
+		return false, errScan
 	}
-
 
 	return true, nil
 
