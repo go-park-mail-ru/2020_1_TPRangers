@@ -121,4 +121,6 @@ func (Like LikeDelivery) DislikePhoto(rwContext echo.Context) error {
 func (likeD LikeDelivery) InitHandlers(server *echo.Echo) {
 	server.POST("/api/v1/photo/:id/like", likeD.LikePhoto)
 	server.DELETE("/api/v1/photo/:id/like", likeD.DislikePhoto)
+
+
 }
