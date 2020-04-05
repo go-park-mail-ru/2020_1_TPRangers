@@ -18,7 +18,7 @@ func NewFeedRepositoryRealisation(db *sql.DB) FeedRepositoryRealisation {
 
 }
 
-func (Data FeedRepositoryRealisation) GetUserFeedById(id int, count int) (models.Feed, error) {
+func (Data FeedRepositoryRealisation) GetUserFeedById(id int, count int) ([]models.Post, error) {
 	rows, err := Data.feedDB.Query("select posts.txt_data, photos.url, photos.photos_likes_count, PhotosLikes.photo_was_like, posts.posts_likes_count, posts.attachments, PostsLikes.post_was_like from (posts INNER JOIN feeds ON feeds.post_id=posts.post_id) INNER JOIN users ON users.u_id = feeds.u_id AND users.u_id = $1 LEFT JOIN photos ON photos.photo_id = posts.photo_id LEFT JOIN PhotosLikes ON PhotosLikes.photo_id = Posts.photo_id LEFT JOIN PostsLikes ON PostsLikes.post_id = Posts.post_id", id)
 	if err != nil {
 
@@ -26,7 +26,7 @@ func (Data FeedRepositoryRealisation) GetUserFeedById(id int, count int) (models
 			fmt.Println(err.Error(), "FEED ================================ id")
 		}
 
-		return models.Feed{}, errors.FailReadFromDB
+		return nil, errors.FailReadFromDB
 	}
 	posts := []models.Post{}
 	var photoUrl interface{}
@@ -50,7 +50,7 @@ func (Data FeedRepositoryRealisation) GetUserFeedById(id int, count int) (models
 
 		if err != nil {
 			fmt.Println(err.Error(), "FEED ================================ id")
-			return models.Feed{}, errors.FailReadToVar
+			return nil, errors.FailReadToVar
 		}
 
 		if photoLikes == nil {
@@ -92,14 +92,12 @@ func (Data FeedRepositoryRealisation) GetUserFeedById(id int, count int) (models
 		posts = append(posts, post)
 		i++
 	}
-	Feed := models.Feed{}
-	Feed.Posts = posts
 
-	return Feed, nil
+	return posts, nil
 
 }
 
-func (Data FeedRepositoryRealisation) GetUserFeedByEmail(email string, count int) (models.Feed, error) {
+func (Data FeedRepositoryRealisation) GetUserFeedByEmail(email string, count int) ([]models.Post, error) {
 	rows, err := Data.feedDB.Query("select posts.txt_data, photos.url, photos.photos_likes_count, PhotosLikes.photo_was_like, posts.posts_likes_count, posts.attachments, PostsLikes.post_was_like from (posts INNER JOIN feeds ON feeds.post_id=posts.post_id) INNER JOIN users ON users.u_id = feeds.u_id AND users.mail = $1 LEFT JOIN photos ON photos.photo_id = posts.photo_id LEFT JOIN PhotosLikes ON PhotosLikes.photo_id = Posts.photo_id LEFT JOIN PostsLikes ON PostsLikes.post_id = Posts.post_id", email)
 	if err != nil {
 
@@ -107,7 +105,7 @@ func (Data FeedRepositoryRealisation) GetUserFeedByEmail(email string, count int
 			fmt.Println(err.Error(), "FEED ================================ id")
 		}
 
-		return models.Feed{}, errors.FailReadFromDB
+		return nil, errors.FailReadFromDB
 	}
 	posts := []models.Post{}
 	var photoUrl interface{}
@@ -130,7 +128,7 @@ func (Data FeedRepositoryRealisation) GetUserFeedByEmail(email string, count int
 		}
 
 		if err != nil {
-			return models.Feed{}, errors.FailReadToVar
+			return nil, errors.FailReadToVar
 		}
 
 		if photoLikes == nil {
@@ -172,21 +170,19 @@ func (Data FeedRepositoryRealisation) GetUserFeedByEmail(email string, count int
 		posts = append(posts, post)
 		i++
 	}
-	Feed := models.Feed{}
-	Feed.Posts = posts
 
-	return Feed, nil
+	return posts, nil
 
 }
 
-func (Data FeedRepositoryRealisation) GetUserPostsById(id int) (models.Feed, error) {
+func (Data FeedRepositoryRealisation) GetUserPostsById(id int) ([]models.Post, error) {
 
 	feed := make([]models.Post, 0)
 
 	row, err := Data.feedDB.Query("SELECT P.txt_data, P.posts_likes_count, P.creation_date,P.attachments,UPL.postlike_id,PH.url FROM UsersPosts UP INNER JOIN Posts P ON(P.post_id=UP.post_id) LEFT JOIN Photos PH ON(PH.photo_id=P.photo_id) LEFT JOIN UsersPostsLikes UPL ON(UPL.u_id = $1 AND P.post_id = UPL.post_id) WHERE UP.u_id = $1", id)
 	if err != nil {
 		fmt.Println(err, "USER POSTS ERROR")
-		return models.Feed{Posts: feed}, err
+		return feed, err
 	}
 
 	for row.Next() {
@@ -211,11 +207,11 @@ func (Data FeedRepositoryRealisation) GetUserPostsById(id int) (models.Feed, err
 		feed = append(feed , *post)
 	}
 
-	return models.Feed{Posts:feed}, nil
+	return feed, nil
 
 }
 
-func (Data FeedRepositoryRealisation) GetUserPostsByLogin(login string) (models.Feed, error) {
+func (Data FeedRepositoryRealisation) GetUserPostsByLogin(login string) ([]models.Post, error) {
 
 	feed := make([]models.Post, 0)
 
@@ -227,7 +223,7 @@ func (Data FeedRepositoryRealisation) GetUserPostsByLogin(login string) (models.
 	row, err := Data.feedDB.Query("SELECT P.txt_data, P.posts_likes_count, P.creation_date,P.attachments,UPL.postlike_id,PH.url FROM UsersPosts UP INNER JOIN Posts P ON(P.post_id=UP.post_id) LEFT JOIN Photos PH ON(PH.photo_id=P.photo_id) LEFT JOIN UsersPostsLikes UPL ON(UPL.u_id = UP.u_id AND P.post_id = UPL.post_id) WHERE UP.u_id = $1", userId)
 	if err != nil {
 		fmt.Println(err, "USER POSTS ERROR")
-		return models.Feed{Posts: feed}, err
+		return feed, err
 	}
 
 	for row.Next() {
@@ -253,7 +249,7 @@ func (Data FeedRepositoryRealisation) GetUserPostsByLogin(login string) (models.
 		feed = append(feed , *post)
 	}
 
-	return models.Feed{Posts:feed}, nil
+	return feed, nil
 
 }
 

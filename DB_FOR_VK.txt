@@ -90,8 +90,6 @@ CREATE TABLE PhotosLikes(
     photo_was_like      boolean
 );
 
-
-
 INSERT INTO photos (url, photos_likes_count) VALUES ('defaults/profile/avatar', 0);
 
 
