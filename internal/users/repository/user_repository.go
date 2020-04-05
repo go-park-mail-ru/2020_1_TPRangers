@@ -16,6 +16,34 @@ func NewUserRepositoryRealisation(db *sql.DB) UserRepositoryRealisation {
 	return UserRepositoryRealisation{userDB: db}
 
 }
+func (Data UserRepositoryRealisation) GetAlbums(id int) ([]models.Album, error) {
+	albums := make([]models.Album,0, 20)
+
+	rows, err := Data.userDB.Query("select a.name, a.url, ph.photo_url from albums AS a LEFT JOIN photosfromalbums AS ph ON (ph.album_id = a.album_id) WHERE a.u_id = $1;", id)
+	defer rows.Close()
+
+	if err != nil {
+		return nil, errors.FailReadFromDB
+	}
+
+	for rows.Next() {
+		var album models.Album
+		err = rows.Scan(&album.Name, &album.Url, &album.PhotoUrl)
+
+		if album.PhotoUrl == nil {
+			album.PhotoUrl = new(string)
+			*album.PhotoUrl = ""
+		}
+
+		if err != nil {
+			return nil, errors.FailReadToVar
+		}
+
+		albums = append(albums, album)
+
+	}
+	return albums, nil
+}
 
 func (Data UserRepositoryRealisation) GetUserFriendsById(id, friendsCount int) ([]models.FriendLandingInfo, error) {
 	userFriends := make([]models.FriendLandingInfo, 0, 6)

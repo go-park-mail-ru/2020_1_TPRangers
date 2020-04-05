@@ -427,6 +427,51 @@ func (userD UserDeliveryRealisation) AddFriend(rwContext echo.Context) error {
 	return rwContext.NoContent(http.StatusOK)
 }
 
+func (userD UserDeliveryRealisation) GetAlbums(rwContext echo.Context) error {
+	rId := rwContext.Response().Header().Get("REQUEST_ID")
+
+	cookie, err := rwContext.Cookie("session_id")
+
+	if err != nil {
+		userD.logger.Debug(
+			zap.String("ID", rId),
+			zap.String("COOKIE", err.Error()),
+			zap.Int("ANSWER STATUS", http.StatusUnauthorized),
+		)
+
+		return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: errors.CookieExpired.Error()})
+	}
+
+	albums, err := userD.userLogic.GetAlbums(cookie.Value)
+
+	respErrStat := 0
+	switch err {
+	case errors.InvalidCookie:
+		cookie.Expires = time.Now().AddDate(0, 0, -1)
+		rwContext.SetCookie(cookie)
+
+		respErrStat = http.StatusUnauthorized
+	case errors.FailReadFromDB:
+		respErrStat = http.StatusInternalServerError
+	}
+
+	if err != nil {
+		userD.logger.Info(
+			zap.String("ID", rId),
+			zap.String("ERROR", err.Error()),
+			zap.Int("ANSWER STATUS", respErrStat),
+		)
+
+		return rwContext.JSON(respErrStat, models.JsonStruct{Err: err.Error()})
+	}
+
+	userD.logger.Info(
+		zap.String("ID", rId),
+		zap.Int("ANSWER STATUS", http.StatusOK),
+	)
+	return rwContext.JSON(http.StatusOK, models.JsonStruct{Body: albums})
+}
+
 func NewUserDelivery(log *zap.SugaredLogger, userRealisation usecase.UserUseCaseRealisation) UserDeliveryRealisation {
 	return UserDeliveryRealisation{userLogic: userRealisation, logger: log}
 }
@@ -442,6 +487,8 @@ func (userD UserDeliveryRealisation) InitHandlers(server *echo.Echo) {
 	server.GET("/api/v1/settings", userD.GetSettings)
 	server.GET("/api/v1/user/:id", userD.GetUser)
 	server.GET("api/v1/friends/:id", userD.FriendList)
+
+	server.GET("api/v1/albums", userD.GetAlbums)
 
 	server.DELETE("/api/v1/auth", userD.Logout)
 }

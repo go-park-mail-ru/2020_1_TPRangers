@@ -10,14 +10,15 @@ DROP TABLE IF EXISTS UsersPhotosLikes;
 DROP TABLE IF EXISTS AlbumsPhotos;
 DROP TABLE IF EXISTS PhotosLikes;
 DROP TABLE IF EXISTS PostsLikes;
+DROP TABLE IF EXISTS PhotosFromAlbums;
 
 
 
 
 CREATE TABLE Users (
     u_id            SERIAL PRIMARY KEY,
-    login           varchar(50), 
-    phone           varchar(20),     
+    login           varchar(50),
+    phone           varchar(20),
     mail            text,
     name            text,
     surname         text,
@@ -58,13 +59,17 @@ CREATE TABLE Photos(
 
 CREATE TABLE Albums(
     album_id        SERIAL PRIMARY KEY,
-    album_name      text
+    name            text,
+    url             text,
+    u_id            int
 );
 
-CREATE TABLE AlbumsPhotos(
-    album_id        int,
-    photo_id        int
-);
+CREATE TABLE PhotosFromAlbums(
+    photo_id    int,
+    photo_url   text,
+    album_id    int
+)
+
 
 CREATE TABLE UsersPostsLikes(
     u_id            int,
@@ -91,6 +96,9 @@ CREATE TABLE PhotosLikes(
 
 
 INSERT INTO photos (url, photos_likes_count) VALUES ('defaults/profile/avatar', 0);
+INSERT INTO Albums (name, url, u_id) VALUES ('default', 'albums/default', 0);
+
+
 
 
 

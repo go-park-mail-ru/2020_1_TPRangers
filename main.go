@@ -17,7 +17,7 @@ import (
 
 const (
 	usernameDB = "postgres"
-	passwordDB = "071299"
+	passwordDB = "postgres"
 	nameDB     = "vk"
 	redisPas   = ""
 	redisPort  = "127.0.0.1:6379"
