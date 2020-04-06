@@ -24,4 +24,6 @@ type UserRepository interface {
 	GetPhotosFromAlbum(int) ([]models.Photos, error)
 	CreateAlbum(int, models.AlbumReq) error
 	UploadPhotoToAlbum(models.PhotoInAlbum) error
+	GetUserLoginById(int) (string, error)
+
 }

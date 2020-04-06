@@ -94,7 +94,7 @@ func (userR UserUseCaseRealisation) GetUser(userLogin string) (map[string]interf
 
 	sendData := make(map[string]interface{})
 
-	sendData["feed"], _ = userR.feedDB.GetUserFeedByEmail(userLogin, 30)
+	sendData["feed"], _ = userR.feedDB.GetUserPostsByLogin(userLogin)
 	sendData["user"] = userData
 	sendData["friends"] , err = userR.userDB.GetUserFriendsByLogin(userLogin,6)
 
@@ -110,9 +110,12 @@ func (userR UserUseCaseRealisation) Profile(cookie string) (map[string]interface
 		return nil, errors.InvalidCookie
 	}
 
+
+
 	sendData := make(map[string]interface{})
 	sendData["user"], _ = userR.userDB.GetUserProfileSettingsById(id)
 	sendData["friends"] , err = userR.userDB.GetUserFriendsById(id,6)
+	sendData["feed"] , err = userR.feedDB.GetUserPostsById(id)
 
 	return sendData, err
 }
@@ -333,6 +336,12 @@ func (userR UserUseCaseRealisation) AddFriend(cookie , friendLogin string) error
 	}
 
 	return err
+}
+
+func (userR UserUseCaseRealisation) GetUserLoginByCookie(cookieValue string) (string, error) {
+	id , _ := userR.sessionDB.GetUserIdByCookie(cookieValue)
+
+	return userR.userDB.GetUserLoginById(id)
 }
 
 func NewUserUseCaseRealisation(userDB UserRep.UserRepositoryRealisation, feedDB repository.FeedRepositoryRealisation, sesDB SessRep.CookieRepositoryRealisation) UserUseCaseRealisation {

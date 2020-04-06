@@ -1,10 +1,11 @@
 package usecase
 
 import (
-	Ckie "main/internal/cookies/repository"
 	SessRep "main/internal/cookies"
+	Ckie "main/internal/cookies/repository"
 	"main/internal/feeds"
 	FeedRep "main/internal/feeds/repository"
+	"main/internal/models"
 	"main/internal/tools/errors"
 )
 
@@ -13,12 +14,12 @@ type FeedUseCaseRealisation struct {
 	sessionDB SessRep.CookieRepository
 }
 
-func (feedR FeedUseCaseRealisation) Feed(cookie string) (map[string]interface{} , error) {
+func (feedR FeedUseCaseRealisation) Feed(cookie string) (map[string]interface{}, error) {
 
 	id, err := feedR.sessionDB.GetUserIdByCookie(cookie)
 
 	if err != nil {
-		return nil , errors.InvalidCookie
+		return nil, errors.InvalidCookie
 	}
 
 	sendData := make(map[string]interface{})
@@ -26,15 +27,26 @@ func (feedR FeedUseCaseRealisation) Feed(cookie string) (map[string]interface{} 
 	sendData["feed"], err = feedR.feedDB.GetUserFeedById(id, 30)
 
 	if err != nil {
-		return nil , errors.FailReadFromDB
+		return nil, errors.FailReadFromDB
 	}
 
-	return sendData , nil
+	return sendData, nil
+}
+
+func (feedR FeedUseCaseRealisation) CreatePost(cookie string, newPost models.Post) error {
+
+	id, err := feedR.sessionDB.GetUserIdByCookie(cookie)
+
+	if err != nil {
+		return errors.InvalidCookie
+	}
+
+	return feedR.feedDB.CreatePost(id, newPost)
 }
 
 func NewFeedUseCaseRealisation(feedDB FeedRep.FeedRepositoryRealisation, sesDB Ckie.CookieRepositoryRealisation) FeedUseCaseRealisation {
 	return FeedUseCaseRealisation{
-		feedDB:   feedDB,
+		feedDB:    feedDB,
 		sessionDB: sesDB,
 	}
 }
