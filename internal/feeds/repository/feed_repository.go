@@ -179,7 +179,7 @@ func (Data FeedRepositoryRealisation) GetUserPostsById(id int) ([]models.Post, e
 
 	feed := make([]models.Post, 0)
 
-	row, err := Data.feedDB.Query("SELECT P.txt_data, P.posts_likes_count, P.creation_date,P.attachments,UPL.postlike_id,PH.url FROM UsersPosts UP INNER JOIN Posts P ON(P.post_id=UP.post_id) LEFT JOIN Photos PH ON(PH.photo_id=P.photo_id) LEFT JOIN UsersPostsLikes UPL ON(UPL.u_id = $1 AND P.post_id = UPL.post_id) WHERE UP.u_id = $1", id)
+	row, err := Data.feedDB.Query("SELECT P.post_id,PH.photo_id,P.txt_data, P.posts_likes_count, P.creation_date,P.attachments,UPL.postlike_id,PH.url FROM UsersPosts UP INNER JOIN Posts P ON(P.post_id=UP.post_id) LEFT JOIN Photos PH ON(PH.photo_id=P.photo_id) LEFT JOIN UsersPostsLikes UPL ON(UPL.u_id = $1 AND P.post_id = UPL.post_id) WHERE UP.u_id = $1", id)
 	if err != nil {
 		fmt.Println(err, "USER POSTS ERROR")
 		return feed, err
@@ -190,7 +190,7 @@ func (Data FeedRepositoryRealisation) GetUserPostsById(id int) ([]models.Post, e
 		var likeId sql.NullInt32
 		likeId.Scan(-1)
 		var postTime time.Time
-		err = row.Scan(&post.Text, &post.Likes, &postTime, &post.Attachments, &likeId, &post.Photo.Url)
+		err = row.Scan(&post.Id,&post.Photo.Id,&post.Text, &post.Likes, &postTime, &post.Attachments, &likeId, &post.Photo.Url)
 
 		post.Creation = postTime.Format("2006-01-02 15:04:05")
 
