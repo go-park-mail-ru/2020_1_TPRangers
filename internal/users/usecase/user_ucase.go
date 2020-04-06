@@ -20,6 +20,70 @@ type UserUseCaseRealisation struct {
 	sessionDB Sess.CookieRepository
 }
 
+func (userR UserUseCaseRealisation) GetAlbums(cookie string) ([]models.Album, error) {
+	id, err := userR.sessionDB.GetUserIdByCookie(cookie)
+
+	if err != nil {
+		return  nil ,errors.InvalidCookie
+	}
+
+	albums, err := userR.userDB.GetAlbums(id)
+
+	fmt.Println(albums)
+
+	if len(albums) == 0 {
+		albums, err = userR.userDB.GetAlbums(0) // FIXME user id 0 have default album - maybe it's not cool
+	}
+	return albums , nil
+
+}
+
+func (userR UserUseCaseRealisation) GetPhotosFromAlbum(cookie string, albumID int) ([]models.Photos, error) {
+	_, err := userR.sessionDB.GetUserIdByCookie(cookie)
+
+	if err != nil {
+		return  nil ,errors.InvalidCookie
+	}
+
+	photos, err := userR.userDB.GetPhotosFromAlbum(albumID)
+
+	fmt.Println(photos)
+
+	return photos, nil
+}
+
+func (userR UserUseCaseRealisation) CreateAlbum(cookie string, albumData models.AlbumReq) error {
+	uID, err := userR.sessionDB.GetUserIdByCookie(cookie)
+
+	if err != nil {
+		return  errors.InvalidCookie
+	}
+
+	err = userR.userDB.CreateAlbum(uID, albumData)
+
+	if err != nil {
+		return errors.FailReadFromDB
+	}
+
+	return nil
+}
+
+func (userR UserUseCaseRealisation) UploadPhotoToAlbum(cookie string, photoData models.PhotoInAlbum) error {
+	_, err := userR.sessionDB.GetUserIdByCookie(cookie)
+
+	if err != nil {
+		return  errors.InvalidCookie
+	}
+
+	err = userR.userDB.UploadPhotoToAlbum(photoData)
+
+	if err != nil {
+		return errors.FailReadFromDB
+	}
+
+	return nil
+}
+
 func (userR UserUseCaseRealisation) GetUser(userLogin string) (map[string]interface{}, error) {
 
 	userData, err := userR.userDB.GetUserProfileSettingsByLogin(userLogin)

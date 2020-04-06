@@ -20,5 +20,10 @@ type UserRepository interface {
 	GetUserFriendsById(int, int) ([]models.FriendLandingInfo, error)
 	GetUserFriendsByLogin(string, int) ([]models.FriendLandingInfo, error)
 	CheckFriendship(int , int) (bool , error)
+	GetAlbums(int) ([]models.Album, error)
+	GetPhotosFromAlbum(int) ([]models.Photos, error)
+	CreateAlbum(int, models.AlbumReq) error
+	UploadPhotoToAlbum(models.PhotoInAlbum) error
 	GetUserLoginById(int) (string, error)
+
 }

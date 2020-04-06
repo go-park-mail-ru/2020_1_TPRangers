@@ -6,6 +6,7 @@ import (
 	_ "github.com/lib/pq"
 	"main/internal/models"
 	"main/internal/tools/errors"
+	"strconv"
 )
 
 type UserRepositoryRealisation struct {
@@ -17,6 +18,81 @@ func NewUserRepositoryRealisation(db *sql.DB) UserRepositoryRealisation {
 
 }
 
+
+func (Data UserRepositoryRealisation ) UploadPhotoToAlbum(photoData models.PhotoInAlbum) error {
+	albumId, err := strconv.ParseInt(photoData.AlbumID, 10, 32)
+
+	_, err = Data.userDB.Exec("INSERT INTO photosfromalbums (photo_url, album_id) VALUES ($1, $2);", photoData.Url, int(albumId))
+	if err != nil{
+		return errors.FailSendToDB
+	}
+
+	return nil
+
+}
+
+func (Data UserRepositoryRealisation ) CreateAlbum(u_id int, albumData models.AlbumReq) error {
+
+	_, err := Data.userDB.Exec("INSERT INTO albums (name, url, u_id) VALUES ($1, $2, $3);", albumData.Name, albumData.Url, u_id)
+	if err != nil{
+		return errors.FailSendToDB
+	}
+
+	return nil
+
+}
+
+func (Data UserRepositoryRealisation ) GetPhotosFromAlbum(albumID int) ([]models.Photos, error) {
+	photos := make([]models.Photos,0, 20)
+	rows, err := Data.userDB.Query("select photo_url from photosfromalbums where album_id = $1;", albumID)
+	defer rows.Close()
+
+	if err != nil {
+		return nil, errors.FailReadFromDB
+	}
+
+	for rows.Next() {
+		var photo models.Photos
+		err = rows.Scan(&photo.Url)
+
+		if err != nil {
+			return nil, errors.FailReadToVar
+		}
+
+		photos = append(photos, photo)
+
+	}
+	return photos, nil
+}
+
+
+func (Data UserRepositoryRealisation) GetAlbums(id int) ([]models.Album, error) {
+	albums := make([]models.Album,0, 20)
+
+	rows, err := Data.userDB.Query("select a.name, a.url, ph.photo_url from albums AS a LEFT JOIN photosfromalbums AS ph ON (ph.album_id = a.album_id) WHERE a.u_id = $1;", id)
+	defer rows.Close()
+
+	if err != nil {
+		return nil, errors.FailReadFromDB
+	}
+
+	for rows.Next() {
+		var album models.Album
+		err = rows.Scan(&album.Name, &album.Url, &album.PhotoUrl)
+
+		if album.PhotoUrl == nil {
+			album.PhotoUrl = new(string)
+			*album.PhotoUrl = ""
+		}
+
+		if err != nil {
+			return nil, errors.FailReadToVar
+		}
+
+		albums = append(albums, album)
+
+	}
+	return albums, nil
 func (Data UserRepositoryRealisation) GetUserLoginById(userId int) (string, error) {
 	row := Data.userDB.QueryRow("SELECT login FROM Users WHERE u_id = $1", userId)
 	login := ""
