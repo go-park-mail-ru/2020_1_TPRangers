@@ -6,3 +6,4 @@ type Album struct {
 	PhotoUrl 	*string `json:"photo_url, omitempty"`
 
 }
+

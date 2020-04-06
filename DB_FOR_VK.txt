@@ -65,7 +65,7 @@ CREATE TABLE Albums(
 );
 
 CREATE TABLE PhotosFromAlbums(
-    photo_id    int,
+    photo_id    SERIAL PRIMARY KEY,
     photo_url   text,
     album_id    int
 )
