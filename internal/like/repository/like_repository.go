@@ -39,3 +39,27 @@ func (Like LikeRepositoryRealisation) DislikePhoto(photoId, userId int) error {
 	return err
 }
 
+func (Like LikeRepositoryRealisation) LikePost(postId, userId int) error {
+	Like.likeDB.Exec("UPDATE Posts SET posts_likes_count = posts_likes_count + 1 WHERE post_id =$1", postId)
+
+	like_id := int64(0)
+
+	row := Like.likeDB.QueryRow("INSERT INTO UsersPostsLikes (u_id,post_id) VALUES ($1,$2) RETURNING postlike_id",userId , postId)
+
+	err := row.Scan(&like_id)
+
+	return err
+}
+
+func (Like LikeRepositoryRealisation) DislikePost(postId, userId int) error {
+	Like.likeDB.Exec("UPDATE Posts SET posts_likes_count = posts_likes_count - 1 WHERE post_id = $1", postId)
+
+	like_id := int64(0)
+
+	row := Like.likeDB.QueryRow("DELETE FROM UserPostsLike WHERE u_id = $1 AND post_id = $2 RETURNING postlike_id",userId , postId)
+
+	err := row.Scan(&like_id)
+
+	return err
+}
+

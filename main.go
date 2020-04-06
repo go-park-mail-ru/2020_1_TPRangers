@@ -90,6 +90,7 @@ func main() {
 
 	api.userHandler.InitHandlers(server)
 	api.feedHandler.InitHandlers(server)
+	api.likeHandler.InitHandlers(server)
 
 	server.Logger.Fatal(server.Start(":3001"))
 	//server.Logger.Fatal(server.StartTLS(":3001","./internal/tools/ssl/bundle.pem","./internal/tools/ssl/private.key"))

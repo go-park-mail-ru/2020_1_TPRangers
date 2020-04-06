@@ -29,7 +29,6 @@ func (Like LikesUseRealisation) LikePhoto(photoId int, cookieValue string) error
 
 func (Like LikesUseRealisation) DislikePhoto(photoId int, cookieValue string) error {
 
-
 	userId , err := Like.cookieRepo.GetUserIdByCookie(cookieValue)
 
 	if err != nil {
@@ -38,6 +37,29 @@ func (Like LikesUseRealisation) DislikePhoto(photoId int, cookieValue string) er
 
 	return Like.likeRepo.DislikePhoto(photoId, userId)
 }
+
+func (Like LikesUseRealisation) LikePost(photoId int, cookieValue string) error {
+	userId , err := Like.cookieRepo.GetUserIdByCookie(cookieValue)
+
+	if err != nil {
+		return errors.InvalidCookie
+	}
+
+	return Like.likeRepo.LikePost(photoId, userId)
+}
+
+func (Like LikesUseRealisation) DislikePost(photoId int, cookieValue string) error {
+
+	userId , err := Like.cookieRepo.GetUserIdByCookie(cookieValue)
+
+	if err != nil {
+		return errors.InvalidCookie
+	}
+
+	return Like.likeRepo.DislikePost(photoId, userId)
+}
+
+
 
 
 
