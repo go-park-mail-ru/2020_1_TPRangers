@@ -8,4 +8,8 @@ type Post struct {
 	Likes       int    `json:"likes"`
 	WasLike     bool   `json:"wasLike"`
 	Creation	string `json:"date,omitempty"`
+	AuthorName	string `json:"authorName,omitempty"`
+	AuthorSurname	string `json:"authorSurname,omitempty"`
+	AuthorUrl	string `json:"authorUrl,omitempty"`
+	AuthorPhoto	string `json:"authorPhoto,omitempty"`
 }

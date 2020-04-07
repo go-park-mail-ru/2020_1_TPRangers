@@ -93,6 +93,8 @@ func (Data UserRepositoryRealisation) GetAlbums(id int) ([]models.Album, error) 
 
 	}
 	return albums, nil
+}
+
 func (Data UserRepositoryRealisation) GetUserLoginById(userId int) (string, error) {
 	row := Data.userDB.QueryRow("SELECT login FROM Users WHERE u_id = $1", userId)
 	login := ""
@@ -254,7 +256,7 @@ func (Data UserRepositoryRealisation) GetUserProfileSettingsById(id int) (models
 
 	row := Data.userDB.QueryRow("SELECT U.login, U.phone, U.mail, U.name, U.surname, U.birthdate , P.url FROM users U INNER JOIN photos P USING (photo_id) WHERE U.u_id=$1 GROUP BY U.login, U.phone, U.mail, U.name, U.surname, U.birthdate , P.url", id)
 	errScan := row.Scan(&user.Login, &user.Telephone, &user.Email, &user.Name, &user.Surname, &user.Date, &user.Photo)
-
+	fmt.Println(user)
 	fmt.Println(errScan)
 
 	return user, errScan
