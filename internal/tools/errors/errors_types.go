@@ -17,5 +17,5 @@ var (
 	FailReadFromDB = errors.New("Ошибка чтения из базы данных")
 	FailReadToVar  = errors.New("Ошибка записи данных в переменные")
 	FailAddFriend = errors.New("Ошибка при добавлении друга")
-
+	AlbumDoesntExist = errors.New("Такого альбома не существует")
 )
