@@ -102,8 +102,7 @@ func (userD UserDeliveryRealisation) GetMainUserFriends(rwContext echo.Context) 
 		return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: errors.CookieExpired.Error()})
 	}
 
-
-	login , err := userD.userLogic.GetUserLoginByCookie(cookie.Value)
+	login, err := userD.userLogic.GetUserLoginByCookie(cookie.Value)
 	friendList, err := userD.userLogic.GetAllFriends(login)
 
 	if err != nil {
@@ -416,7 +415,7 @@ func (userD UserDeliveryRealisation) Register(rwContext echo.Context) error {
 	return rwContext.NoContent(http.StatusOK)
 }
 
-func (userD UserDeliveryRealisation)  AddFriend(rwContext echo.Context) error {
+func (userD UserDeliveryRealisation) AddFriend(rwContext echo.Context) error {
 
 	uId := rwContext.Response().Header().Get("REQUEST_ID")
 
@@ -512,7 +511,7 @@ func (userD UserDeliveryRealisation) GetAlbums(rwContext echo.Context) error {
 	return rwContext.JSON(http.StatusOK, models.JsonStruct{Body: albums})
 }
 
-func (userD UserDeliveryRealisation) GetPhotosFromAlbum(rwContext echo.Context) error  {
+func (userD UserDeliveryRealisation) GetPhotosFromAlbum(rwContext echo.Context) error {
 
 	uId := rwContext.Response().Header().Get("REQUEST_ID")
 
@@ -564,7 +563,7 @@ func (userD UserDeliveryRealisation) GetPhotosFromAlbum(rwContext echo.Context) 
 	return rwContext.JSON(http.StatusOK, models.JsonStruct{Body: photos})
 }
 
-func (userD UserDeliveryRealisation) CreateAlbum(rwContext echo.Context) error  {
+func (userD UserDeliveryRealisation) CreateAlbum(rwContext echo.Context) error {
 	rId := rwContext.Response().Header().Get("REQUEST_ID")
 
 	cookie, err := rwContext.Cookie("session_id")
@@ -580,7 +579,6 @@ func (userD UserDeliveryRealisation) CreateAlbum(rwContext echo.Context) error  
 	albumData := new(models.AlbumReq)
 
 	err = rwContext.Bind(albumData)
-
 
 	if err != nil {
 		userD.logger.Debug(
@@ -620,11 +618,10 @@ func (userD UserDeliveryRealisation) CreateAlbum(rwContext echo.Context) error  
 		zap.Int("ANSWER STATUS", http.StatusOK),
 	)
 
-
 	return rwContext.NoContent(http.StatusOK)
 }
 
-func (userD UserDeliveryRealisation) UploadPhotoToAlbum(rwContext echo.Context) error  {
+func (userD UserDeliveryRealisation) UploadPhotoToAlbum(rwContext echo.Context) error {
 	rId := rwContext.Response().Header().Get("REQUEST_ID")
 
 	cookie, err := rwContext.Cookie("session_id")
@@ -640,7 +637,6 @@ func (userD UserDeliveryRealisation) UploadPhotoToAlbum(rwContext echo.Context) 
 	photoData := new(models.PhotoInAlbum)
 
 	err = rwContext.Bind(photoData)
-
 
 	if err != nil {
 		userD.logger.Debug(
@@ -680,9 +676,7 @@ func (userD UserDeliveryRealisation) UploadPhotoToAlbum(rwContext echo.Context) 
 		zap.Int("ANSWER STATUS", http.StatusOK),
 	)
 
-
 	return rwContext.NoContent(http.StatusOK)
-
 
 }
 
@@ -691,22 +685,22 @@ func NewUserDelivery(log *zap.SugaredLogger, userRealisation usecase.UserUseCase
 }
 
 func (userD UserDeliveryRealisation) InitHandlers(server *echo.Echo) {
-	server.POST("/api/v1/login", userD.Login)
-	server.POST("/api/v1/registration", userD.Register)
-  server.POST("api/v1/album", userD.CreateAlbum)
+	server.POST("/api/v1/login", userD.Login) //
+	server.POST("/api/v1/registration", userD.Register) //
+	server.POST("api/v1/album", userD.CreateAlbum)
 	server.POST("api/v1/album/photo", userD.UploadPhotoToAlbum)
 
-	server.PUT("/api/v1/settings", userD.UploadSettings)
-	server.PUT("/api/v1/user/:id", userD.AddFriend)
+	server.PUT("/api/v1/settings", userD.UploadSettings) //
+	server.PUT("/api/v1/user/:id", userD.AddFriend) //
 
-	server.GET("/api/v1/profile", userD.Profile)
-	server.GET("/api/v1/settings", userD.GetSettings)
-	server.GET("/api/v1/user/:id", userD.GetUser)
-	server.GET("api/v1/friends/:id", userD.FriendList)
-	server.GET("api/v1/friends", userD.GetMainUserFriends)
+	server.GET("/api/v1/profile", userD.Profile) //
+	server.GET("/api/v1/settings", userD.GetSettings) //
+	server.GET("/api/v1/user/:id", userD.GetUser) //
+	server.GET("api/v1/friends/:id", userD.FriendList) //
+	server.GET("api/v1/friends", userD.GetMainUserFriends) //
 	server.GET("api/v1/albums", userD.GetAlbums)
 	server.GET("api/v1/albums/:id", userD.GetPhotosFromAlbum)
- 
+
 	server.DELETE("/api/v1/login", userD.Logout)
 
 }

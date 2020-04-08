@@ -137,7 +137,7 @@ func NewFeedDelivery(log *zap.SugaredLogger, feedRealisation usecase.FeedUseCase
 }
 
 func (feedD FeedDeliveryRealisation) InitHandlers(server *echo.Echo) {
-	server.GET("/api/v1/news", feedD.Feed)
-	server.POST("/api/v1/post", feedD.CreatePost)
+	server.GET("/api/v1/news", feedD.Feed) //
+	server.POST("/api/v1/post", feedD.CreatePost) //
 
 }
