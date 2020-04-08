@@ -41,30 +41,25 @@ func (userR UserUseCaseRealisation) GetAlbums(cookie string) ([]models.Album, er
 	id, err := userR.sessionDB.GetUserIdByCookie(cookie)
 
 	if err != nil {
-		return nil, errors.InvalidCookie
+		return  nil ,errors.InvalidCookie
 	}
 
 	albums, err := userR.userDB.GetAlbums(id)
 
 	fmt.Println(albums)
 
-	if len(albums) == 0 {
-		albums, err = userR.userDB.GetAlbums(0) // FIXME user id 0 have default album - maybe it's not cool
-	}
-	return albums, nil
+	return albums , nil
 
 }
 
-func (userR UserUseCaseRealisation) GetPhotosFromAlbum(cookie string, albumID int) ([]models.Photos, error) {
+func (userR UserUseCaseRealisation) GetPhotosFromAlbum(cookie string, albumID int) (models.Photos, error) {
 	_, err := userR.sessionDB.GetUserIdByCookie(cookie)
 
 	if err != nil {
-		return nil, errors.InvalidCookie
+		return  models.Photos{} ,errors.InvalidCookie
 	}
 
 	photos, err := userR.userDB.GetPhotosFromAlbum(albumID)
-
-	fmt.Println(photos)
 
 	return photos, nil
 }
@@ -292,7 +287,9 @@ func (userR UserUseCaseRealisation) Login(userData models.Auth, cookieValue stri
 
 func (userR UserUseCaseRealisation) Register(userData models.Register, cookieValue string, exprTime time.Duration) error {
 
+
 	email := userData.Email
+
 
 	if flag, _ := userR.userDB.IsUserExist(email); flag == true {
 		return errors.AlreadyExist
@@ -339,6 +336,7 @@ func (userR UserUseCaseRealisation) Logout(cookie string) error {
 }
 
 func (userR UserUseCaseRealisation) AddFriend(cookie, friendLogin string) error {
+
 
 	id, err := userR.sessionDB.GetUserIdByCookie(cookie)
 

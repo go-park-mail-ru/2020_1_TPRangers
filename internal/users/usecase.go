@@ -16,7 +16,7 @@ type UserUseCase interface {
 	GetAllFriends(string) (map[string]interface{}, error)
 	Register(models.Register, string, time.Duration) error
 	GetAlbums(string) ([]models.Album, error)
-	GetPhotosFromAlbum(string, int) ([]models.Photos, error)
+	GetPhotosFromAlbum(string, int) (models.Photos, error)
 	CreateAlbum(string, models.AlbumReq) error
 	UploadPhotoToAlbum(string, models.PhotoInAlbum) error
 	CheckFriendship(string, string, map[string]interface{}) (map[string]interface{}, error)

@@ -71,15 +71,14 @@ CREATE TABLE Albums
 (
     album_id SERIAL PRIMARY KEY,
     name     TEXT,
-    url      TEXT,
-    u_id     INT NOT NULL
+    u_id     INT
 );
 
 CREATE TABLE PhotosFromAlbums
 (
-    photo_id  SERIAL PRIMARY KEY,
-    photo_url text,
-    album_id  int
+    photo_id  INT NOT NULL REFERENCES Photos,
+    photo_url TEXT,
+    album_id  INT
 );
 
 CREATE TABLE UsersPostsLikes
@@ -98,8 +97,7 @@ CREATE TABLE UsersPhotosLikes
 
 INSERT INTO photos (url, photos_likes_count)
 VALUES ('defaults/profile/avatar', 0);
-INSERT INTO Albums (name, url, u_id)
-VALUES ('default', 'albums/default', 0);
+
 
 
 
