@@ -2,5 +2,6 @@ package models
 
 
 type Photos struct {
-	Url     string `json:"url,omitempty"`
+	AlbumName 	string `json:"album_name,omitempty"`
+	Url     	string `json:"url,omitempty"`
 }

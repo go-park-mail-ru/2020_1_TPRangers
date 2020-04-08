@@ -60,16 +60,17 @@ func (Data UserRepositoryRealisation ) CreateAlbum(u_id int, albumData models.Al
 
 func (Data UserRepositoryRealisation ) GetPhotosFromAlbum(albumID int) ([]models.Photos, error) {
 	photos := make([]models.Photos,0, 20)
-	rows, err := Data.userDB.Query("select photo_url from photosfromalbums where album_id = $1;", albumID)
+	rows, err := Data.userDB.Query("select ph.photo_url, a.name from photosfromalbums AS ph INNER JOIN albums AS a ON ph.album_id = a.album_id  where a.album_id = $1;", albumID)
 	defer rows.Close()
 
 	if err != nil {
 		return nil, errors.FailReadFromDB
 	}
-	var photo models.Photos
-	rows.Scan(&photo.Url)
+
 	for rows.Next() {
-		err = rows.Scan(&photo.Url)
+		var photo models.Photos
+
+		err = rows.Scan(&photo.Url, &photo.AlbumName)
 
 		if err != nil {
 			return nil, errors.FailReadToVar
