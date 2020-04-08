@@ -58,7 +58,6 @@ func (Data UserRepositoryRealisation ) CreateAlbum(u_id int, albumData models.Al
 
 }
 
-
 func (Data UserRepositoryRealisation ) GetPhotosFromAlbum(albumID int) (models.Photos, error) {
 	photosAlb := models.Photos{}
 	phUrls := make([]string, 0, 20)
