@@ -13,11 +13,15 @@ import (
 	deliveryUser "main/internal/users/delivery"
 	repositoryUser "main/internal/users/repository"
 	usecaseUser "main/internal/users/usecase"
+
+	deliveryLikes "main/internal/like/delivery"
+	repositoryLikes "main/internal/like/repository"
+	usecaseLikes "main/internal/like/usecase"
 )
 
 const (
 	usernameDB = "postgres"
-	passwordDB = "071299"
+	passwordDB = "postgres"
 	nameDB     = "vk"
 	redisPas   = ""
 	redisPort  = "127.0.0.1:6379"
@@ -26,13 +30,20 @@ const (
 type RequestHandlers struct {
 	userHandler deliveryUser.UserDeliveryRealisation
 	feedHandler deliveryFeed.FeedDeliveryRealisation
+	likeHandler deliveryLikes.LikeDelivery
 }
 
 func NewRequestHandler(db *sql.DB, logger *zap.SugaredLogger) *RequestHandlers {
 
+
+
 	sessionDB := repositoryCookie.NewCookieRepositoryRealisation(redisPort, redisPas)
 	feedDB := repositoryFeed.NewFeedRepositoryRealisation(db)
 	userDB := repositoryUser.NewUserRepositoryRealisation(db)
+
+	likesDB := repositoryLikes.NewLikeRepositoryRealisation(db)
+	likesUse := usecaseLikes.NewLikeUseRealisation(likesDB,sessionDB)
+	likeH := deliveryLikes.NewLikeDelivery(logger , likesUse)
 
 	feedUseCase := usecaseFeed.NewFeedUseCaseRealisation(feedDB, sessionDB)
 	userUseCase := usecaseUser.NewUserUseCaseRealisation(userDB, feedDB, sessionDB)
@@ -43,6 +54,7 @@ func NewRequestHandler(db *sql.DB, logger *zap.SugaredLogger) *RequestHandlers {
 	api := &(RequestHandlers{
 		userHandler: userH,
 		feedHandler: feedH,
+		likeHandler: likeH,
 	})
 
 	return api
@@ -51,6 +63,7 @@ func NewRequestHandler(db *sql.DB, logger *zap.SugaredLogger) *RequestHandlers {
 func main() {
 
 	server := echo.New()
+	//server.Use(middleware2.CSRF())
 
 	config := zap.NewDevelopmentConfig()
 	config.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
@@ -78,6 +91,7 @@ func main() {
 
 	api.userHandler.InitHandlers(server)
 	api.feedHandler.InitHandlers(server)
+	api.likeHandler.InitHandlers(server)
 
 	server.Logger.Fatal(server.Start(":3001"))
 	//server.Logger.Fatal(server.StartTLS(":3001","./internal/tools/ssl/bundle.pem","./internal/tools/ssl/private.key"))
