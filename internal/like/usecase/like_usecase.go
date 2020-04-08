@@ -1,10 +1,8 @@
 package usecase
 
-import(
-	"main/internal/like"
-	lR "main/internal/like/repository"
+import (
 	"main/internal/cookies"
-	cR "main/internal/cookies/repository"
+	"main/internal/like"
 	"main/internal/tools/errors"
 )
 
@@ -13,7 +11,7 @@ type LikesUseRealisation struct {
 	cookieRepo cookies.CookieRepository
 }
 
-func NewLikeUseRealisation(lRepo lR.LikeRepositoryRealisation, cRepo cR.CookieRepositoryRealisation ) LikesUseRealisation {
+func NewLikeUseRealisation(lRepo like.RepositoryLike, cRepo cookies.CookieRepository) LikesUseRealisation {
 	return LikesUseRealisation{likeRepo:lRepo, cookieRepo:cRepo}
 }
 
