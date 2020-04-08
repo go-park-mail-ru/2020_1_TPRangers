@@ -35,11 +35,11 @@ func (userR UserUseCaseRealisation) GetAlbums(cookie string) ([]models.Album, er
 
 }
 
-func (userR UserUseCaseRealisation) GetPhotosFromAlbum(cookie string, albumID int) ([]models.Photos, error) {
+func (userR UserUseCaseRealisation) GetPhotosFromAlbum(cookie string, albumID int) (models.Photos, error) {
 	_, err := userR.sessionDB.GetUserIdByCookie(cookie)
 
 	if err != nil {
-		return  nil ,errors.InvalidCookie
+		return  models.Photos{} ,errors.InvalidCookie
 	}
 
 	photos, err := userR.userDB.GetPhotosFromAlbum(albumID)

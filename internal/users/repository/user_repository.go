@@ -58,28 +58,36 @@ func (Data UserRepositoryRealisation ) CreateAlbum(u_id int, albumData models.Al
 
 }
 
-func (Data UserRepositoryRealisation ) GetPhotosFromAlbum(albumID int) ([]models.Photos, error) {
-	photos := make([]models.Photos,0, 20)
-	rows, err := Data.userDB.Query("select ph.photo_url, a.name from photosfromalbums AS ph INNER JOIN albums AS a ON ph.album_id = a.album_id  where a.album_id = $1;", albumID)
-	defer rows.Close()
 
+func (Data UserRepositoryRealisation ) GetPhotosFromAlbum(albumID int) (models.Photos, error) {
+	photosAlb := models.Photos{}
+	phUrls := make([]string, 0, 20)
+	rows, err := Data.userDB.Query("select photo_url from photosfromalbums where album_id = $1;", albumID)
+
+	defer rows.Close()
 	if err != nil {
-		return nil, errors.FailReadFromDB
+		return models.Photos{}, errors.FailReadFromDB
 	}
 
 	for rows.Next() {
-		var photo models.Photos
+		var phUrl string
 
-		err = rows.Scan(&photo.Url, &photo.AlbumName)
+		err = rows.Scan(&phUrl)
 
 		if err != nil {
-			return nil, errors.FailReadToVar
+			return models.Photos{}, errors.FailReadToVar
 		}
 
-		photos = append(photos, photo)
-
+		phUrls = append(phUrls, phUrl)
 	}
-	return photos, nil
+	photosAlb.Urls = phUrls
+	row := Data.userDB.QueryRow("select name from albums where album_id = $1;", albumID)
+	err = row.Scan(&photosAlb.AlbumName)
+	if err != nil {
+		return models.Photos{}, nil
+	}
+
+	return photosAlb, nil
 }
 
 
