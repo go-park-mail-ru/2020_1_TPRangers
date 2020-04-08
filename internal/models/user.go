@@ -9,4 +9,5 @@ type User struct {
 	Surname   string `json:"surname,omitempty"`
 	Date      string `json:"date,omitempty"`
 	Photo     int    `json:"photo,omitempty"`
+	CryptedPassword []byte
 }

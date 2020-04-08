@@ -13,6 +13,7 @@ require (
 	github.com/onsi/gomega v1.7.0 // indirect
 	github.com/satori/go.uuid v1.2.0
 	go.uber.org/zap v1.14.1
+	golang.org/x/crypto v0.0.0-20190510104115-cbcb75029529
 	golang.org/x/net v0.0.0-20190923162816-aa69164e4478 // indirect
 	golang.org/x/sys v0.0.0-20191010194322-b09406accb47 // indirect
 	golang.org/x/text v0.3.2 // indirect

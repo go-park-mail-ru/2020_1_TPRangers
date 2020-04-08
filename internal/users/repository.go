@@ -10,7 +10,7 @@ type UserRepository interface {
 	UploadSettings(int, models.User) error
 	UploadPhoto(string) (int, error)
 	GetIdByEmail(string) (int, error)
-	GetPassword(string) (string, error)
+	GetPassword(string) ([]byte, error)
 	AddNewUser(models.User) error
 	GetDefaultProfilePhotoId() (int, error)
 	IsUserExist(string) (bool, error)

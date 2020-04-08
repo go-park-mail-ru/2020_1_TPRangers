@@ -254,6 +254,8 @@ func (userD UserDeliveryRealisation) UploadSettings(rwContext echo.Context) erro
 		respErrStat = http.StatusUnauthorized
 	case errors.FailReadFromDB:
 		respErrStat = http.StatusInternalServerError
+	case errors.FailSendToDB:
+		respErrStat = http.StatusConflict
 	}
 
 	if err != nil {

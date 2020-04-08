@@ -3,7 +3,6 @@ package main
 import (
 	"database/sql"
 	"github.com/labstack/echo"
-	middleware2 "github.com/labstack/echo/middleware"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	repositoryCookie "main/internal/cookies/repository"
@@ -15,9 +14,9 @@ import (
 	repositoryUser "main/internal/users/repository"
 	usecaseUser "main/internal/users/usecase"
 
+	deliveryLikes "main/internal/like/delivery"
 	repositoryLikes "main/internal/like/repository"
 	usecaseLikes "main/internal/like/usecase"
-	deliveryLikes "main/internal/like/delivery"
 )
 
 const (
@@ -64,7 +63,7 @@ func NewRequestHandler(db *sql.DB, logger *zap.SugaredLogger) *RequestHandlers {
 func main() {
 
 	server := echo.New()
-	server.Use(middleware2.CSRF())
+	//server.Use(middleware2.CSRF())
 
 	config := zap.NewDevelopmentConfig()
 	config.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder

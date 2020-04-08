@@ -199,8 +199,8 @@ func (Data UserRepositoryRealisation) GetUserFriendsByLogin(login string, friend
 func (Data UserRepositoryRealisation) GetUserDataById(id int) (models.User, error) {
 	user := models.User{}
 
-	row := Data.userDB.QueryRow("SELECT login, phone, mail, name, surname, birthdate , photo_id FROM users WHERE u_id=$1", id)
-	errScan := row.Scan(&user.Login, &user.Telephone, &user.Email, &user.Name, &user.Surname, &user.Date, &user.Photo)
+	row := Data.userDB.QueryRow("SELECT login, phone, mail, name, surname, birthdate , photo_id , password FROM users WHERE u_id=$1", id)
+	errScan := row.Scan(&user.Login, &user.Telephone, &user.Email, &user.Name, &user.Surname, &user.Date, &user.Photo , &user.CryptedPassword)
 
 	if errScan != nil {
 		fmt.Println("ERROR", errScan.Error())
@@ -223,7 +223,7 @@ func (Data UserRepositoryRealisation) GetUserDataByLogin(email string) (models.U
 }
 
 func (Data UserRepositoryRealisation) UploadSettings(id int, currentUserData models.User) error {
-	_, err := Data.userDB.Exec("update users set login = $1, phone = $2, mail = $3, name = $4, surname = $5, birthdate = $6, password = $7 , photo_id = $8 WHERE u_id=$9", currentUserData.Login, currentUserData.Telephone, currentUserData.Email, currentUserData.Name, currentUserData.Surname, currentUserData.Date, currentUserData.Password, currentUserData.Photo, id)
+	_, err := Data.userDB.Exec("update users set login = $1, phone = $2, mail = $3, name = $4, surname = $5, birthdate = $6, password = $7::bytea , photo_id = $8 WHERE u_id=$9", currentUserData.Login, currentUserData.Telephone, currentUserData.Email, currentUserData.Name, currentUserData.Surname, currentUserData.Date, currentUserData.CryptedPassword, currentUserData.Photo, id)
 	if err != nil {
 		return errors.FailSendToDB
 	}
@@ -270,12 +270,12 @@ func (Data UserRepositoryRealisation) GetIdByEmail(email string) (int, error) {
 	return u_id, nil
 }
 
-func (Data UserRepositoryRealisation) GetPassword(email string) (string, error) {
+func (Data UserRepositoryRealisation) GetPassword(email string) ([]byte, error) {
 	row := Data.userDB.QueryRow("SELECT password FROM users WHERE mail=$1", email)
-	var password string
+	var password []byte
 	errScan := row.Scan(&password)
 	if errScan != nil {
-		return "", errors.NotExist
+		return password, errors.NotExist
 	}
 	return password, nil
 }
@@ -291,7 +291,7 @@ func (Data UserRepositoryRealisation) GetDefaultProfilePhotoId() (int, error) {
 
 func (Data UserRepositoryRealisation) AddNewUser(userData models.User) error {
 	//result
-	_, err := Data.userDB.Exec("insert into Users (phone, mail, name, surname, password, birthdate, login, photo_id) values ($1, $2, $3, $4, $5, $6, $7, $8)", userData.Telephone, userData.Email, userData.Name, userData.Surname, userData.Password, userData.Date, userData.Login, userData.Photo)
+	_, err := Data.userDB.Exec("insert into Users (phone, mail, name, surname, password, birthdate, login, photo_id) values ($1, $2, $3, $4, $5::bytea, $6, $7, $8)", userData.Telephone, userData.Email, userData.Name, userData.Surname, userData.CryptedPassword, userData.Date, userData.Login, userData.Photo)
 	if err != nil {
 		return errors.FailSendToDB
 	}
