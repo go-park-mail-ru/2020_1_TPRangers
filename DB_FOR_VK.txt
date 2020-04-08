@@ -35,7 +35,6 @@ CREATE TABLE Friends(
     f_id            INT
 );
 
-
 CREATE TABLE Posts(
     post_id         	SERIAL PRIMARY KEY,
     txt_data        	TEXT,

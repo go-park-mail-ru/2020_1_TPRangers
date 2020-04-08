@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"github.com/labstack/echo"
+	middleware2 "github.com/labstack/echo/middleware"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	repositoryCookie "main/internal/cookies/repository"
@@ -63,6 +64,11 @@ func NewRequestHandler(db *sql.DB, logger *zap.SugaredLogger) *RequestHandlers {
 func main() {
 
 	server := echo.New()
+	server.Use(middleware2.CSRFWithConfig(middleware2.CSRFConfig{
+		TokenLength:    32,
+		TokenLookup:    "header" + echo.HeaderXCSRFToken,
+		ContextKey:     "csrf",
+	}))
 
 	config := zap.NewDevelopmentConfig()
 	config.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder

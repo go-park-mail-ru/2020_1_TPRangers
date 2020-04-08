@@ -65,7 +65,6 @@ func (Data UserRepositoryRealisation ) GetPhotosFromAlbum(albumID int) ([]models
 	return photos, nil
 }
 
-
 func (Data UserRepositoryRealisation) GetAlbums(id int) ([]models.Album, error) {
 	albums := make([]models.Album,0, 20)
 
@@ -197,7 +196,6 @@ func (Data UserRepositoryRealisation) GetUserFriendsByLogin(login string, friend
 	return Data.GetUserFriendsById(id, friendsCount)
 }
 
-// фотка !!!
 func (Data UserRepositoryRealisation) GetUserDataById(id int) (models.User, error) {
 	user := models.User{}
 
