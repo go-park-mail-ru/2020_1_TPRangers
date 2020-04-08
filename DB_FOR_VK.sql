@@ -96,7 +96,7 @@ CREATE TABLE UsersPhotosLikes
 );
 
 INSERT INTO photos (url, photos_likes_count)
-VALUES ('defaults/profile/avatar', 0);
+VALUES ('https://social-hub.ru/uploads/img/default.png', 0);
 
 
 
