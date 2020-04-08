@@ -11,6 +11,11 @@ import (
 
 
 func Test_PhotoLike(t *testing.T) {
+
+	var likePhoto
+
+
+
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	lRepoMock := NewMockRepositoryLike(ctrl)
@@ -20,6 +25,5 @@ func Test_PhotoLike(t *testing.T) {
 	likeUseCase := NewLikeUseRealisation(lRepoMock,cRepoMock)
 
 	likeUseCase.LikePhoto(1,"123")
-
 
 }

@@ -62,8 +62,6 @@ func (Data FeedRepositoryRealisation) GetUserFeedById(id int, count int) ([]mode
 
 }
 
-
-
 func (Data FeedRepositoryRealisation) GetUserPostsById(id int) ([]models.Post, error) {
 
 	feed := make([]models.Post, 0)
