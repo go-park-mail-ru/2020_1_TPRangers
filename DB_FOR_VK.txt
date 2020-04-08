@@ -49,8 +49,6 @@ CREATE TABLE PostsAuthor(
     u_id                INT NOT NULL REFERENCES Users
 );
 
-
-
 CREATE TABLE Feeds(
     u_id            INT NOT NULL REFERENCES Users,
     post_id         INT NOT NULL REFERENCES Posts
@@ -85,7 +83,6 @@ CREATE TABLE UsersPhotosLikes(
     u_id            INT NOT NULL REFERENCES Users,
     photo_id        INT NOT NULL REFERENCES Photos
 );
-
 
 INSERT INTO photos (url, photos_likes_count) VALUES ('defaults/profile/avatar', 0);
 INSERT INTO Albums (name, url, u_id) VALUES ('default', 'albums/default', 0);
