@@ -23,9 +23,9 @@ func (Data UserRepositoryRealisation ) UploadPhotoToAlbum(photoData models.Photo
 	albumId, err := strconv.ParseInt(photoData.AlbumID, 10, 32)
 
 	album := Data.userDB.QueryRow("select name from albums where album_id = $1;", int(albumId))
-	var albumName *string
+	var albumName string
 	album.Scan(&albumName)
-	if albumName == nil {
+	if albumName == "" {
 		return errors.AlbumDoesntExist
 	}
 
@@ -49,7 +49,7 @@ func (Data UserRepositoryRealisation ) UploadPhotoToAlbum(photoData models.Photo
 
 func (Data UserRepositoryRealisation ) CreateAlbum(u_id int, albumData models.AlbumReq) error {
 
-	_, err := Data.userDB.Exec("INSERT INTO albums (name, url, u_id) VALUES ($1, $2, $3);", albumData.Name, albumData.Url, u_id)
+	_, err := Data.userDB.Exec("INSERT INTO albums (name, u_id) VALUES ($1, $2);", albumData.Name,  u_id)
 	if err != nil{
 		return errors.FailSendToDB
 	}
@@ -66,9 +66,9 @@ func (Data UserRepositoryRealisation ) GetPhotosFromAlbum(albumID int) ([]models
 	if err != nil {
 		return nil, errors.FailReadFromDB
 	}
-
+	var photo models.Photos
+	rows.Scan(&photo.Url)
 	for rows.Next() {
-		var photo models.Photos
 		err = rows.Scan(&photo.Url)
 
 		if err != nil {
@@ -85,7 +85,7 @@ func (Data UserRepositoryRealisation ) GetPhotosFromAlbum(albumID int) ([]models
 func (Data UserRepositoryRealisation) GetAlbums(id int) ([]models.Album, error) {
 	albums := make([]models.Album,0, 20)
 
-	rows, err := Data.userDB.Query("select DISTINCT ON (a.url) a.name, a.url, ph.photo_url from albums AS a LEFT JOIN photosfromalbums AS ph ON ph.album_id = a.album_id WHERE a.u_id = $1;", id)
+	rows, err := Data.userDB.Query("select DISTINCT ON (a.album_id) a.name, a.album_id, ph.photo_url from albums AS a LEFT JOIN photosfromalbums AS ph ON ph.album_id = a.album_id WHERE a.u_id = $1;", id)
 	defer rows.Close()
 	if err != nil {
 		return nil, errors.FailReadFromDB
@@ -93,13 +93,12 @@ func (Data UserRepositoryRealisation) GetAlbums(id int) ([]models.Album, error) 
 
 	for rows.Next() {
 		var album models.Album
-		err = rows.Scan(&album.Name, &album.Url, &album.PhotoUrl)
+		err = rows.Scan(&album.Name, &album.ID, &album.PhotoUrl)
 
 		if album.PhotoUrl == nil {
 			album.PhotoUrl = new(string)
 			*album.PhotoUrl = ""
 		}
-
 		if err != nil {
 			return nil, errors.FailReadToVar
 		}
@@ -108,6 +107,14 @@ func (Data UserRepositoryRealisation) GetAlbums(id int) ([]models.Album, error) 
 
 	}
 	return albums, nil
+}
+
+func (Data UserRepositoryRealisation) CreateDefaultAlbum(user_id int) error {
+	_, err := Data.userDB.Exec("INSERT INTO Albums (name, u_id) VALUES ('default',  $1);", user_id)
+	if err != nil {
+		return errors.FailSendToDB
+	}
+	return nil
 }
 
 

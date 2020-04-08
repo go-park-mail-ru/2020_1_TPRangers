@@ -65,7 +65,6 @@ CREATE TABLE UsersPosts(
 CREATE TABLE Albums(
     album_id        SERIAL PRIMARY KEY,
     name            TEXT,
-    url             TEXT,
     u_id            INT
 );
 
@@ -90,7 +89,7 @@ CREATE TABLE UsersPhotosLikes(
 
 
 INSERT INTO photos (url, photos_likes_count) VALUES ('defaults/profile/avatar', 0);
-INSERT INTO Albums (name, url, u_id) VALUES ('default', 'albums/default', 0);
+
 
 
 

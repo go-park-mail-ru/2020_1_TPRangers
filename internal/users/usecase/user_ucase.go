@@ -31,9 +31,6 @@ func (userR UserUseCaseRealisation) GetAlbums(cookie string) ([]models.Album, er
 
 	fmt.Println(albums)
 
-	if len(albums) == 0 {
-		albums, err = userR.userDB.GetAlbums(0) // FIXME user id 0 have default album - maybe it's not cool
-	}
 	return albums , nil
 
 }
@@ -46,8 +43,6 @@ func (userR UserUseCaseRealisation) GetPhotosFromAlbum(cookie string, albumID in
 	}
 
 	photos, err := userR.userDB.GetPhotosFromAlbum(albumID)
-
-	fmt.Println(photos)
 
 	return photos, nil
 }
@@ -299,13 +294,20 @@ func (userR UserUseCaseRealisation) Register(userData models.Register, cookieVal
 
 	userR.userDB.AddNewUser(data)
 
+
 	id, err := userR.userDB.GetIdByEmail(email)
+
+
 
 	if err != nil {
 		return errors.FailReadFromDB
 	}
 
+
+
 	userR.sessionDB.AddCookie(id, cookieValue, exprTime)
+
+	userR.userDB.CreateDefaultAlbum(id)
 
 	return nil
 

@@ -14,7 +14,7 @@ type FeedUseCaseRealisation struct {
 	sessionDB SessRep.CookieRepository
 }
 
-func (feedR FeedUseCaseRealisation) Feed(cookie string) (map[string]interface{}, error) {
+func (feedR FeedUseCaseRealisation) Feed(cookie string) ([]models.Post, error) {
 
 	id, err := feedR.sessionDB.GetUserIdByCookie(cookie)
 
@@ -22,15 +22,14 @@ func (feedR FeedUseCaseRealisation) Feed(cookie string) (map[string]interface{},
 		return nil, errors.InvalidCookie
 	}
 
-	sendData := make(map[string]interface{})
 
-	sendData["feed"], err = feedR.feedDB.GetUserFeedById(id, 30)
+	feeds, err := feedR.feedDB.GetUserFeedById(id, 30)
 
 	if err != nil {
 		return nil, errors.FailReadFromDB
 	}
 
-	return sendData, nil
+	return feeds, nil
 }
 
 func (feedR FeedUseCaseRealisation) CreatePost(cookie string, newPost models.Post) error {
