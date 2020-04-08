@@ -19,74 +19,39 @@ func NewFeedRepositoryRealisation(db *sql.DB) FeedRepositoryRealisation {
 }
 
 func (Data FeedRepositoryRealisation) GetUserFeedById(id int, count int) ([]models.Post, error) {
-	rows, err := Data.feedDB.Query("select posts.txt_data, photos.url, photos.photos_likes_count, PhotosLikes.photo_was_like, posts.posts_likes_count, posts.attachments, PostsLikes.post_was_like from (posts INNER JOIN feeds ON feeds.post_id=posts.post_id) INNER JOIN users ON users.u_id = feeds.u_id AND users.u_id = $1 LEFT JOIN photos ON photos.photo_id = posts.photo_id LEFT JOIN PhotosLikes ON PhotosLikes.photo_id = Posts.photo_id LEFT JOIN PostsLikes ON PostsLikes.post_id = Posts.post_id", id)
+	rows, err := Data.feedDB.Query("select  p.post_id, p.txt_data, p.attachments, p.posts_likes_count, p.creation_date, ph.photo_id, ph.url, ph.photos_likes_count, u.name, u.surname, u.login " +
+	"from posts AS p INNER JOIN postsauthor AS pa ON (p.post_id = pa.post_id) INNER JOIN users AS u ON (pa.u_id = u.u_id) LEFT JOIN photos AS ph ON p.photo_id = ph.photo_id;")
 	if err != nil {
-
-		if err != nil {
-			fmt.Println(err.Error(), "FEED ================================ id")
-		}
-
 		return nil, errors.FailReadFromDB
 	}
 	posts := []models.Post{}
-	var photoUrl interface{}
-	var photowasLike interface{}
-	var photoLikes interface{}
-	var postAttachments interface{}
-	var postWasLike interface{}
-	var postLikes interface{}
-	var postText interface{}
-	var i int
+	i := 0
 	for rows.Next() {
 		if i > count {
 			break
 		}
 		post := models.Post{}
-		err := rows.Scan(&postText, &photoUrl, &photoLikes, &photowasLike, &postLikes, &postAttachments, &postWasLike)
+		err := rows.Scan(&post.Id, &post.Text, &post.Attachments, &post.Likes, &post.Creation, &post.Photo.Id, &post.Photo.Url, &post.Photo.Likes, &post.AuthorName, &post.AuthorSurname, &post.AuthorUrl)
 
-		if err != nil {
-			fmt.Println(err.Error(), "FEED ================================ id")
+		additional_row := Data.feedDB.QueryRow("select upl.postlike_id, uphl.photolike_id, ph.url from userspostslikes AS upl RIGHT JOIN posts AS p " +
+			"ON (p.post_id = upl.post_id) LEFT JOIN usersphotoslikes AS uphl ON (p.photo_id = uphl.photo_id) INNER JOIN postsauthor AS pa ON (pa.post_id = p.post_id) " +
+			"LEFT JOIN users AS u ON (u.u_id = pa.u_id) LEFT JOIN photos AS ph ON (u.photo_id = ph.photo_id) WHERE p.post_id = $1;", post.Id)
+		var postLikes *int
+		var photoLikes *int
+		additional_row.Scan(&postLikes, &photoLikes, &post.AuthorPhoto)
+		if postLikes != nil {
+			post.WasLike = true
+		} else {
+			post.WasLike = false
 		}
-
+		if photoLikes != nil {
+			post.Photo.WasLike = true
+		} else {
+			post.Photo.WasLike = false
+		}
 		if err != nil {
 			fmt.Println(err.Error(), "FEED ================================ id")
 			return nil, errors.FailReadToVar
-		}
-
-		if photoLikes == nil {
-			post.Photo.Likes = 0
-		} else {
-			post.Photo.Likes = int(photoLikes.(int64))
-		}
-		if photowasLike == nil || photowasLike.(bool) == false {
-			post.Photo.WasLike = false
-		} else {
-			post.Photo.WasLike = true
-		}
-		if photoLikes == nil {
-			post.Photo.Likes = 0
-		} else {
-			post.Photo.Likes = int(photoLikes.(int64))
-		}
-		if postAttachments == nil {
-			post.Attachments = ""
-		} else {
-			post.Attachments = postAttachments.(string)
-		}
-		if postWasLike == nil || postWasLike.(bool) == false {
-			post.WasLike = false
-		} else {
-			post.WasLike = true
-		}
-		if postLikes == nil {
-			post.Likes = 0
-		} else {
-			post.Likes = int(postLikes.(int64))
-		}
-		if postText == nil {
-			post.Text = ""
-		} else {
-			post.Text = postText.(string)
 		}
 
 		posts = append(posts, post)
@@ -97,83 +62,7 @@ func (Data FeedRepositoryRealisation) GetUserFeedById(id int, count int) ([]mode
 
 }
 
-func (Data FeedRepositoryRealisation) GetUserFeedByEmail(email string, count int) ([]models.Post, error) {
-	rows, err := Data.feedDB.Query("select posts.txt_data, photos.url, photos.photos_likes_count, PhotosLikes.photo_was_like, posts.posts_likes_count, posts.attachments, PostsLikes.post_was_like from (posts INNER JOIN feeds ON feeds.post_id=posts.post_id) INNER JOIN users ON users.u_id = feeds.u_id AND users.mail = $1 LEFT JOIN photos ON photos.photo_id = posts.photo_id LEFT JOIN PhotosLikes ON PhotosLikes.photo_id = Posts.photo_id LEFT JOIN PostsLikes ON PostsLikes.post_id = Posts.post_id", email)
-	if err != nil {
 
-		if err != nil {
-			fmt.Println(err.Error(), "FEED ================================ id")
-		}
-
-		return nil, errors.FailReadFromDB
-	}
-	posts := []models.Post{}
-	var photoUrl interface{}
-	var photowasLike interface{}
-	var photoLikes interface{}
-	var postAttachments interface{}
-	var postWasLike interface{}
-	var postLikes interface{}
-	var postText interface{}
-	var i int
-	for rows.Next() {
-		if i > count {
-			break
-		}
-		post := models.Post{}
-		err := rows.Scan(&postText, &photoUrl, &photoLikes, &photowasLike, &postLikes, &postAttachments, &postWasLike)
-
-		if err != nil {
-			fmt.Println(err.Error(), "FEED ================================ EMAIL")
-		}
-
-		if err != nil {
-			return nil, errors.FailReadToVar
-		}
-
-		if photoLikes == nil {
-			post.Photo.Likes = 0
-		} else {
-			post.Photo.Likes = int(photoLikes.(int64))
-		}
-		if photowasLike == nil || photowasLike.(bool) == false {
-			post.Photo.WasLike = false
-		} else {
-			post.Photo.WasLike = true
-		}
-		if photoLikes == nil {
-			post.Photo.Likes = 0
-		} else {
-			post.Photo.Likes = int(photoLikes.(int64))
-		}
-		if postAttachments == nil {
-			post.Attachments = ""
-		} else {
-			post.Attachments = postAttachments.(string)
-		}
-		if postWasLike == nil || postWasLike.(bool) == false {
-			post.WasLike = false
-		} else {
-			post.WasLike = true
-		}
-		if postLikes == nil {
-			post.Likes = 0
-		} else {
-			post.Likes = int(postLikes.(int64))
-		}
-		if postText == nil {
-			post.Text = ""
-		} else {
-			post.Text = postText.(string)
-		}
-
-		posts = append(posts, post)
-		i++
-	}
-
-	return posts, nil
-
-}
 
 func (Data FeedRepositoryRealisation) GetUserPostsById(id int) ([]models.Post, error) {
 
@@ -228,7 +117,7 @@ func (Data FeedRepositoryRealisation) CreatePost(uId int,newPost models.Post) er
 
 	photo_id := 0
 
-	if newPost.Photo.Url != "" {
+	if newPost.Photo.Url != nil {
 		row := Data.feedDB.QueryRow("INSERT INTO photos (url, photos_likes_count) VALUES ($1 , 0) RETURNING photo_id", newPost.Photo.Url)
 
 		errScan := row.Scan(&photo_id)

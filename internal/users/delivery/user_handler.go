@@ -558,7 +558,7 @@ func (userD UserDeliveryRealisation) GetPhotosFromAlbum(rwContext echo.Context) 
 		zap.Int("ANSWER STATUS", http.StatusOK),
 	)
 
-	if len(photos) == 0 {
+	if len(photos.Urls) == 0 {
 		return rwContext.JSON(http.StatusNotFound, models.JsonStruct{Body: photos})
 	}
 
