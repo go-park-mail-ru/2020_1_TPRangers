@@ -2,7 +2,7 @@
 // Source: repository.go
 
 // Package mock_like is a generated GoMock package.
-package usecase
+package mock
 
 import (
 	gomock "github.com/golang/mock/gomock"

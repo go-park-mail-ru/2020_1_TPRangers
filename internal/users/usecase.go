@@ -12,8 +12,6 @@ type UserUseCase interface {
 	UploadSettings(string, models.Settings) (map[string]interface{}, error)
 	Logout(string) error
 	Login(models.Auth, string, time.Duration) error
-	AddFriend(string, string) error
-	GetAllFriends(string) (map[string]interface{}, error)
 	Register(models.Register, string, time.Duration) error
 	GetAlbums(string) ([]models.Album, error)
 	GetPhotosFromAlbum(string, int) (models.Photos, error)
@@ -22,5 +20,6 @@ type UserUseCase interface {
 
 	CheckFriendship(string, string, map[string]interface{}) (map[string]interface{}, error)
 	GetUserLoginByCookie(string) (string, error)
+	GetUserWhileLogged(string,string) (map[string]interface{}, error)
 }
 

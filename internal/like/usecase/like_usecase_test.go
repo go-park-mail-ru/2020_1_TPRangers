@@ -5,21 +5,181 @@
 package usecase
 
 import (
+	"errors"
 	"github.com/golang/mock/gomock"
+	uuid "github.com/satori/go.uuid"
+	"main/internal/like/usecase/mock"
+	err "main/internal/tools/errors"
+	"math/rand"
 	"testing"
 )
 
+func Test_LikePhoto(t *testing.T) {
 
-func Test_PhotoLike(t *testing.T) {
+	uVal := uuid.NewV4()
+	testLength := 2
+
+	type testPhotoStruct struct {
+		photoId     int
+		userId      int
+		cookieValue string
+	}
+
 	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-	lRepoMock := NewMockRepositoryLike(ctrl)
-	cRepoMock := NewMockCookieRepository(ctrl)
-	lRepoMock.EXPECT().LikePhoto(1,1).Return(nil)
-	cRepoMock.EXPECT().GetUserIdByCookie("123").Return(1,nil)
-	likeUseCase := NewLikeUseRealisation(lRepoMock,cRepoMock)
 
-	likeUseCase.LikePhoto(1,"123")
+	lRepoMock := mock.NewMockRepositoryLike(ctrl)
+	cRepoMock := mock.NewMockCookieRepository(ctrl)
+	likeUseCase := NewLikeUseRealisation(lRepoMock, cRepoMock)
+
+	tests := new(testPhotoStruct)
+	cookieErr := []error{nil, nil, errors.New("smth wrong")}
+	photoErr := []error{nil, err.NotExist, nil}
+	expectErr := []error{nil, err.NotExist, err.InvalidCookie}
+
+	for iter := 0; iter < testLength; iter++ {
+		tests.photoId = rand.Int()
+		tests.userId = rand.Int()
+		tests.cookieValue = uVal.String()
+
+		cRepoMock.EXPECT().GetUserIdByCookie(string(tests.cookieValue)).Return(tests.userId, cookieErr[iter])
+		if cookieErr[iter] == nil {
+			lRepoMock.EXPECT().LikePhoto(int(tests.photoId), int(tests.userId)).Return(photoErr[iter])
+
+		}
+
+		errs := likeUseCase.LikePhoto(int(tests.photoId), tests.cookieValue)
+		if errs != expectErr[iter] {
+			t.Error("Expected value: ", expectErr[iter], " current value: ", errs, " iteration: ", iter)
+		}
+	}
+
+	ctrl.Finish()
+}
+
+func Test_DislikePhoto(t *testing.T) {
+
+	uVal := uuid.NewV4()
+	testLength := 2
+
+	type testPhotoStruct struct {
+		photoId     int
+		userId      int
+		cookieValue string
+	}
+
+	ctrl := gomock.NewController(t)
+
+	lRepoMock := mock.NewMockRepositoryLike(ctrl)
+	cRepoMock := mock.NewMockCookieRepository(ctrl)
+	likeUseCase := NewLikeUseRealisation(lRepoMock, cRepoMock)
+
+	tests := new(testPhotoStruct)
+	cookieErr := []error{nil, nil, errors.New("smth wrong")}
+	photoErr := []error{nil, err.NotExist, nil}
+	expectErr := []error{nil, err.NotExist, err.InvalidCookie}
 
 
+	for iter := 0; iter < testLength; iter++ {
+		tests.photoId = rand.Int()
+		tests.userId = rand.Int()
+		tests.cookieValue = uVal.String()
+
+		cRepoMock.EXPECT().GetUserIdByCookie(string(tests.cookieValue)).Return(tests.userId, cookieErr[iter])
+		if cookieErr[iter] == nil {
+			lRepoMock.EXPECT().DislikePhoto(int(tests.photoId), int(tests.userId)).Return(photoErr[iter])
+
+		}
+
+		errs := likeUseCase.DislikePhoto(int(tests.photoId), tests.cookieValue)
+		if errs != expectErr[iter] {
+			t.Error("Expected value: ", expectErr[iter], " current value: ", errs, " iteration: ", iter)
+		}
+	}
+
+	ctrl.Finish()
+}
+
+func Test_LikePost(t *testing.T) {
+
+	uVal := uuid.NewV4()
+	testLength := 3
+
+	type testPostStruct struct {
+		postId      int
+		userId      int
+		cookieValue string
+	}
+
+	ctrl := gomock.NewController(t)
+
+	lRepoMock := mock.NewMockRepositoryLike(ctrl)
+	cRepoMock := mock.NewMockCookieRepository(ctrl)
+	likeUseCase := NewLikeUseRealisation(lRepoMock, cRepoMock)
+
+	tests := new(testPostStruct)
+	cookieErr := []error{nil, nil, errors.New("smth wrong")}
+	photoErr := []error{nil, err.NotExist, nil}
+	expectErr := []error{nil, err.NotExist, err.InvalidCookie}
+
+	for iter := 0; iter < testLength; iter++ {
+		tests.postId = rand.Int()
+		tests.userId = rand.Int()
+		tests.cookieValue = uVal.String()
+
+		cRepoMock.EXPECT().GetUserIdByCookie(string(tests.cookieValue)).Return(tests.userId, cookieErr[iter])
+		if cookieErr[iter] == nil {
+			lRepoMock.EXPECT().LikePost(int(tests.postId), int(tests.userId)).Return(photoErr[iter])
+
+		}
+
+		errs := likeUseCase.LikePost(int(tests.postId), tests.cookieValue)
+		if errs != expectErr[iter] {
+			t.Error("Expected value: ", expectErr[iter], " current value: ", errs, " iteration: ", iter)
+		}
+	}
+
+	ctrl.Finish()
+}
+
+func Test_DislikePost(t *testing.T) {
+
+	uVal := uuid.NewV4()
+	testLength := 2
+
+	type testPhotoStruct struct {
+		postId     int
+		userId      int
+		cookieValue string
+	}
+
+	ctrl := gomock.NewController(t)
+
+	lRepoMock := mock.NewMockRepositoryLike(ctrl)
+	cRepoMock := mock.NewMockCookieRepository(ctrl)
+	likeUseCase := NewLikeUseRealisation(lRepoMock, cRepoMock)
+
+	tests := new(testPhotoStruct)
+	cookieErr := []error{nil, nil, errors.New("smth wrong")}
+	photoErr := []error{nil, err.NotExist, nil}
+	expectErr := []error{nil, err.NotExist, err.InvalidCookie}
+
+
+	for iter := 0; iter < testLength; iter++ {
+		tests.postId = rand.Int()
+		tests.userId = rand.Int()
+		tests.cookieValue = uVal.String()
+
+		cRepoMock.EXPECT().GetUserIdByCookie(string(tests.cookieValue)).Return(tests.userId, cookieErr[iter])
+		if cookieErr[iter] == nil {
+			lRepoMock.EXPECT().DislikePost(int(tests.postId), int(tests.userId)).Return(photoErr[iter])
+
+		}
+
+		errs := likeUseCase.DislikePost(int(tests.postId), tests.cookieValue)
+		if errs != expectErr[iter] {
+			t.Error("Expected value: ", expectErr[iter], " current value: ", errs, " iteration: ", iter)
+		}
+	}
+
+	ctrl.Finish()
 }

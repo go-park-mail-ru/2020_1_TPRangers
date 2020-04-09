@@ -22,6 +22,9 @@ import (
 	usecaseLikes "main/internal/like/usecase"
 	usecasePhoto "main/internal/photos/usecase"
 	usecaseAlbum "main/internal/albums/usecase"
+	deliveryFriends "main/internal/friends/delivery"
+	repositoryFriends "main/internal/friends/repository"
+	usecaseFriends "main/internal/friends/usecase"
 )
 
 const (
@@ -38,39 +41,59 @@ type RequestHandlers struct {
 	likeHandler deliveryLikes.LikeDelivery
 	photoHandler deliveryPhoto.PhotoDeliveryRealisation
 	albumHandler deliveryAlbum.AlbumDeliveryRealisation
+	friendHandler deliveryFriends.FriendDeliveryRealisation
 }
 
 func NewRequestHandler(db *sql.DB, logger *zap.SugaredLogger) *RequestHandlers {
 
 
-
 	sessionDB := repositoryCookie.NewCookieRepositoryRealisation(redisPort, redisPas)
 	feedDB := repositoryFeed.NewFeedRepositoryRealisation(db)
 	userDB := repositoryUser.NewUserRepositoryRealisation(db)
+
 	photoDB := repositoryPhoto.NewPhotoRepositoryRealisation(db)
 	likesDB := repositoryLikes.NewLikeRepositoryRealisation(db)
 	albumDB := repositoryAlbum.NewAlbumRepositoryRealisation(db)
 
 
-	likesUse := usecaseLikes.NewLikeUseRealisation(likesDB,sessionDB)
-	likeH := deliveryLikes.NewLikeDelivery(logger , likesUse)
+
+
+	friendsDB := repositoryFriends.NewFriendRepositoryRealisation(db)
+
+
 
 
 	feedUseCase := usecaseFeed.NewFeedUseCaseRealisation(feedDB, sessionDB)
+
 	userUseCase := usecaseUser.NewUserUseCaseRealisation(userDB, feedDB, sessionDB)
 	photoUseCase := usecasePhoto.NewPhotoUseCaseRealisation(photoDB, sessionDB)
 	albumUseCase := usecaseAlbum.NewAlbumUseCaseRealisation(albumDB, sessionDB)
 
+	userUseCase := usecaseUser.NewUserUseCaseRealisation(userDB, friendsDB ,feedDB, sessionDB)
+	likesUse := usecaseLikes.NewLikeUseRealisation(likesDB,sessionDB)
+	friendsUse := usecaseFriends.NewFriendUseCaseRealisation(friendsDB, sessionDB)
+
+
+	likeH := deliveryLikes.NewLikeDelivery(logger , likesUse)
 	userH := deliveryUser.NewUserDelivery(logger, userUseCase)
 	feedH := deliveryFeed.NewFeedDelivery(logger, feedUseCase)
+
 	photoH := deliveryPhoto.NewPhotoDelivery(logger, photoUseCase)
 	albumH := deliveryAlbum.NewAlbumDelivery(logger, albumUseCase)
+
+	friendH := deliveryFriends.NewUserDelivery(logger, friendsUse)
+
+
 	api := &(RequestHandlers{
 		userHandler: userH,
 		feedHandler: feedH,
 		likeHandler: likeH,
+
 		photoHandler: photoH,
 		albumHandler: albumH,
+
+		friendHandler: friendH,
+
 	})
 
 	return api
@@ -87,7 +110,7 @@ func main() {
 	logger := prLogger.Sugar()
 	defer prLogger.Sync()
 
-	server.Use(middleware.PanicMiddleWare)
+	//server.Use(middleware.PanicMiddleWare)
 	server.Use(middleware.SetCorsMiddleware)
 
 
@@ -110,6 +133,7 @@ func main() {
 	api.likeHandler.InitHandlers(server)
 	api.photoHandler.InitHandlers(server)
 	api.albumHandler.InitHandlers(server)
+	api.friendHandler.InitHandlers(server)
 
 	server.Logger.Fatal(server.Start(":3001"))
 	//server.Logger.Fatal(server.StartTLS(":3001","./internal/tools/ssl/bundle.pem","./internal/tools/ssl/private.key"))
