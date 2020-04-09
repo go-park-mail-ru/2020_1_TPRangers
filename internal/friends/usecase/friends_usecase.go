@@ -6,12 +6,10 @@ import (
 	"main/internal/tools/errors"
 )
 
-
 type FriendUseCaseRealisation struct {
 	friendDB  Friend.FriendRepository
 	sessionDB Sess.CookieRepository
 }
-
 
 func (userR FriendUseCaseRealisation) GetAllFriends(login string) (map[string]interface{}, error) {
 
@@ -67,9 +65,9 @@ func (userR FriendUseCaseRealisation) GetUserLoginByCookie(cookieValue string) (
 	return userR.friendDB.GetUserLoginById(id)
 }
 
-func NewUserUseCaseRealisation(userDB Friend.FriendRepository, sesDB Sess.CookieRepository) FriendUseCaseRealisation {
+func NewFriendUseCaseRealisation(userDB Friend.FriendRepository, sesDB Sess.CookieRepository) FriendUseCaseRealisation {
 	return FriendUseCaseRealisation{
-		friendDB:    userDB,
+		friendDB:  userDB,
 		sessionDB: sesDB,
 	}
 }

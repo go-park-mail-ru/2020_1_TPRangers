@@ -52,7 +52,7 @@ func NewRequestHandler(db *sql.DB, logger *zap.SugaredLogger) *RequestHandlers {
 	feedUseCase := usecaseFeed.NewFeedUseCaseRealisation(feedDB, sessionDB)
 	userUseCase := usecaseUser.NewUserUseCaseRealisation(userDB, friendsDB ,feedDB, sessionDB)
 	likesUse := usecaseLikes.NewLikeUseRealisation(likesDB,sessionDB)
-	friendsUse := usecaseFriends.NewUserUseCaseRealisation(friendsDB, sessionDB)
+	friendsUse := usecaseFriends.NewFriendUseCaseRealisation(friendsDB, sessionDB)
 
 	likeH := deliveryLikes.NewLikeDelivery(logger , likesUse)
 	userH := deliveryUser.NewUserDelivery(logger, userUseCase)

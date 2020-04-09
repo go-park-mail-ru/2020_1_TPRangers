@@ -2,7 +2,7 @@
 // Source: ../cookies/repository.go
 
 // Package mock_cookies is a generated GoMock package.
-package usecase
+package mock
 
 import (
 	gomock "github.com/golang/mock/gomock"
