@@ -56,20 +56,38 @@ func TestLikeRepositoryRealisation_LikePhoto(t *testing.T) {
 		likeId := rand.Int()
 		mock.ExpectBegin()
 		mock.ExpectExec(`UPDATE Photos SET photos_likes_count \= photos_likes_count \+ 1 WHERE photo_id \= \$1; ` ).WithArgs(photoId).WillReturnResult(sqlmock.NewResult(0,int64(photoId)))
+
+		mock.ExpectPrepare(`INSERT INTO UsersPhotosLikes \(u_id,photo_id\) VALUES \(\$1,\$2\) RETURNING photolike_id;`)
 		if errs[iter] == nil {
 			mock.ExpectQuery(`INSERT INTO UsersPhotosLikes \(u_id,photo_id\) VALUES \(\$1,\$2\) RETURNING photolike_id;`).WithArgs(uId,photoId).WillReturnRows(sqlmock.NewRows([]string{"photolike_id"}).AddRow(likeId))
 		} else {
-			mock.ExpectQuery(`INSERT INTO UsersPhotosLikes \(u_id,photo_id\) VALUES \(\$1,\$2\) RETURNING photolike_id;`).WithArgs(uId,photoId).WillReturnRows(sqlmock.NewRows([]string{"photolike_id"}).AddRow(likeId))
+			mock.ExpectQuery(`INSERT INTO UsersPhotosLikes \(u_id,photo_id\) VALUES \(\$1,\$2\) RETURNING photolike_id;`).WithArgs(uId,photoId).WillReturnError(errs[iter])
 		}
 		mock.ExpectCommit()
 
 
-		if err := recordLikePhotoStats(db,photoId) ; err != nil {
-			fmt.Println(err)
+		tx, err := db.Begin()
+
+		if err != nil {
+			fmt.Println("db not created" , err)
+			return
 		}
 
-		if err := mock.ExpectationsWereMet(); err != nil {
-			t.Errorf("there were unfulfilled expections: %s", err)
+		if _ , err = tx.Exec("UPDATE Photos SET photos_likes_count = photos_likes_count + 1 WHERE photo_id = $1;" , photoId); err != nil {
+			return
+		}
+
+		stmt , err := tx.Prepare("INSERT INTO UsersPhotosLikes (u_id,photo_id) VALUES ($1,$2) RETURNING photolike_id;")
+		scanPLID := 0
+		if  err = stmt.QueryRow(uId,photoId).Scan(&scanPLID); err != nil {
+			return
+		}
+
+		switch err {
+		case nil:
+			err = tx.Commit()
+		default:
+			tx.Rollback()
 		}
 
 	}
