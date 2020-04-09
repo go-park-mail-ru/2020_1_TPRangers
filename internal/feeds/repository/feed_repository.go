@@ -35,7 +35,7 @@ func (Data FeedRepositoryRealisation) GetUserFeedById(id int, count int) ([]mode
 
 		additional_row := Data.feedDB.QueryRow("select upl.postlike_id, uphl.photolike_id, ph.url from userspostslikes AS upl RIGHT JOIN posts AS p " +
 			"ON (p.post_id = upl.post_id) LEFT JOIN usersphotoslikes AS uphl ON (p.photo_id = uphl.photo_id) INNER JOIN postsauthor AS pa ON (pa.post_id = p.post_id) " +
-			"LEFT JOIN users AS u ON (u.u_id = pa.u_id) LEFT JOIN photos AS ph ON (u.photo_id = ph.photo_id) WHERE p.post_id = $1;", post.Id)
+			"LEFT JOIN users AS u ON (u.u_id = pa.u_id) LEFT JOIN photos AS ph ON (u.photo_id = ph.photo_id) WHERE p.post_id = $1 AND upl.u_id = $2;", post.Id ,id)
 		var postLikes *int
 		var photoLikes *int
 		additional_row.Scan(&postLikes, &photoLikes, &post.AuthorPhoto)

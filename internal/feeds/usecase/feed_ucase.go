@@ -22,7 +22,6 @@ func (feedR FeedUseCaseRealisation) Feed(cookie string) ([]models.Post, error) {
 		return nil, errors.InvalidCookie
 	}
 
-
 	feeds, err := feedR.feedDB.GetUserFeedById(id, 30)
 
 	if err != nil {
