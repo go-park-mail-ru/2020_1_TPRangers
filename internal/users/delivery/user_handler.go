@@ -4,6 +4,7 @@ import (
 	"github.com/labstack/echo"
 	uuid "github.com/satori/go.uuid"
 	"go.uber.org/zap"
+	"main/internal/csrf"
 	"main/internal/models"
 	"main/internal/tools/errors"
 	"main/internal/users"
@@ -150,6 +151,14 @@ func (userD UserDeliveryRealisation) UploadSettings(rwContext echo.Context) erro
 
 	cookie, err := rwContext.Cookie("session_id")
 
+	token := rwContext.Request().Header.Get("X-CSRF-Token")
+
+	_, err = csrf.Tokens.Check("login", cookie.Value,  token)
+
+	if err != nil {
+		return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: errors.CookieExpired.Error()})
+	}
+
 	if err != nil {
 		userD.logger.Debug(
 			zap.String("ID", uId),
@@ -232,7 +241,8 @@ func (userD UserDeliveryRealisation) Login(rwContext echo.Context) error {
 	exprTime := 12 * time.Hour
 	cookieValue := info.String()
 
-	err = userD.userLogic.Login(*userAuthData, cookieValue, exprTime)
+	token, err := userD.userLogic.Login(*userAuthData, cookieValue, exprTime)
+	rwContext.Response().Header().Set("X-CSRF-Token", token)
 
 	if err != nil {
 		userD.logger.Debug(

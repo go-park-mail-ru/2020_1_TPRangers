@@ -9,6 +9,7 @@ import (
 	"golang.org/x/crypto/pbkdf2"
 	Sess "main/internal/cookies"
 	SessRep "main/internal/cookies/repository"
+	"main/internal/csrf"
 	FeedRep "main/internal/feeds"
 	"main/internal/feeds/repository"
 	FriendRep "main/internal/friends"
@@ -270,29 +271,36 @@ func (userR UserUseCaseRealisation) CheckFriendship(cookie, friendLogin string, 
 	return answer, nil
 }
 
-func (userR UserUseCaseRealisation) Login(userData models.Auth, cookieValue string, exprTime time.Duration) error {
-
+func (userR UserUseCaseRealisation) Login(userData models.Auth, cookieValue string, exprTime time.Duration) (string, error) {
 	login := userData.Login
+
+
+	token, _ := csrf.Tokens.Create(login, cookieValue,  999999)
+
+
+
+
+
 	password := userData.Password
 	dbPassword, existErr := userR.userDB.GetPassword(login)
 
 	if existErr != nil {
-		return errors.WrongLogin
+		return "", errors.WrongLogin
 	}
 
 	if ! CheckPassword(password, dbPassword) {
-		return errors.WrongPassword
+		return "", errors.WrongPassword
 	}
 
 	id, existErr := userR.userDB.GetIdByEmail(login)
 
 	if existErr != nil {
-		return errors.WrongLogin
+		return "", errors.WrongLogin
 	}
 
 	userR.sessionDB.AddCookie(id, cookieValue, exprTime)
 
-	return nil
+	return token, nil
 
 }
 
