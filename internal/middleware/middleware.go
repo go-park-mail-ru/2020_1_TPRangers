@@ -1,10 +1,10 @@
 package middleware
 
 import (
-	"main/internal/models"
 	"github.com/labstack/echo"
 	uuid "github.com/satori/go.uuid"
 	"go.uber.org/zap"
+	"main/internal/models"
 	"net/http"
 	"time"
 )
@@ -75,5 +75,5 @@ func AccessLog(logs *zap.SugaredLogger) echo.MiddlewareFunc {
 
 		}
 	}
-
 }
+
