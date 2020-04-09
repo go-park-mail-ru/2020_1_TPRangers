@@ -64,6 +64,7 @@ func (userR UserUseCaseRealisation) GetPhotosFromAlbum(cookie string, albumID in
 	return photos, nil
 }
 
+
 func (userR UserUseCaseRealisation) CreateAlbum(cookie string, albumData models.AlbumReq) error {
 	uID, err := userR.sessionDB.GetUserIdByCookie(cookie)
 
