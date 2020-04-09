@@ -11,7 +11,7 @@ type UserUseCase interface {
 	GetSettings(string) (map[string]interface{}, error)
 	UploadSettings(string, models.Settings) (map[string]interface{}, error)
 	Logout(string) error
-	Login(models.Auth, string, time.Duration) error
+	Login(models.Auth, string, time.Duration) (string, error)
 	Register(models.Register, string, time.Duration) error
 	GetAlbums(string) ([]models.Album, error)
 	GetPhotosFromAlbum(string, int) (models.Photos, error)

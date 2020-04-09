@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"time"
 )
 var Tokens *HashToken
 
@@ -31,7 +30,7 @@ func (tk *HashToken) Create(userID string, cookie string, tokenExpTime int64) (s
 	return token, nil
 }
 
-func (tk *HashToken) Check(userID string, cookie string, inputToken string) (bool, error) {
+func (tk *HashToken) Check(userLogin string, cookie string, inputToken string) (bool, error) {
 	tokenData := strings.Split(inputToken, ":")
 	if len(tokenData) != 2 {
 		return false, fmt.Errorf("bad token data")
@@ -42,12 +41,12 @@ func (tk *HashToken) Check(userID string, cookie string, inputToken string) (boo
 		return false, fmt.Errorf("error token exp operation")
 	}
 
-	if tokenExp < time.Now().Unix() {
-		return false, fmt.Errorf("token expired")
-	}
+	//if tokenExp < time.Now().Unix() {
+	//	return false, fmt.Errorf("token expired")
+	//}
 
 	h := hmac.New(sha256.New, []byte(tk.Secret))
-	data := fmt.Sprintf("%s:%s:%d", userID, cookie, tokenExp)
+	data := fmt.Sprintf("%s:%s:%d", userLogin, cookie, tokenExp)
 	h.Write([]byte(data))
 	expectedMAC := h.Sum(nil)
 	messageMAC, err := hex.DecodeString(tokenData[0])

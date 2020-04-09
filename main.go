@@ -69,7 +69,8 @@ func NewRequestHandler(db *sql.DB, logger *zap.SugaredLogger) *RequestHandlers {
 func main() {
 
 	server := echo.New()
-	//server.Use(middleware2.CSRF())
+
+	//server.Use(middleware.CSRFMiddleware)
 
 	config := zap.NewDevelopmentConfig()
 	config.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
