@@ -15,8 +15,9 @@ type UserUseCase interface {
 	Register(models.Register, string, time.Duration) error
 	GetAlbums(string) ([]models.Album, error)
 	GetPhotosFromAlbum(string, int) (models.Photos, error)
-	CreateAlbum(string, models.AlbumReq) error
 	UploadPhotoToAlbum(string, models.PhotoInAlbum) error
+	CreateAlbum(string, models.AlbumReq) error
+
 	CheckFriendship(string, string, map[string]interface{}) (map[string]interface{}, error)
 	GetUserLoginByCookie(string) (string, error)
 	GetUserWhileLogged(string,string) (map[string]interface{}, error)

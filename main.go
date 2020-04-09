@@ -6,18 +6,22 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	repositoryCookie "main/internal/cookies/repository"
+	repositoryPhoto "main/internal/photos/repository"
+	repositoryAlbum "main/internal/albums/repository"
 	deliveryFeed "main/internal/feeds/delivery"
+	deliveryAlbum "main/internal/albums/delivery"
 	repositoryFeed "main/internal/feeds/repository"
 	usecaseFeed "main/internal/feeds/usecase"
 	"main/internal/middleware"
 	deliveryUser "main/internal/users/delivery"
 	repositoryUser "main/internal/users/repository"
 	usecaseUser "main/internal/users/usecase"
-
+	deliveryPhoto "main/internal/photos/delivery"
 	deliveryLikes "main/internal/like/delivery"
 	repositoryLikes "main/internal/like/repository"
 	usecaseLikes "main/internal/like/usecase"
-
+	usecasePhoto "main/internal/photos/usecase"
+	usecaseAlbum "main/internal/albums/usecase"
 	deliveryFriends "main/internal/friends/delivery"
 	repositoryFriends "main/internal/friends/repository"
 	usecaseFriends "main/internal/friends/usecase"
@@ -35,6 +39,8 @@ type RequestHandlers struct {
 	userHandler deliveryUser.UserDeliveryRealisation
 	feedHandler deliveryFeed.FeedDeliveryRealisation
 	likeHandler deliveryLikes.LikeDelivery
+	photoHandler deliveryPhoto.PhotoDeliveryRealisation
+	albumHandler deliveryAlbum.AlbumDeliveryRealisation
 	friendHandler deliveryFriends.FriendDeliveryRealisation
 }
 
@@ -44,26 +50,50 @@ func NewRequestHandler(db *sql.DB, logger *zap.SugaredLogger) *RequestHandlers {
 	sessionDB := repositoryCookie.NewCookieRepositoryRealisation(redisPort, redisPas)
 	feedDB := repositoryFeed.NewFeedRepositoryRealisation(db)
 	userDB := repositoryUser.NewUserRepositoryRealisation(db)
+
+	photoDB := repositoryPhoto.NewPhotoRepositoryRealisation(db)
 	likesDB := repositoryLikes.NewLikeRepositoryRealisation(db)
+	albumDB := repositoryAlbum.NewAlbumRepositoryRealisation(db)
+
+
+
+
 	friendsDB := repositoryFriends.NewFriendRepositoryRealisation(db)
 
 
 
+
 	feedUseCase := usecaseFeed.NewFeedUseCaseRealisation(feedDB, sessionDB)
+
+	userUseCase := usecaseUser.NewUserUseCaseRealisation(userDB, feedDB, sessionDB)
+	photoUseCase := usecasePhoto.NewPhotoUseCaseRealisation(photoDB, sessionDB)
+	albumUseCase := usecaseAlbum.NewAlbumUseCaseRealisation(albumDB, sessionDB)
+
 	userUseCase := usecaseUser.NewUserUseCaseRealisation(userDB, friendsDB ,feedDB, sessionDB)
 	likesUse := usecaseLikes.NewLikeUseRealisation(likesDB,sessionDB)
 	friendsUse := usecaseFriends.NewFriendUseCaseRealisation(friendsDB, sessionDB)
 
+
 	likeH := deliveryLikes.NewLikeDelivery(logger , likesUse)
 	userH := deliveryUser.NewUserDelivery(logger, userUseCase)
 	feedH := deliveryFeed.NewFeedDelivery(logger, feedUseCase)
+
+	photoH := deliveryPhoto.NewPhotoDelivery(logger, photoUseCase)
+	albumH := deliveryAlbum.NewAlbumDelivery(logger, albumUseCase)
+
 	friendH := deliveryFriends.NewUserDelivery(logger, friendsUse)
+
 
 	api := &(RequestHandlers{
 		userHandler: userH,
 		feedHandler: feedH,
 		likeHandler: likeH,
+
+		photoHandler: photoH,
+		albumHandler: albumH,
+
 		friendHandler: friendH,
+
 	})
 
 	return api
@@ -102,6 +132,8 @@ func main() {
 	api.userHandler.InitHandlers(server)
 	api.feedHandler.InitHandlers(server)
 	api.likeHandler.InitHandlers(server)
+	api.photoHandler.InitHandlers(server)
+	api.albumHandler.InitHandlers(server)
 	api.friendHandler.InitHandlers(server)
 
 	server.Logger.Fatal(server.Start(":3001"))
