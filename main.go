@@ -17,6 +17,10 @@ import (
 	deliveryLikes "main/internal/like/delivery"
 	repositoryLikes "main/internal/like/repository"
 	usecaseLikes "main/internal/like/usecase"
+
+	deliveryFriends "main/internal/friends/delivery"
+	repositoryFriends "main/internal/friends/repository"
+	usecaseFriends "main/internal/friends/usecase"
 )
 
 const (
@@ -31,30 +35,35 @@ type RequestHandlers struct {
 	userHandler deliveryUser.UserDeliveryRealisation
 	feedHandler deliveryFeed.FeedDeliveryRealisation
 	likeHandler deliveryLikes.LikeDelivery
+	friendHandler deliveryFriends.FriendDeliveryRealisation
 }
 
 func NewRequestHandler(db *sql.DB, logger *zap.SugaredLogger) *RequestHandlers {
 
 
-
 	sessionDB := repositoryCookie.NewCookieRepositoryRealisation(redisPort, redisPas)
 	feedDB := repositoryFeed.NewFeedRepositoryRealisation(db)
 	userDB := repositoryUser.NewUserRepositoryRealisation(db)
-
 	likesDB := repositoryLikes.NewLikeRepositoryRealisation(db)
-	likesUse := usecaseLikes.NewLikeUseRealisation(likesDB,sessionDB)
-	likeH := deliveryLikes.NewLikeDelivery(logger , likesUse)
+	friendsDB := repositoryFriends.NewFriendRepositoryRealisation(db)
+
+
 
 	feedUseCase := usecaseFeed.NewFeedUseCaseRealisation(feedDB, sessionDB)
-	userUseCase := usecaseUser.NewUserUseCaseRealisation(userDB, feedDB, sessionDB)
+	userUseCase := usecaseUser.NewUserUseCaseRealisation(userDB, friendsDB ,feedDB, sessionDB)
+	likesUse := usecaseLikes.NewLikeUseRealisation(likesDB,sessionDB)
+	friendsUse := usecaseFriends.NewUserUseCaseRealisation(friendsDB, sessionDB)
 
+	likeH := deliveryLikes.NewLikeDelivery(logger , likesUse)
 	userH := deliveryUser.NewUserDelivery(logger, userUseCase)
 	feedH := deliveryFeed.NewFeedDelivery(logger, feedUseCase)
+	friendH := deliveryFriends.NewUserDelivery(logger, friendsUse)
 
 	api := &(RequestHandlers{
 		userHandler: userH,
 		feedHandler: feedH,
 		likeHandler: likeH,
+		friendHandler: friendH,
 	})
 
 	return api
@@ -71,7 +80,7 @@ func main() {
 	logger := prLogger.Sugar()
 	defer prLogger.Sync()
 
-	server.Use(middleware.PanicMiddleWare)
+	//server.Use(middleware.PanicMiddleWare)
 	server.Use(middleware.SetCorsMiddleware)
 
 
@@ -92,6 +101,7 @@ func main() {
 	api.userHandler.InitHandlers(server)
 	api.feedHandler.InitHandlers(server)
 	api.likeHandler.InitHandlers(server)
+	api.friendHandler.InitHandlers(server)
 
 	server.Logger.Fatal(server.Start(":3001"))
 	//server.Logger.Fatal(server.StartTLS(":3001","./internal/tools/ssl/bundle.pem","./internal/tools/ssl/private.key"))

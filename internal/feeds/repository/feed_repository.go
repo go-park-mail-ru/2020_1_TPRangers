@@ -105,7 +105,71 @@ func (Data FeedRepositoryRealisation) GetUserPostsByLogin(login string) ([]model
 	userId := 0
 	userRow.Scan(&userId)
 
-	return Data.GetUserPostsById(userId)
+
+	feed := make([]models.Post, 0)
+	row, err := Data.feedDB.Query("SELECT P.post_id,PH.photo_id,P.txt_data, P.posts_likes_count, P.creation_date,P.attachments,PH.url,A.login,A.name,A.surname,AP.url FROM UsersPosts UP INNER JOIN Posts P ON(P.post_id=UP.post_id) LEFT JOIN Photos PH ON(PH.photo_id=P.photo_id) LEFT JOIN PostsAuthor PA ON(PA.post_id=P.post_id) LEFT JOIN Users A ON(PA.u_id=A.u_id) INNER JOIN Photos AP ON(A.photo_id=AP.photo_id) WHERE UP.u_id = $1", userId)
+	if err != nil {
+		fmt.Println(err, "USER POSTS ERROR")
+		return feed, err
+	}
+
+	for row.Next() {
+		post := new(models.Post)
+		var postTime time.Time
+		err = row.Scan(&post.Id,&post.Photo.Id,&post.Text, &post.Likes, &postTime, &post.Attachments, &post.Photo.Url , &post.AuthorUrl, &post.AuthorName, &post.AuthorSurname, &post.AuthorPhoto)
+
+		post.Creation = postTime.Format("2006-01-02 15:04:05")
+
+		if err != nil {
+			fmt.Println(err.Error(), "USER POSTS BY ID")
+		}
+
+		feed = append(feed , *post)
+	}
+
+	return feed, nil
+
+}
+
+func (Data FeedRepositoryRealisation) GetPostsOfOtherUserWhileLogged(login string, currentUserId int) ([]models.Post, error) {
+
+	userRow := Data.feedDB.QueryRow("SELECT u_id FROM Users WHERE login = $1",login)
+
+	userId := 0
+	userRow.Scan(&userId)
+
+
+	feed := make([]models.Post, 0)
+	row, err := Data.feedDB.Query("SELECT P.post_id,PH.photo_id,P.txt_data, P.posts_likes_count, P.creation_date,P.attachments,UPL.postlike_id,PH.url,A.login,A.name,A.surname,AP.url FROM UsersPosts UP INNER JOIN Posts P ON(P.post_id=UP.post_id) LEFT JOIN Photos PH ON(PH.photo_id=P.photo_id) LEFT JOIN UsersPostsLikes UPL ON(UPL.u_id = $2 AND P.post_id = UPL.post_id) LEFT JOIN PostsAuthor PA ON(PA.post_id=P.post_id) LEFT JOIN Users A ON(PA.u_id=A.u_id) INNER JOIN Photos AP ON(A.photo_id=AP.photo_id) WHERE UP.u_id = $1", userId, currentUserId)
+	if err != nil {
+		fmt.Println(err, "USER POSTS ERROR")
+		return feed, err
+	}
+
+	for row.Next() {
+		post := new(models.Post)
+		var likeId sql.NullInt32
+		var postTime time.Time
+		err = row.Scan(&post.Id,&post.Photo.Id,&post.Text, &post.Likes, &postTime, &post.Attachments, &likeId, &post.Photo.Url , &post.AuthorUrl, &post.AuthorName, &post.AuthorSurname, &post.AuthorPhoto)
+
+		post.Creation = postTime.Format("2006-01-02 15:04:05")
+
+		if err != nil {
+			fmt.Println(err.Error(), "USER POSTS BY ID")
+		}
+
+		value , _ := likeId.Value()
+
+		if value == nil {
+			post.WasLike = false
+		} else {
+			post.WasLike = true
+		}
+
+		feed = append(feed , *post)
+	}
+
+	return feed, nil
 
 }
 

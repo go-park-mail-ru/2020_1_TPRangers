@@ -7,4 +7,5 @@ type FeedRepository interface {
 	GetUserPostsById(int) ([]models.Post ,error)
 	GetUserPostsByLogin(string) ([]models.Post ,error)
 	CreatePost(int,models.Post) error
+	GetPostsOfOtherUserWhileLogged(string,int) ([]models.Post, error)
 }

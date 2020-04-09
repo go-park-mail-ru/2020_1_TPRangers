@@ -12,9 +12,7 @@ import (
 
 func Test_PhotoLike(t *testing.T) {
 
-	var likePhoto
-
-
+	var likePhoto int
 
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
