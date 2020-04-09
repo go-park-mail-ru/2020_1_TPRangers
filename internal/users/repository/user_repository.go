@@ -234,7 +234,7 @@ func (Data UserRepositoryRealisation) GetPassword(email string) ([]byte, error) 
 }
 
 func (Data UserRepositoryRealisation) GetDefaultProfilePhotoId() (int, error) {
-	row := Data.userDB.QueryRow("SELECT photo_id FROM photos WHERE url=$1", "defaults/profile/avatar")
+	row := Data.userDB.QueryRow("SELECT photo_id FROM photos WHERE url=$1", "https://social-hub.ru/uploads/img/default.png")
 
 	var photo_id int
 	errScan := row.Scan(&photo_id)
