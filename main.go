@@ -65,7 +65,6 @@ func NewRequestHandler(db *sql.DB, logger *zap.SugaredLogger) *RequestHandlers {
 
 	feedUseCase := usecaseFeed.NewFeedUseCaseRealisation(feedDB, sessionDB)
 
-	userUseCase := usecaseUser.NewUserUseCaseRealisation(userDB, feedDB, sessionDB)
 	photoUseCase := usecasePhoto.NewPhotoUseCaseRealisation(photoDB, sessionDB)
 	albumUseCase := usecaseAlbum.NewAlbumUseCaseRealisation(albumDB, sessionDB)
 
