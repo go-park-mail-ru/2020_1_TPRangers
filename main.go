@@ -40,14 +40,11 @@ type RequestHandlers struct {
 
 func NewRequestHandler(db *sql.DB, logger *zap.SugaredLogger) *RequestHandlers {
 
-
 	sessionDB := repositoryCookie.NewCookieRepositoryRealisation(redisPort, redisPas)
 	feedDB := repositoryFeed.NewFeedRepositoryRealisation(db)
 	userDB := repositoryUser.NewUserRepositoryRealisation(db)
 	likesDB := repositoryLikes.NewLikeRepositoryRealisation(db)
 	friendsDB := repositoryFriends.NewFriendRepositoryRealisation(db)
-
-
 
 	feedUseCase := usecaseFeed.NewFeedUseCaseRealisation(feedDB, sessionDB)
 	userUseCase := usecaseUser.NewUserUseCaseRealisation(userDB, friendsDB ,feedDB, sessionDB)
@@ -80,7 +77,7 @@ func main() {
 	logger := prLogger.Sugar()
 	defer prLogger.Sync()
 
-	//server.Use(middleware.PanicMiddleWare)
+	server.Use(middleware.PanicMiddleWare)
 	server.Use(middleware.SetCorsMiddleware)
 
 
