@@ -189,7 +189,6 @@ func (Data UserRepositoryRealisation) UploadPhoto(photoUrl string) (int, error) 
 	var photo_id int
 
 	errScan := row.Scan(&photo_id)
-
 	return photo_id, errScan
 }
 
