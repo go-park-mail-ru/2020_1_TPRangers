@@ -16,7 +16,7 @@ func SetCorsMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		//TODO: убрать из корса
 		//c.Response().Header().Set("Content-Type", "application/json; charset=utf-8")
 
-		c.Response().Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+		c.Response().Header().Set("Access-Control-Allow-Origin", "https://social-hub.ru")
 		c.Response().Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS, PUT, DELETE, POST")
 		//c.Response().Header().Set("Set-Cookie", "HttpOnly, Secure, SameSite=Strict")
 		c.Response().Header().Set("Access-Control-Allow-Headers", "Origin, X-Login, Set-Cookie, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, csrf-token, Authorization")
