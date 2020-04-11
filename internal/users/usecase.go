@@ -11,12 +11,13 @@ type UserUseCase interface {
 	GetSettings(string) (map[string]interface{}, error)
 	UploadSettings(string, models.Settings) (map[string]interface{}, error)
 	Logout(string) error
-	Login(models.Auth, string, time.Duration) error
+	Login(models.Auth, string, time.Duration) (string, error)
 	Register(models.Register, string, time.Duration) error
 	GetAlbums(string) ([]models.Album, error)
 	GetPhotosFromAlbum(string, int) (models.Photos, error)
-	CreateAlbum(string, models.AlbumReq) error
 	UploadPhotoToAlbum(string, models.PhotoInAlbum) error
+	CreateAlbum(string, models.AlbumReq) error
+
 	CheckFriendship(string, string, map[string]interface{}) (map[string]interface{}, error)
 	GetUserLoginByCookie(string) (string, error)
 	GetUserWhileLogged(string,string) (map[string]interface{}, error)

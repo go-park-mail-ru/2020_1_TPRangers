@@ -2,9 +2,7 @@ package usecase
 
 import (
 	SessRep "main/internal/cookies"
-	Ckie "main/internal/cookies/repository"
 	"main/internal/feeds"
-	FeedRep "main/internal/feeds/repository"
 	"main/internal/models"
 	"main/internal/tools/errors"
 )
@@ -42,7 +40,7 @@ func (feedR FeedUseCaseRealisation) CreatePost(cookie string, newPost models.Pos
 	return feedR.feedDB.CreatePost(id, newPost)
 }
 
-func NewFeedUseCaseRealisation(feedDB FeedRep.FeedRepositoryRealisation, sesDB Ckie.CookieRepositoryRealisation) FeedUseCaseRealisation {
+func NewFeedUseCaseRealisation(feedDB feeds.FeedRepository, sesDB SessRep.CookieRepository) FeedUseCaseRealisation {
 	return FeedUseCaseRealisation{
 		feedDB:    feedDB,
 		sessionDB: sesDB,
