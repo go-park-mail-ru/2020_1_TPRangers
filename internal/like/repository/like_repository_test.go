@@ -45,7 +45,7 @@ func TestLikeRepositoryRealisation_LikePhoto(t *testing.T) {
 		stmt, err := tx.Prepare("INSERT INTO UsersPhotosLikes (u_id,photo_id) VALUES ($1,$2) RETURNING photolike_id")
 		scanPLID := 0
 		if err = stmt.QueryRow(uId, photoId).Scan(&scanPLID); err != nil {
-			if err == sql.ErrNoRows{
+			if err == sql.ErrNoRows {
 				err = nil
 			}
 		}
@@ -94,7 +94,7 @@ func TestLikeRepositoryRealisation_DislikePhoto(t *testing.T) {
 			tx.Rollback()
 		}
 
-		if _, err = tx.Exec("DELETE FROM UsersPhotosLikes WHERE u_id = $1 AND photo_id = $2 RETURNING photolike_id", uId ,photoId); err != nil {
+		if _, err = tx.Exec("DELETE FROM UsersPhotosLikes WHERE u_id = $1 AND photo_id = $2 RETURNING photolike_id", uId, photoId); err != nil {
 			tx.Rollback()
 		}
 
@@ -196,7 +196,7 @@ func TestLikeRepositoryRealisation_DislikePost(t *testing.T) {
 			tx.Rollback()
 		}
 
-		if _, err = tx.Exec("DELETE FROM UsersPostsLikes WHERE u_id = $1 AND post_id = $2 RETURNING postlike_id", uId , photoId); err != nil {
+		if _, err = tx.Exec("DELETE FROM UsersPostsLikes WHERE u_id = $1 AND post_id = $2 RETURNING postlike_id", uId, photoId); err != nil {
 			tx.Rollback()
 		}
 

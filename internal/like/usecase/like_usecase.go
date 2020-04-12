@@ -1,63 +1,29 @@
 package usecase
 
 import (
-	"main/internal/cookies"
 	"main/internal/like"
-	"main/internal/tools/errors"
 )
 
 type LikesUseRealisation struct {
 	likeRepo like.RepositoryLike
-	cookieRepo cookies.CookieRepository
 }
 
-func NewLikeUseRealisation(lRepo like.RepositoryLike, cRepo cookies.CookieRepository) LikesUseRealisation {
-	return LikesUseRealisation{likeRepo:lRepo, cookieRepo:cRepo}
+func NewLikeUseRealisation(lRepo like.RepositoryLike) LikesUseRealisation {
+	return LikesUseRealisation{likeRepo: lRepo}
 }
 
-func (Like LikesUseRealisation) LikePhoto(photoId int, cookieValue string) error {
-	userId , err := Like.cookieRepo.GetUserIdByCookie(cookieValue)
-
-	if err != nil {
-		return errors.InvalidCookie
-	}
-
+func (Like LikesUseRealisation) LikePhoto(photoId int, userId int) error {
 	return Like.likeRepo.LikePhoto(photoId, userId)
 }
 
-func (Like LikesUseRealisation) DislikePhoto(photoId int, cookieValue string) error {
-
-	userId , err := Like.cookieRepo.GetUserIdByCookie(cookieValue)
-
-	if err != nil {
-		return errors.InvalidCookie
-	}
-
+func (Like LikesUseRealisation) DislikePhoto(photoId int, userId int) error {
 	return Like.likeRepo.DislikePhoto(photoId, userId)
 }
 
-func (Like LikesUseRealisation) LikePost(postId int, cookieValue string) error {
-	userId , err := Like.cookieRepo.GetUserIdByCookie(cookieValue)
-
-	if err != nil {
-		return errors.InvalidCookie
-	}
-
+func (Like LikesUseRealisation) LikePost(postId int, userId int) error {
 	return Like.likeRepo.LikePost(postId, userId)
 }
 
-func (Like LikesUseRealisation) DislikePost(postId int, cookieValue string) error {
-
-	userId , err := Like.cookieRepo.GetUserIdByCookie(cookieValue)
-
-	if err != nil {
-		return errors.InvalidCookie
-	}
-
+func (Like LikesUseRealisation) DislikePost(postId int, userId int) error {
 	return Like.likeRepo.DislikePost(postId, userId)
 }
-
-
-
-
-

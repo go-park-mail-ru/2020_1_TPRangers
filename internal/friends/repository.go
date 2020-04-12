@@ -11,6 +11,5 @@ type FriendRepository interface {
 	GetUserFriendsById(int, int) ([]models.FriendLandingInfo, error)
 	GetUserFriendsByLogin(string, int) ([]models.FriendLandingInfo, error)
 	GetUserLoginById(int) (string, error)
-	CheckFriendship(int , int) (bool , error)
+	CheckFriendship(int, int) (bool, error)
 }
-

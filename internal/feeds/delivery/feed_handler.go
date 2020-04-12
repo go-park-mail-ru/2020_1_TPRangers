@@ -1,14 +1,13 @@
 package delivery
 
 import (
-	"main/internal/tools/errors"
-	"main/internal/models"
-	"main/internal/feeds"
-	"main/internal/feeds/usecase"
 	"github.com/labstack/echo"
 	"go.uber.org/zap"
+	"main/internal/feeds"
+	"main/internal/feeds/usecase"
+	"main/internal/models"
+	"main/internal/tools/errors"
 	"net/http"
-	"time"
 )
 
 type FeedDeliveryRealisation struct {
@@ -18,45 +17,32 @@ type FeedDeliveryRealisation struct {
 
 func (feedD FeedDeliveryRealisation) Feed(rwContext echo.Context) error {
 
-	uId := rwContext.Response().Header().Get("REQUEST_ID")
+	uId := rwContext.Get("REQUEST_ID").(string)
 
-	cookie, err := rwContext.Cookie("session_id")
+	userId := rwContext.Get("user_id").(int)
 
-	if err != nil {
+	if userId == -1 {
 
 		feedD.logger.Info(
 			zap.String("ID", uId),
-			zap.String("ERROR", err.Error()),
+			zap.String("ERROR", errors.CookieExpired.Error()),
 			zap.Int("ANSWER STATUS", http.StatusUnauthorized),
 		)
 
 		return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: errors.CookieExpired.Error()})
 	}
 
-	jsonAnswer, err := feedD.feedLogic.Feed(cookie.Value)
-
-	errRespStauts := 0
-
-	switch err {
-	case errors.InvalidCookie:
-
-		cookie.Expires = time.Now().AddDate(0, 0, -1)
-		rwContext.SetCookie(cookie)
-
-		errRespStauts = http.StatusUnauthorized
-	case errors.FailReadFromDB:
-		errRespStauts = http.StatusInternalServerError
-	}
+	jsonAnswer, err := feedD.feedLogic.Feed(userId)
 
 	if err != nil {
 
 		feedD.logger.Info(
 			zap.String("ID", uId),
 			zap.String("ERROR", err.Error()),
-			zap.Int("ANSWER STATUS", errRespStauts),
+			zap.Int("ANSWER STATUS", http.StatusInternalServerError),
 		)
 
-		return rwContext.JSON(errRespStauts, models.JsonStruct{Err: err.Error()})
+		return rwContext.JSON(http.StatusInternalServerError, models.JsonStruct{Err: err.Error()})
 	}
 
 	feedD.logger.Info(
@@ -64,20 +50,21 @@ func (feedD FeedDeliveryRealisation) Feed(rwContext echo.Context) error {
 		zap.Int("ANSWER STATUS", http.StatusOK),
 	)
 
-	return rwContext.JSON(http.StatusOK, models.JsonStruct{Body: jsonAnswer})
+	return rwContext.JSON(http.StatusOK, jsonAnswer)
 }
 
 func (feedD FeedDeliveryRealisation) CreatePost(rwContext echo.Context) error {
 
-	uId := rwContext.Response().Header().Get("REQUEST_ID")
+	uId := rwContext.Get("REQUEST_ID").(string)
 
-	cookie, err := rwContext.Cookie("session_id")
+	userId := rwContext.Get("user_id").(int)
+	ownerLogin := rwContext.Param("id")
 
-	if err != nil {
+	if userId == -1 {
 
 		feedD.logger.Info(
 			zap.String("ID", uId),
-			zap.String("ERROR", err.Error()),
+			zap.String("ERROR", errors.CookieExpired.Error()),
 			zap.Int("ANSWER STATUS", http.StatusUnauthorized),
 		)
 
@@ -86,7 +73,7 @@ func (feedD FeedDeliveryRealisation) CreatePost(rwContext echo.Context) error {
 
 	newPost := new(models.Post)
 
-	err = rwContext.Bind(&newPost)
+	err := rwContext.Bind(&newPost)
 
 	if err != nil {
 
@@ -99,29 +86,17 @@ func (feedD FeedDeliveryRealisation) CreatePost(rwContext echo.Context) error {
 		return rwContext.JSON(http.StatusConflict, models.JsonStruct{Err: err.Error()})
 	}
 
-
-	err = feedD.feedLogic.CreatePost(cookie.Value, *newPost)
-
-	errRespStauts := 0
-
-	switch err {
-	case errors.InvalidCookie:
-		cookie.Expires = time.Now().AddDate(0, 0, -1)
-		rwContext.SetCookie(cookie)
-		errRespStauts = http.StatusUnauthorized
-	case errors.FailSendToDB:
-		errRespStauts = http.StatusInternalServerError
-	}
+	err = feedD.feedLogic.CreatePost(userId, ownerLogin, *newPost)
 
 	if err != nil {
 
 		feedD.logger.Info(
 			zap.String("ID", uId),
 			zap.String("ERROR", err.Error()),
-			zap.Int("ANSWER STATUS", errRespStauts),
+			zap.Int("ANSWER STATUS", http.StatusInternalServerError),
 		)
 
-		return rwContext.JSON(errRespStauts, models.JsonStruct{Err: err.Error()})
+		return rwContext.JSON(http.StatusInternalServerError, models.JsonStruct{Err: err.Error()})
 	}
 
 	feedD.logger.Info(
@@ -137,7 +112,7 @@ func NewFeedDelivery(log *zap.SugaredLogger, feedRealisation usecase.FeedUseCase
 }
 
 func (feedD FeedDeliveryRealisation) InitHandlers(server *echo.Echo) {
-	server.GET("/api/v1/news", feedD.Feed) //
-	server.POST("/api/v1/post", feedD.CreatePost) //
+	server.GET("/api/v1/news", feedD.Feed)
+	server.POST("/api/v1/:id/post", feedD.CreatePost)
 
 }

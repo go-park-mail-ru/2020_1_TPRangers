@@ -78,7 +78,6 @@ func Test_DislikePhoto(t *testing.T) {
 	photoErr := []error{nil, err.NotExist, nil}
 	expectErr := []error{nil, err.NotExist, err.InvalidCookie}
 
-
 	for iter := 0; iter < testLength; iter++ {
 		tests.photoId = rand.Int()
 		tests.userId = rand.Int()
@@ -147,7 +146,7 @@ func Test_DislikePost(t *testing.T) {
 	testLength := 2
 
 	type testPhotoStruct struct {
-		postId     int
+		postId      int
 		userId      int
 		cookieValue string
 	}
@@ -162,7 +161,6 @@ func Test_DislikePost(t *testing.T) {
 	cookieErr := []error{nil, nil, errors.New("smth wrong")}
 	photoErr := []error{nil, err.NotExist, nil}
 	expectErr := []error{nil, err.NotExist, err.InvalidCookie}
-
 
 	for iter := 0; iter < testLength; iter++ {
 		tests.postId = rand.Int()

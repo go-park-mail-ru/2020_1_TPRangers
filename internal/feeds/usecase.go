@@ -3,6 +3,6 @@ package feeds
 import "main/internal/models"
 
 type FeedUseCase interface {
-	Feed(string) ([]models.Post , error)
-	CreatePost(string , models.Post) error
+	Feed(int) ([]models.Post, error)
+	CreatePost(int, string, models.Post) error
 }

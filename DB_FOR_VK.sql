@@ -40,6 +40,8 @@ CREATE TABLE Friends
     f_id INT
 );
 
+CREATE UNIQUE INDEX userfriend_idx ON Friends (u_id, f_id);
+
 CREATE TABLE Posts
 (
     post_id           SERIAL PRIMARY KEY,
@@ -52,8 +54,8 @@ CREATE TABLE Posts
 
 CREATE TABLE PostsAuthor
 (
-    post_id INT NOT NULL REFERENCES Posts ON DELETE CASCADE,
-    u_id    INT NOT NULL REFERENCES Users
+    post_id    INT NOT NULL REFERENCES Posts ON DELETE CASCADE,
+    u_id       INT NOT NULL REFERENCES Users
 );
 
 CREATE TABLE Feeds
@@ -65,6 +67,7 @@ CREATE TABLE Feeds
 CREATE TABLE UsersPosts
 (
     u_id    INT NOT NULL REFERENCES Users,
+    post_owner INT NOT NULL REFERENCES Users,
     post_id INT NOT NULL REFERENCES Posts
 );
 
@@ -89,12 +92,17 @@ CREATE TABLE UsersPostsLikes
     post_id     INT NOT NULL REFERENCES Posts
 );
 
+CREATE UNIQUE INDEX userpostlike_idx ON UsersPostsLikes (u_id, post_id);
+
 CREATE TABLE UsersPhotosLikes
 (
     photolike_id BIGSERIAL PRIMARY KEY,
     u_id         INT NOT NULL REFERENCES Users,
     photo_id     INT NOT NULL REFERENCES Photos
 );
+
+CREATE UNIQUE INDEX userphotolike_idx ON UsersPhotosLikes (u_id, photo_id);
+
 
 INSERT INTO photos (url, photos_likes_count)
 VALUES ('https://social-hub.ru/uploads/img/default.png', 0);

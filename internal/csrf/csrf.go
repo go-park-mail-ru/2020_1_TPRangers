@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 )
+
 var Tokens *HashToken
 
 func init() {

@@ -1,8 +1,8 @@
 package friends
 
 type FriendUseCase interface {
-	AddFriend(string, string) error
-	DeleteFriend(string, string) error
+	AddFriend(int, string) error
+	DeleteFriend(int, string) error
 	GetAllFriends(string) (map[string]interface{}, error)
-	GetUserLoginByCookie(string) (string, error)
+	GetUserLoginById(int) (string, error)
 }
