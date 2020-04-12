@@ -33,7 +33,7 @@ func (mh MiddlewareHandler) SetMiddleware(server *echo.Echo) {
 func (mh MiddlewareHandler) SetCorsMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 
-		c.Response().Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+		c.Response().Header().Set("Access-Control-Allow-Origin", "https://social-hub.ru")
 		c.Response().Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS, PUT, DELETE, POST")
 		c.Response().Header().Set("Access-Control-Allow-Headers", "Origin, X-Login, Set-Cookie, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, csrf-token, Authorization")
 		c.Response().Header().Set("Access-Control-Allow-Credentials", "true")
@@ -92,6 +92,7 @@ func (mh MiddlewareHandler) AccessLog() echo.MiddlewareFunc {
 	}
 }
 
+
 func (mh MiddlewareHandler) CheckAuthentication() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 
@@ -117,3 +118,4 @@ func (mh MiddlewareHandler) CheckAuthentication() echo.MiddlewareFunc {
 		}
 	}
 }
+

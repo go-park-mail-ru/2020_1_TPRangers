@@ -7,28 +7,38 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	repositoryCookie "main/internal/cookies/repository"
+	repositoryPhoto "main/internal/photos/repository"
+	repositoryAlbum "main/internal/albums/repository"
 	deliveryFeed "main/internal/feeds/delivery"
+	deliveryAlbum "main/internal/albums/delivery"
 	repositoryFeed "main/internal/feeds/repository"
 	usecaseFeed "main/internal/feeds/usecase"
 	"main/internal/middleware"
 	deliveryUser "main/internal/users/delivery"
 	repositoryUser "main/internal/users/repository"
 	usecaseUser "main/internal/users/usecase"
+	deliveryPhoto "main/internal/photos/delivery"
+
 	"os"
+
 
 	deliveryLikes "main/internal/like/delivery"
 	repositoryLikes "main/internal/like/repository"
 	usecaseLikes "main/internal/like/usecase"
-
+	usecasePhoto "main/internal/photos/usecase"
+	usecaseAlbum "main/internal/albums/usecase"
 	deliveryFriends "main/internal/friends/delivery"
 	repositoryFriends "main/internal/friends/repository"
 	usecaseFriends "main/internal/friends/usecase"
 )
 
 type RequestHandlers struct {
-	userHandler   deliveryUser.UserDeliveryRealisation
-	feedHandler   deliveryFeed.FeedDeliveryRealisation
-	likeHandler   deliveryLikes.LikeDelivery
+
+	userHandler deliveryUser.UserDeliveryRealisation
+	feedHandler deliveryFeed.FeedDeliveryRealisation
+	likeHandler deliveryLikes.LikeDelivery
+	photoHandler deliveryPhoto.PhotoDeliveryRealisation
+	albumHandler deliveryAlbum.AlbumDeliveryRealisation
 	friendHandler deliveryFriends.FriendDeliveryRealisation
 }
 
@@ -60,8 +70,22 @@ func NewRequestHandler(db *sql.DB, sessionDB repositoryCookie.CookieRepositoryRe
 
 	feedDB := repositoryFeed.NewFeedRepositoryRealisation(db)
 	userDB := repositoryUser.NewUserRepositoryRealisation(db)
+
+	photoDB := repositoryPhoto.NewPhotoRepositoryRealisation(db)
 	likesDB := repositoryLikes.NewLikeRepositoryRealisation(db)
+	albumDB := repositoryAlbum.NewAlbumRepositoryRealisation(db)
+
+
+
+
 	friendsDB := repositoryFriends.NewFriendRepositoryRealisation(db)
+
+
+
+
+	photoUseCase := usecasePhoto.NewPhotoUseCaseRealisation(photoDB, sessionDB)
+	albumUseCase := usecaseAlbum.NewAlbumUseCaseRealisation(albumDB, sessionDB)
+
 
 	feedUseCase := usecaseFeed.NewFeedUseCaseRealisation(feedDB)
 	userUseCase := usecaseUser.NewUserUseCaseRealisation(userDB, friendsDB, feedDB, sessionDB)
@@ -69,15 +93,26 @@ func NewRequestHandler(db *sql.DB, sessionDB repositoryCookie.CookieRepositoryRe
 	friendsUse := usecaseFriends.NewFriendUseCaseRealisation(friendsDB)
 
 	likeH := deliveryLikes.NewLikeDelivery(logger, likesUse)
+
 	userH := deliveryUser.NewUserDelivery(logger, userUseCase)
 	feedH := deliveryFeed.NewFeedDelivery(logger, feedUseCase)
+
+	photoH := deliveryPhoto.NewPhotoDelivery(logger, photoUseCase)
+	albumH := deliveryAlbum.NewAlbumDelivery(logger, albumUseCase)
+
 	friendH := deliveryFriends.NewUserDelivery(logger, friendsUse)
 
+
 	api := &(RequestHandlers{
+
+
+		photoHandler: photoH,
+		albumHandler: albumH,
 		userHandler:   userH,
 		feedHandler:   feedH,
 		likeHandler:   likeH,
 		friendHandler: friendH,
+
 	})
 
 	return api
@@ -86,6 +121,7 @@ func NewRequestHandler(db *sql.DB, sessionDB repositoryCookie.CookieRepositoryRe
 func main() {
 
 	server := echo.New()
+
 
 	config := zap.NewDevelopmentConfig()
 	config.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
@@ -104,6 +140,8 @@ func main() {
 	api.userHandler.InitHandlers(server)
 	api.feedHandler.InitHandlers(server)
 	api.likeHandler.InitHandlers(server)
+	api.photoHandler.InitHandlers(server)
+	api.albumHandler.InitHandlers(server)
 	api.friendHandler.InitHandlers(server)
 
 	port := os.Getenv("PORT")
