@@ -16,11 +16,10 @@ func NewAlbumRepositoryRealisation(db *sql.DB) AlbumRepositoryRealisation {
 
 }
 
+func (Data AlbumRepositoryRealisation) CreateAlbum(u_id int, albumData models.AlbumReq) error {
 
-func (Data AlbumRepositoryRealisation ) CreateAlbum(u_id int, albumData models.AlbumReq) error {
-
-	_, err := Data.albumDB.Exec("INSERT INTO albums (name, u_id) VALUES ($1, $2);", albumData.Name,  u_id)
-	if err != nil{
+	_, err := Data.albumDB.Exec("INSERT INTO albums (name, u_id) VALUES ($1, $2);", albumData.Name, u_id)
+	if err != nil {
 		return errors.FailSendToDB
 	}
 
@@ -28,9 +27,8 @@ func (Data AlbumRepositoryRealisation ) CreateAlbum(u_id int, albumData models.A
 
 }
 
-
-func (Data AlbumRepositoryRealisation ) GetAlbums(id int) ([]models.Album, error) {
-	albums := make([]models.Album,0, 20)
+func (Data AlbumRepositoryRealisation) GetAlbums(id int) ([]models.Album, error) {
+	albums := make([]models.Album, 0, 20)
 
 	rows, err := Data.albumDB.Query("select DISTINCT ON (a.album_id) a.name, a.album_id, ph.photo_url from albums AS a LEFT JOIN photosfromalbums AS ph ON ph.album_id = a.album_id WHERE a.u_id = $1;", id)
 	defer rows.Close()

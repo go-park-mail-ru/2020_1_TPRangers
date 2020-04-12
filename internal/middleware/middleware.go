@@ -92,7 +92,6 @@ func (mh MiddlewareHandler) AccessLog() echo.MiddlewareFunc {
 	}
 }
 
-
 func (mh MiddlewareHandler) CheckAuthentication() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 
@@ -118,4 +117,3 @@ func (mh MiddlewareHandler) CheckAuthentication() echo.MiddlewareFunc {
 		}
 	}
 }
-

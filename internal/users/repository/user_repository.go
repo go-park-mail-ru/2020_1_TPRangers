@@ -6,7 +6,6 @@ import (
 	_ "github.com/lib/pq"
 	"main/internal/models"
 	"main/internal/tools/errors"
-	"strconv"
 )
 
 type UserRepositoryRealisation struct {
@@ -16,111 +15,6 @@ type UserRepositoryRealisation struct {
 func NewUserRepositoryRealisation(db *sql.DB) UserRepositoryRealisation {
 	return UserRepositoryRealisation{userDB: db}
 
-}
-
-func (Data UserRepositoryRealisation) UploadPhotoToAlbum(photoData models.PhotoInAlbum) error {
-	albumId, err := strconv.ParseInt(photoData.AlbumID, 10, 32)
-
-	album := Data.userDB.QueryRow("select name from albums where album_id = $1;", int(albumId))
-	var albumName string
-	album.Scan(&albumName)
-	if albumName == "" {
-		return errors.AlbumDoesntExist
-	}
-
-	_, err = Data.userDB.Exec("INSERT INTO photos (url, photos_likes_count) VALUES ($1, $2);", photoData.Url, 0)
-	if err != nil {
-		return errors.FailSendToDB
-	}
-	var photoID int
-	row := Data.userDB.QueryRow("select photo_id from photos where url = $1", photoData.Url)
-	err = row.Scan(&photoID)
-	if err != nil {
-		return errors.FailReadToVar
-	}
-
-	_, err = Data.userDB.Exec("INSERT INTO photosfromalbums (photo_id, photo_url, album_id) VALUES ($1, $2, $3);", photoID, photoData.Url, int(albumId))
-	if err != nil {
-		return errors.FailSendToDB
-	}
-	return nil
-}
-
-func (Data UserRepositoryRealisation) CreateAlbum(u_id int, albumData models.AlbumReq) error {
-
-	_, err := Data.userDB.Exec("INSERT INTO albums (name, u_id) VALUES ($1, $2);", albumData.Name, u_id)
-	if err != nil {
-		return errors.FailSendToDB
-	}
-
-	return nil
-
-}
-
-func (Data UserRepositoryRealisation) GetPhotosFromAlbum(albumID int) (models.Photos, error) {
-	photosAlb := models.Photos{}
-	phUrls := make([]string, 0, 20)
-	rows, err := Data.userDB.Query("select photo_url from photosfromalbums where album_id = $1;", albumID)
-
-	defer rows.Close()
-	if err != nil {
-		return models.Photos{}, errors.FailReadFromDB
-	}
-
-	for rows.Next() {
-		var phUrl string
-
-		err = rows.Scan(&phUrl)
-
-		if err != nil {
-			return models.Photos{}, errors.FailReadToVar
-		}
-
-		phUrls = append(phUrls, phUrl)
-	}
-	photosAlb.Urls = phUrls
-	row := Data.userDB.QueryRow("select name from albums where album_id = $1;", albumID)
-	err = row.Scan(&photosAlb.AlbumName)
-	if err != nil {
-		return models.Photos{}, nil
-	}
-
-	return photosAlb, nil
-}
-
-func (Data UserRepositoryRealisation) GetAlbums(id int) ([]models.Album, error) {
-	albums := make([]models.Album, 0, 20)
-
-	rows, err := Data.userDB.Query("select DISTINCT ON (a.album_id) a.name, a.album_id, ph.photo_url from albums AS a LEFT JOIN photosfromalbums AS ph ON ph.album_id = a.album_id WHERE a.u_id = $1;", id)
-	defer rows.Close()
-	if err != nil {
-		return nil, errors.FailReadFromDB
-	}
-
-	for rows.Next() {
-		var album models.Album
-		err = rows.Scan(&album.Name, &album.ID, &album.PhotoUrl)
-
-		if album.PhotoUrl == nil {
-			album.PhotoUrl = new(string)
-			*album.PhotoUrl = ""
-		}
-		if err != nil {
-			return nil, errors.FailReadToVar
-		}
-
-		albums = append(albums, album)
-
-	}
-	return albums, nil
-}
-
-func (Data UserRepositoryRealisation) CreateDefaultAlbum(user_id int) error {
-	_, err := Data.userDB.Exec("INSERT INTO Albums (name, u_id) VALUES ('default',  $1);", user_id)
-	if err != nil {
-		return errors.FailSendToDB
-	}
-	return nil
 }
 
 func (Data UserRepositoryRealisation) GetUserLoginById(userId int) (string, error) {

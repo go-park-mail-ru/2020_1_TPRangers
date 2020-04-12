@@ -38,43 +38,6 @@ type UserUseCaseRealisation struct {
 	sessionDB Sess.CookieRepository
 }
 
-func (userR UserUseCaseRealisation) GetAlbums(userId int) ([]models.Album, error) {
-	albums, _ := userR.userDB.GetAlbums(userId)
-
-	return albums, nil
-
-}
-
-func (userR UserUseCaseRealisation) GetPhotosFromAlbum(albumID int) (models.Photos, error) {
-	photos, _ := userR.userDB.GetPhotosFromAlbum(albumID)
-
-	return photos, nil
-}
-
-
-func (userR UserUseCaseRealisation) CreateAlbum(userId int, albumData models.AlbumReq) error {
-
-
-	err := userR.userDB.CreateAlbum(userId, albumData)
-
-	if err != nil {
-		return errors.FailReadFromDB
-	}
-
-	return nil
-}
-
-func (userR UserUseCaseRealisation) UploadPhotoToAlbum(photoData models.PhotoInAlbum) error {
-
-	err := userR.userDB.UploadPhotoToAlbum(photoData)
-
-	if err != nil {
-		return errors.FailReadFromDB
-	}
-
-	return nil
-}
-
 func (userR UserUseCaseRealisation) GetOtherUserProfileNotLogged(userLogin string) (models.OtherUserProfileData, error) {
 
 	sendData := new(models.OtherUserProfileData)
@@ -218,12 +181,7 @@ func (userR UserUseCaseRealisation) CheckFriendship(mainUserId int, friendLogin 
 func (userR UserUseCaseRealisation) Login(userData models.Auth, cookieValue string, exprTime time.Duration) (string, error) {
 	login := userData.Login
 
-
-	token, _ := csrf.Tokens.Create(login, cookieValue,  999999)
-
-
-
-
+	token, _ := csrf.Tokens.Create(login, cookieValue, 999999)
 
 	password := userData.Password
 	dbPassword, existErr := userR.userDB.GetPassword(login)
@@ -232,9 +190,8 @@ func (userR UserUseCaseRealisation) Login(userData models.Auth, cookieValue stri
 		return "", errors.WrongLogin
 	}
 
-
 	if !CheckPassword(password, dbPassword) {
-		return errors.WrongPassword
+		return "",errors.WrongPassword
 	}
 
 	id, existErr := userR.userDB.GetIdByEmail(login)
@@ -245,9 +202,7 @@ func (userR UserUseCaseRealisation) Login(userData models.Auth, cookieValue stri
 
 	err := userR.sessionDB.AddCookie(id, cookieValue, exprTime)
 
-
-	return token, nil
-
+	return token, err
 
 }
 

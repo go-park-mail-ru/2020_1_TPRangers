@@ -1,39 +1,26 @@
 package usecase
 
 import (
-	Sess "main/internal/cookies"
-	SessRep "main/internal/cookies/repository"
 	"main/internal/models"
+	"main/internal/photos"
 	photoRep "main/internal/photos/repository"
 	"main/internal/tools/errors"
-	"main/internal/photos"
 )
 
 type PhotoUseCaseRealisation struct {
-	photoDB    photos.PhotoRepository
-	sessionDB Sess.CookieRepository
+	photoDB photos.PhotoRepository
 }
 
-func (photoR PhotoUseCaseRealisation) GetPhotosFromAlbum(cookie string, albumID int) (models.Photos, error) {
-	_, err := photoR.sessionDB.GetUserIdByCookie(cookie)
+func (photoR PhotoUseCaseRealisation) GetPhotosFromAlbum(albumID int) (models.Photos, error) {
 
-	if err != nil {
-		return  models.Photos{} ,errors.InvalidCookie
-	}
-
-	photos, err := photoR.photoDB.GetPhotosFromAlbum(albumID)
+	photos, _ := photoR.photoDB.GetPhotosFromAlbum(albumID)
 
 	return photos, nil
 }
 
-func (photoR PhotoUseCaseRealisation) UploadPhotoToAlbum(cookie string, photoData models.PhotoInAlbum) error {
-	_, err := photoR.sessionDB.GetUserIdByCookie(cookie)
+func (photoR PhotoUseCaseRealisation) UploadPhotoToAlbum(photoData models.PhotoInAlbum) error {
 
-	if err != nil {
-		return errors.InvalidCookie
-	}
-
-	err = photoR.photoDB.UploadPhotoToAlbum(photoData)
+	err := photoR.photoDB.UploadPhotoToAlbum(photoData)
 
 	if err != nil {
 		return errors.FailReadFromDB
@@ -42,10 +29,8 @@ func (photoR PhotoUseCaseRealisation) UploadPhotoToAlbum(cookie string, photoDat
 	return nil
 }
 
-
-func NewPhotoUseCaseRealisation(photoDB photoRep.PhotoRepositoryRealisation, sesDB SessRep.CookieRepositoryRealisation) PhotoUseCaseRealisation {
+func NewPhotoUseCaseRealisation(photoDB photoRep.PhotoRepositoryRealisation) PhotoUseCaseRealisation {
 	return PhotoUseCaseRealisation{
-		photoDB:    photoDB,
-		sessionDB: sesDB,
+		photoDB: photoDB,
 	}
 }

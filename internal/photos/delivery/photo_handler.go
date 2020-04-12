@@ -4,30 +4,28 @@ import (
 	"github.com/labstack/echo"
 	"go.uber.org/zap"
 	"main/internal/models"
-	"main/internal/photos/usecase"
 	"main/internal/photos"
+	"main/internal/photos/usecase"
 	"main/internal/tools/errors"
 	"net/http"
 	"strconv"
-	"time"
 )
-
 
 type PhotoDeliveryRealisation struct {
 	photoLogic photos.PhotoUseCase
-	logger    *zap.SugaredLogger
+	logger     *zap.SugaredLogger
 }
 
 func (photoD PhotoDeliveryRealisation) GetPhotosFromAlbum(rwContext echo.Context) error {
 
-	uId := rwContext.Response().Header().Get("REQUEST_ID")
+	uId := rwContext.Get("REQUEST_ID").(string)
 
-	cookie, err := rwContext.Cookie("session_id")
+	userId := rwContext.Get("user_id").(int)
 
-	if err != nil {
+	if userId == -1 {
 		photoD.logger.Debug(
 			zap.String("ID", uId),
-			zap.String("ERROR", err.Error()),
+			zap.String("ERROR", errors.CookieExpired.Error()),
 			zap.Int("ANSWER STATUS", http.StatusUnauthorized),
 		)
 		return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: errors.CookieExpired.Error()})
@@ -35,24 +33,13 @@ func (photoD PhotoDeliveryRealisation) GetPhotosFromAlbum(rwContext echo.Context
 
 	a_id, err := strconv.ParseInt(rwContext.Param("id"), 10, 32)
 
-	photos, err := photoD.photoLogic.GetPhotosFromAlbum(cookie.Value, int(a_id))
-
-	errRespStatus := 0
-
-	switch err {
-	case errors.InvalidCookie:
-		cookie.Expires = time.Now().AddDate(0, 0, -1)
-		rwContext.SetCookie(cookie)
-		errRespStatus = http.StatusUnauthorized
-	case errors.FailReadFromDB:
-		errRespStatus = http.StatusInternalServerError
-	}
+	photos, err := photoD.photoLogic.GetPhotosFromAlbum(int(a_id))
 
 	if err != nil {
 		photoD.logger.Info(
 			zap.String("ID", uId),
 			zap.String("ERROR", err.Error()),
-			zap.Int("ANSWER STATUS", errRespStatus),
+			zap.Int("ANSWER STATUS", http.StatusConflict),
 		)
 
 		return rwContext.NoContent(http.StatusConflict)
@@ -67,27 +54,25 @@ func (photoD PhotoDeliveryRealisation) GetPhotosFromAlbum(rwContext echo.Context
 		return rwContext.JSON(http.StatusNotFound, models.JsonStruct{Body: photos})
 	}
 
-	return rwContext.JSON(http.StatusOK, models.JsonStruct{Body: photos})
+	return rwContext.JSON(http.StatusOK, photos)
 }
 
-
-
 func (photoD PhotoDeliveryRealisation) UploadPhotoToAlbum(rwContext echo.Context) error {
-	rId := rwContext.Response().Header().Get("REQUEST_ID")
+	rId := rwContext.Get("REQUEST_ID").(string)
 
-	cookie, err := rwContext.Cookie("session_id")
+	userId := rwContext.Get("user_id").(int)
 
-	if err != nil {
+	if userId == -1 {
 		photoD.logger.Debug(
 			zap.String("ID", rId),
-			zap.String("ERROR", err.Error()),
+			zap.String("ERROR", errors.CookieExpired.Error()),
 			zap.Int("ANSWER STATUS", http.StatusUnauthorized),
 		)
 		return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: errors.CookieExpired.Error()})
 	}
 	photoData := new(models.PhotoInAlbum)
 
-	err = rwContext.Bind(photoData)
+	err := rwContext.Bind(photoData)
 
 	if err != nil {
 		photoD.logger.Debug(
@@ -99,24 +84,13 @@ func (photoD PhotoDeliveryRealisation) UploadPhotoToAlbum(rwContext echo.Context
 		return rwContext.NoContent(http.StatusInternalServerError)
 	}
 
-	err = photoD.photoLogic.UploadPhotoToAlbum(cookie.Value, *photoData)
-
-	errRespStatus := 0
-
-	switch err {
-	case errors.InvalidCookie:
-		cookie.Expires = time.Now().AddDate(0, 0, -1)
-		rwContext.SetCookie(cookie)
-		errRespStatus = http.StatusUnauthorized
-	case errors.FailReadFromDB:
-		errRespStatus = http.StatusInternalServerError
-	}
+	err = photoD.photoLogic.UploadPhotoToAlbum(*photoData)
 
 	if err != nil {
 		photoD.logger.Info(
 			zap.String("ID", rId),
 			zap.String("ERROR", err.Error()),
-			zap.Int("ANSWER STATUS", errRespStatus),
+			zap.Int("ANSWER STATUS", http.StatusConflict),
 		)
 
 		return rwContext.NoContent(http.StatusConflict)
@@ -131,10 +105,6 @@ func (photoD PhotoDeliveryRealisation) UploadPhotoToAlbum(rwContext echo.Context
 
 }
 
-
-
-
-
 func NewPhotoDelivery(log *zap.SugaredLogger, photoRealisation usecase.PhotoUseCaseRealisation) PhotoDeliveryRealisation {
 	return PhotoDeliveryRealisation{photoLogic: photoRealisation, logger: log}
 }
@@ -142,7 +112,6 @@ func NewPhotoDelivery(log *zap.SugaredLogger, photoRealisation usecase.PhotoUseC
 func (photoD PhotoDeliveryRealisation) InitHandlers(server *echo.Echo) {
 
 	server.POST("api/v1/album/photo", photoD.UploadPhotoToAlbum)
-
 
 	server.GET("api/v1/albums/:id", photoD.GetPhotosFromAlbum)
 

@@ -32,7 +32,6 @@ func (Like LikeRepositoryRealisation) DislikePhoto(photoId, userId int) error {
 
 	row := Like.likeDB.QueryRow("DELETE FROM UsersPhotosLikes WHERE u_id = $1 AND photo_id = $2 RETURNING photolike_id", userId, photoId)
 
-
 	err := row.Scan(&like_id)
 
 	return err
@@ -55,8 +54,7 @@ func (Like LikeRepositoryRealisation) DislikePost(postId, userId int) error {
 
 	like_id := int64(0)
 
-
-	row := Like.likeDB.QueryRow("DELETE FROM UsersPostsLikes WHERE u_id = $1 AND post_id = $2 RETURNING postlike_id",userId , postId)
+	row := Like.likeDB.QueryRow("DELETE FROM UsersPostsLikes WHERE u_id = $1 AND post_id = $2 RETURNING postlike_id", userId, postId)
 	err := row.Scan(&like_id)
 
 	return err

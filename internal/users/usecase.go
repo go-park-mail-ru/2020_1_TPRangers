@@ -13,12 +13,7 @@ type UserUseCase interface {
 	Logout(string) error
 	Login(models.Auth, string, time.Duration) (string, error)
 	Register(models.Register, string, time.Duration) error
-	GetAlbums(int) ([]models.Album, error)
-	GetPhotosFromAlbum(int) (models.Photos, error)
-	CreateAlbum(int, models.AlbumReq) error
-	UploadPhotoToAlbum(models.PhotoInAlbum) error
 	CheckFriendship(int, string) (bool, error)
 	GetUserLoginByCookie(int) (string, error)
 	GetUserProfileWhileLogged(string, int) (models.OtherUserProfileData, error)
-
 }

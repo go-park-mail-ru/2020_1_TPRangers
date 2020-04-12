@@ -13,11 +13,6 @@ type UserRepository interface {
 	GetPassword(string) ([]byte, error)
 	GetDefaultProfilePhotoId() (int, error)
 	IsUserExist(string) (bool, error)
-	GetAlbums(int) ([]models.Album, error)
-	GetPhotosFromAlbum(int) (models.Photos, error)
-	CreateAlbum(int, models.AlbumReq) error
-	UploadPhotoToAlbum(models.PhotoInAlbum) error
 	GetUserLoginById(int) (string, error)
-	CreateDefaultAlbum(int) error
 	AddNewUser(models.User) error
 }
