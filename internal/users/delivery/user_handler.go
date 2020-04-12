@@ -20,20 +20,19 @@ type UserDeliveryRealisation struct {
 
 func (userD UserDeliveryRealisation) GetUser(rwContext echo.Context) error {
 
-	uId := rwContext.Response().Header().Get("REQUEST_ID")
+	uId := rwContext.Get("REQUEST_ID").(string)
 	login := rwContext.Param("id")
 
-	cookie, err := rwContext.Cookie("session_id")
+	userId := rwContext.Get("user_id").(int)
 
-	var userData map[string]interface{}
+	var userData models.OtherUserProfileData
+	var err error
 
-	if err == nil {
-		//  вернуть пользователя и лайки текущего юзера
-		userData, err = userD.userLogic.GetUserWhileLogged(login,cookie.Value)
-		userData, err = userD.userLogic.CheckFriendship(cookie.Value, login, userData)
+	if userId != -1 {
+		userData, err = userD.userLogic.GetUserProfileWhileLogged(login, userId)
+		userData.IsFriends, err = userD.userLogic.CheckFriendship(userId, login)
 	} else {
-		// просто вернуть пользователя
-		userData, err = userD.userLogic.GetUser(login)
+		userData, err = userD.userLogic.GetOtherUserProfileNotLogged(login)
 	}
 
 	if err != nil {
@@ -52,27 +51,24 @@ func (userD UserDeliveryRealisation) GetUser(rwContext echo.Context) error {
 		zap.Int("ANSWER STATUS", http.StatusOK),
 	)
 
-	return rwContext.JSON(http.StatusOK, models.JsonStruct{Body: userData})
+	return rwContext.JSON(http.StatusOK, userData)
 }
 
-
-
-
 func (userD UserDeliveryRealisation) Profile(rwContext echo.Context) error {
-	uId := rwContext.Response().Header().Get("REQUEST_ID")
+	uId := rwContext.Get("REQUEST_ID").(string)
 
-	cookie, err := rwContext.Cookie("session_id")
+	userId := rwContext.Get("user_id").(int)
 
-	if err != nil {
+	if userId == -1 {
 
 		userD.logger.Debug(
 			zap.String("ID", uId),
-			zap.String("COOKIE", err.Error()),
+			zap.String("COOKIE", errors.CookieExpired.Error()),
 		)
 		return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: errors.CookieExpired.Error()})
 	}
 
-	userProfile, err := userD.userLogic.Profile(cookie.Value)
+	userProfile, err := userD.userLogic.GetMainUserProfile(userId)
 
 	if err != nil {
 
@@ -81,9 +77,6 @@ func (userD UserDeliveryRealisation) Profile(rwContext echo.Context) error {
 			zap.String("ERROR", err.Error()),
 			zap.Int("ANSWER STATUS", http.StatusUnauthorized),
 		)
-
-		cookie.Expires = time.Now().AddDate(0, 0, -1)
-		rwContext.SetCookie(cookie)
 
 		return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: err.Error()})
 	}
@@ -93,47 +86,35 @@ func (userD UserDeliveryRealisation) Profile(rwContext echo.Context) error {
 		zap.Int("ANSWER STATUS", http.StatusOK),
 	)
 
-	return rwContext.JSON(http.StatusOK, models.JsonStruct{Body: userProfile})
+	return rwContext.JSON(http.StatusOK, userProfile)
 }
 
 func (userD UserDeliveryRealisation) GetSettings(rwContext echo.Context) error {
-	uId := rwContext.Response().Header().Get("REQUEST_ID")
 
-	cookie, err := rwContext.Cookie("session_id")
+	uId := rwContext.Get("REQUEST_ID").(string)
 
-	if err != nil {
+	userId := rwContext.Get("user_id").(int)
+
+	if userId == -1 {
 		userD.logger.Debug(
 			zap.String("ID", uId),
-			zap.String("COOKIE", err.Error()),
+			zap.String("COOKIE", errors.CookieExpired.Error()),
 			zap.Int("ANSWER STATUS", http.StatusUnauthorized),
 		)
 
 		return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: errors.CookieExpired.Error()})
 	}
 
-	userSettings, err := userD.userLogic.GetSettings(cookie.Value)
-
-	respErrStat := 0
-
-	switch err {
-	case errors.InvalidCookie:
-
-		cookie.Expires = time.Now().AddDate(0, 0, -1)
-		rwContext.SetCookie(cookie)
-
-		respErrStat = http.StatusUnauthorized
-	case errors.FailReadFromDB:
-		respErrStat = http.StatusInternalServerError
-	}
+	userSettings, err := userD.userLogic.GetSettings(userId)
 
 	if err != nil {
 		userD.logger.Info(
 			zap.String("ID", uId),
 			zap.String("ERROR", err.Error()),
-			zap.Int("ANSWER STATUS", respErrStat),
+			zap.Int("ANSWER STATUS", http.StatusInternalServerError),
 		)
 
-		return rwContext.JSON(respErrStat, models.JsonStruct{Err: err.Error()})
+		return rwContext.JSON(http.StatusInternalServerError, models.JsonStruct{Err: err.Error()})
 	}
 
 	userD.logger.Info(
@@ -141,19 +122,19 @@ func (userD UserDeliveryRealisation) GetSettings(rwContext echo.Context) error {
 		zap.Int("ANSWER STATUS", http.StatusOK),
 	)
 
-	return rwContext.JSON(http.StatusOK, models.JsonStruct{Body: userSettings})
+	return rwContext.JSON(http.StatusOK, userSettings)
 }
 
 func (userD UserDeliveryRealisation) UploadSettings(rwContext echo.Context) error {
 
-	uId := rwContext.Response().Header().Get("REQUEST_ID")
+	uId := rwContext.Get("REQUEST_ID").(string)
 
-	cookie, err := rwContext.Cookie("session_id")
+	userId := rwContext.Get("user_id").(int)
 
-	if err != nil {
+	if userId == -1 {
 		userD.logger.Debug(
 			zap.String("ID", uId),
-			zap.String("COOKIE", err.Error()),
+			zap.String("COOKIE", errors.CookieExpired.Error()),
 			zap.Int("ANSWER STATUS", http.StatusUnauthorized),
 		)
 
@@ -162,7 +143,7 @@ func (userD UserDeliveryRealisation) UploadSettings(rwContext echo.Context) erro
 
 	newUserSettings := new(models.Settings)
 
-	err = rwContext.Bind(newUserSettings)
+	err := rwContext.Bind(newUserSettings)
 
 	if err != nil {
 
@@ -175,16 +156,11 @@ func (userD UserDeliveryRealisation) UploadSettings(rwContext echo.Context) erro
 		return rwContext.JSON(http.StatusConflict, models.JsonStruct{Err: errors.FailDecode.Error()})
 	}
 
-	userSettings, err := userD.userLogic.UploadSettings(cookie.Value, *newUserSettings)
+	userSettings, err := userD.userLogic.UploadSettings(userId, *newUserSettings)
 
 	respErrStat := 0
 
 	switch err {
-	case errors.InvalidCookie:
-		cookie.Expires = time.Now().AddDate(0, 0, -1)
-		rwContext.SetCookie(cookie)
-
-		respErrStat = http.StatusUnauthorized
 	case errors.FailReadFromDB:
 		respErrStat = http.StatusInternalServerError
 	case errors.FailSendToDB:
@@ -206,13 +182,13 @@ func (userD UserDeliveryRealisation) UploadSettings(rwContext echo.Context) erro
 		zap.Int("ANSWER STATUS", http.StatusOK),
 	)
 
-	return rwContext.JSON(http.StatusOK, models.JsonStruct{Body: userSettings})
+	return rwContext.JSON(http.StatusOK, userSettings)
 
 }
 
 func (userD UserDeliveryRealisation) Login(rwContext echo.Context) error {
 
-	uId := rwContext.Response().Header().Get("REQUEST_ID")
+	uId := rwContext.Get("REQUEST_ID").(string)
 
 	userAuthData := new(models.Auth)
 
@@ -260,7 +236,7 @@ func (userD UserDeliveryRealisation) Login(rwContext echo.Context) error {
 
 func (userD UserDeliveryRealisation) Logout(rwContext echo.Context) error {
 
-	uId := rwContext.Response().Header().Get("REQUEST_ID")
+	uId := rwContext.Get("REQUEST_ID").(string)
 
 	cookie, err := rwContext.Cookie("session_id")
 
@@ -280,7 +256,7 @@ func (userD UserDeliveryRealisation) Logout(rwContext echo.Context) error {
 		userD.logger.Debug(
 			zap.String("ID", uId),
 			zap.String("ERROR", err.Error()),
-			zap.Int("ANSWER STATUS", http.StatusOK),
+			zap.Int("ANSWER STATUS", http.StatusConflict),
 		)
 
 		return rwContext.NoContent(http.StatusConflict)
@@ -294,7 +270,7 @@ func (userD UserDeliveryRealisation) Logout(rwContext echo.Context) error {
 
 func (userD UserDeliveryRealisation) Register(rwContext echo.Context) error {
 
-	uId := rwContext.Response().Header().Get("REQUEST_ID")
+	uId := rwContext.Get("REQUEST_ID").(string)
 
 	userAuthData := new(models.Register)
 
@@ -350,63 +326,50 @@ func (userD UserDeliveryRealisation) Register(rwContext echo.Context) error {
 	return rwContext.NoContent(http.StatusOK)
 }
 
-
-
 func (userD UserDeliveryRealisation) GetAlbums(rwContext echo.Context) error {
-	rId := rwContext.Response().Header().Get("REQUEST_ID")
+	rId := rwContext.Get("REQUEST_ID").(string)
 
-	cookie, err := rwContext.Cookie("session_id")
+	userId := rwContext.Get("user_id").(int)
 
-	if err != nil {
+	if userId == -1 {
 		userD.logger.Debug(
 			zap.String("ID", rId),
-			zap.String("COOKIE", err.Error()),
+			zap.String("COOKIE", errors.CookieExpired.Error()),
 			zap.Int("ANSWER STATUS", http.StatusUnauthorized),
 		)
 
 		return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: errors.CookieExpired.Error()})
 	}
 
-	albums, err := userD.userLogic.GetAlbums(cookie.Value)
-
-	respErrStat := 0
-	switch err {
-	case errors.InvalidCookie:
-		cookie.Expires = time.Now().AddDate(0, 0, -1)
-		rwContext.SetCookie(cookie)
-
-		respErrStat = http.StatusUnauthorized
-	case errors.FailReadFromDB:
-		respErrStat = http.StatusInternalServerError
-	}
+	albums, err := userD.userLogic.GetAlbums(userId)
 
 	if err != nil {
 		userD.logger.Info(
 			zap.String("ID", rId),
 			zap.String("ERROR", err.Error()),
-			zap.Int("ANSWER STATUS", respErrStat),
+			zap.Int("ANSWER STATUS", http.StatusInternalServerError),
 		)
 
-		return rwContext.JSON(respErrStat, models.JsonStruct{Err: err.Error()})
+		return rwContext.JSON(http.StatusInternalServerError, models.JsonStruct{Err: err.Error()})
 	}
 
 	userD.logger.Info(
 		zap.String("ID", rId),
 		zap.Int("ANSWER STATUS", http.StatusOK),
 	)
-	return rwContext.JSON(http.StatusOK, models.JsonStruct{Body: albums})
+	return rwContext.JSON(http.StatusOK, albums)
 }
 
 func (userD UserDeliveryRealisation) GetPhotosFromAlbum(rwContext echo.Context) error {
 
-	uId := rwContext.Response().Header().Get("REQUEST_ID")
+	uId := rwContext.Get("REQUEST_ID").(string)
 
-	cookie, err := rwContext.Cookie("session_id")
+	userId := rwContext.Get("user_id").(int)
 
-	if err != nil {
+	if userId == -1 {
 		userD.logger.Debug(
 			zap.String("ID", uId),
-			zap.String("ERROR", err.Error()),
+			zap.String("ERROR", errors.CookieExpired.Error()),
 			zap.Int("ANSWER STATUS", http.StatusUnauthorized),
 		)
 		return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: errors.CookieExpired.Error()})
@@ -414,24 +377,13 @@ func (userD UserDeliveryRealisation) GetPhotosFromAlbum(rwContext echo.Context) 
 
 	a_id, err := strconv.ParseInt(rwContext.Param("id"), 10, 32)
 
-	photos, err := userD.userLogic.GetPhotosFromAlbum(cookie.Value, int(a_id))
-
-	errRespStatus := 0
-
-	switch err {
-	case errors.InvalidCookie:
-		cookie.Expires = time.Now().AddDate(0, 0, -1)
-		rwContext.SetCookie(cookie)
-		errRespStatus = http.StatusUnauthorized
-	case errors.FailReadFromDB:
-		errRespStatus = http.StatusInternalServerError
-	}
+	photos, err := userD.userLogic.GetPhotosFromAlbum(int(a_id))
 
 	if err != nil {
 		userD.logger.Info(
 			zap.String("ID", uId),
 			zap.String("ERROR", err.Error()),
-			zap.Int("ANSWER STATUS", errRespStatus),
+			zap.Int("ANSWER STATUS", http.StatusConflict),
 		)
 
 		return rwContext.NoContent(http.StatusConflict)
@@ -443,28 +395,29 @@ func (userD UserDeliveryRealisation) GetPhotosFromAlbum(rwContext echo.Context) 
 	)
 
 	if len(photos.Urls) == 0 {
-		return rwContext.JSON(http.StatusNotFound, models.JsonStruct{Body: photos})
+		return rwContext.JSON(http.StatusNotFound, photos)
 	}
 
-	return rwContext.JSON(http.StatusOK, models.JsonStruct{Body: photos})
+	return rwContext.JSON(http.StatusOK, photos)
 }
 
 func (userD UserDeliveryRealisation) CreateAlbum(rwContext echo.Context) error {
-	rId := rwContext.Response().Header().Get("REQUEST_ID")
 
-	cookie, err := rwContext.Cookie("session_id")
+	rId := rwContext.Get("REQUEST_ID").(string)
 
-	if err != nil {
+	userId := rwContext.Get("user_id").(int)
+
+	if userId == -1 {
 		userD.logger.Debug(
 			zap.String("ID", rId),
-			zap.String("ERROR", err.Error()),
+			zap.String("ERROR", errors.CookieExpired.Error()),
 			zap.Int("ANSWER STATUS", http.StatusUnauthorized),
 		)
 		return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: errors.CookieExpired.Error()})
 	}
 	albumData := new(models.AlbumReq)
 
-	err = rwContext.Bind(albumData)
+	err := rwContext.Bind(albumData)
 
 	if err != nil {
 		userD.logger.Debug(
@@ -476,24 +429,13 @@ func (userD UserDeliveryRealisation) CreateAlbum(rwContext echo.Context) error {
 		return rwContext.NoContent(http.StatusInternalServerError)
 	}
 
-	err = userD.userLogic.CreateAlbum(cookie.Value, *albumData)
-
-	errRespStatus := 0
-
-	switch err {
-	case errors.InvalidCookie:
-		cookie.Expires = time.Now().AddDate(0, 0, -1)
-		rwContext.SetCookie(cookie)
-		errRespStatus = http.StatusUnauthorized
-	case errors.FailReadFromDB:
-		errRespStatus = http.StatusInternalServerError
-	}
+	err = userD.userLogic.CreateAlbum(userId, *albumData)
 
 	if err != nil {
 		userD.logger.Info(
 			zap.String("ID", rId),
 			zap.String("ERROR", err.Error()),
-			zap.Int("ANSWER STATUS", errRespStatus),
+			zap.Int("ANSWER STATUS", http.StatusConflict),
 		)
 
 		return rwContext.NoContent(http.StatusConflict)
@@ -508,21 +450,22 @@ func (userD UserDeliveryRealisation) CreateAlbum(rwContext echo.Context) error {
 }
 
 func (userD UserDeliveryRealisation) UploadPhotoToAlbum(rwContext echo.Context) error {
-	rId := rwContext.Response().Header().Get("REQUEST_ID")
 
-	cookie, err := rwContext.Cookie("session_id")
+	rId := rwContext.Get("REQUEST_ID").(string)
 
-	if err != nil {
+	userId := rwContext.Get("user_id").(int)
+
+	if userId == -1 {
 		userD.logger.Debug(
 			zap.String("ID", rId),
-			zap.String("ERROR", err.Error()),
+			zap.String("ERROR", errors.CookieExpired.Error()),
 			zap.Int("ANSWER STATUS", http.StatusUnauthorized),
 		)
 		return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: errors.CookieExpired.Error()})
 	}
 	photoData := new(models.PhotoInAlbum)
 
-	err = rwContext.Bind(photoData)
+	err := rwContext.Bind(photoData)
 
 	if err != nil {
 		userD.logger.Debug(
@@ -534,24 +477,13 @@ func (userD UserDeliveryRealisation) UploadPhotoToAlbum(rwContext echo.Context) 
 		return rwContext.NoContent(http.StatusInternalServerError)
 	}
 
-	err = userD.userLogic.UploadPhotoToAlbum(cookie.Value, *photoData)
-
-	errRespStatus := 0
-
-	switch err {
-	case errors.InvalidCookie:
-		cookie.Expires = time.Now().AddDate(0, 0, -1)
-		rwContext.SetCookie(cookie)
-		errRespStatus = http.StatusUnauthorized
-	case errors.FailReadFromDB:
-		errRespStatus = http.StatusInternalServerError
-	}
+	err = userD.userLogic.UploadPhotoToAlbum(*photoData)
 
 	if err != nil {
 		userD.logger.Info(
 			zap.String("ID", rId),
 			zap.String("ERROR", err.Error()),
-			zap.Int("ANSWER STATUS", errRespStatus),
+			zap.Int("ANSWER STATUS", http.StatusConflict),
 		)
 
 		return rwContext.NoContent(http.StatusConflict)
@@ -571,16 +503,16 @@ func NewUserDelivery(log *zap.SugaredLogger, userRealisation usecase.UserUseCase
 }
 
 func (userD UserDeliveryRealisation) InitHandlers(server *echo.Echo) {
-	server.POST("/api/v1/login", userD.Login) //
-	server.POST("/api/v1/registration", userD.Register) //
+	server.POST("/api/v1/login", userD.Login)
+	server.POST("/api/v1/registration", userD.Register)
 	server.POST("api/v1/album", userD.CreateAlbum)
 	server.POST("api/v1/album/photo", userD.UploadPhotoToAlbum)
 
-	server.PUT("/api/v1/settings", userD.UploadSettings) //
+	server.PUT("/api/v1/settings", userD.UploadSettings)
 
-	server.GET("/api/v1/profile", userD.Profile) //
-	server.GET("/api/v1/settings", userD.GetSettings) //
-	server.GET("/api/v1/user/:id", userD.GetUser) //
+	server.GET("/api/v1/profile", userD.Profile)
+	server.GET("/api/v1/settings", userD.GetSettings)
+	server.GET("/api/v1/user/:id", userD.GetUser)
 	server.GET("api/v1/albums", userD.GetAlbums)
 	server.GET("api/v1/albums/:id", userD.GetPhotosFromAlbum)
 

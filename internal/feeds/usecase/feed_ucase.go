@@ -1,48 +1,33 @@
 package usecase
 
 import (
-	SessRep "main/internal/cookies"
 	"main/internal/feeds"
 	"main/internal/models"
 	"main/internal/tools/errors"
 )
 
 type FeedUseCaseRealisation struct {
-	feedDB    feeds.FeedRepository
-	sessionDB SessRep.CookieRepository
+	feedDB feeds.FeedRepository
 }
 
-func (feedR FeedUseCaseRealisation) Feed(cookie string) ([]models.Post, error) {
+func (feedR FeedUseCaseRealisation) Feed(userId int) ([]models.Post, error) {
 
-	id, err := feedR.sessionDB.GetUserIdByCookie(cookie)
-
-	if err != nil {
-		return nil, errors.InvalidCookie
-	}
-
-	feeds, err := feedR.feedDB.GetUserFeedById(id, 30)
+	feed, err := feedR.feedDB.GetUserFeedById(userId, 30)
 
 	if err != nil {
 		return nil, errors.FailReadFromDB
 	}
 
-	return feeds, nil
+	return feed, nil
 }
 
-func (feedR FeedUseCaseRealisation) CreatePost(cookie string, newPost models.Post) error {
+func (feedR FeedUseCaseRealisation) CreatePost(userId int, ownerLogin string, newPost models.Post) error {
 
-	id, err := feedR.sessionDB.GetUserIdByCookie(cookie)
-
-	if err != nil {
-		return errors.InvalidCookie
-	}
-
-	return feedR.feedDB.CreatePost(id, newPost)
+	return feedR.feedDB.CreatePost(userId, ownerLogin, newPost)
 }
 
-func NewFeedUseCaseRealisation(feedDB feeds.FeedRepository, sesDB SessRep.CookieRepository) FeedUseCaseRealisation {
+func NewFeedUseCaseRealisation(feedDB feeds.FeedRepository) FeedUseCaseRealisation {
 	return FeedUseCaseRealisation{
-		feedDB:    feedDB,
-		sessionDB: sesDB,
+		feedDB: feedDB,
 	}
 }

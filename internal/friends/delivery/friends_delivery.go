@@ -7,18 +7,16 @@ import (
 	"main/internal/models"
 	"main/internal/tools/errors"
 	"net/http"
-	"time"
 )
 
 type FriendDeliveryRealisation struct {
 	friendLogic friends.FriendUseCase
-	logger    *zap.SugaredLogger
+	logger      *zap.SugaredLogger
 }
-
 
 func (userD FriendDeliveryRealisation) FriendList(rwContext echo.Context) error {
 
-	uId := rwContext.Response().Header().Get("REQUEST_ID")
+	uId := rwContext.Get("REQUEST_ID").(string)
 
 	login := rwContext.Param("id")
 
@@ -40,26 +38,25 @@ func (userD FriendDeliveryRealisation) FriendList(rwContext echo.Context) error 
 		zap.Int("ANSWER STATUS", http.StatusOK),
 	)
 
-	return rwContext.JSON(http.StatusOK, models.JsonStruct{Body: friendList})
+	return rwContext.JSON(http.StatusOK, friendList)
 
 }
 
 func (userD FriendDeliveryRealisation) GetMainUserFriends(rwContext echo.Context) error {
 
-	uId := rwContext.Response().Header().Get("REQUEST_ID")
+	uId := rwContext.Get("REQUEST_ID").(string)
 
-	cookie, err := rwContext.Cookie("session_id")
+	userId := rwContext.Get("user_id").(int)
 
-	if err != nil {
-
+	if userId == -1 {
 		userD.logger.Debug(
 			zap.String("ID", uId),
-			zap.String("COOKIE", err.Error()),
+			zap.String("COOKIE", errors.CookieExpired.Error()),
 		)
 		return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: errors.CookieExpired.Error()})
 	}
 
-	login, err := userD.friendLogic.GetUserLoginByCookie(cookie.Value)
+	login, err := userD.friendLogic.GetUserLoginById(userId)
 	friendList, err := userD.friendLogic.GetAllFriends(login)
 
 	if err != nil {
@@ -78,48 +75,34 @@ func (userD FriendDeliveryRealisation) GetMainUserFriends(rwContext echo.Context
 		zap.Int("ANSWER STATUS", http.StatusOK),
 	)
 
-	return rwContext.JSON(http.StatusOK, models.JsonStruct{Body: friendList})
+	return rwContext.JSON(http.StatusOK, friendList)
 
 }
 
 func (userD FriendDeliveryRealisation) AddFriend(rwContext echo.Context) error {
 
-	uId := rwContext.Response().Header().Get("REQUEST_ID")
+	uId := rwContext.Get("REQUEST_ID").(string)
 
-	cookie, err := rwContext.Cookie("session_id")
+	userId := rwContext.Get("user_id").(int)
 
-	if err != nil {
+	if userId == -1 {
 
 		userD.logger.Debug(
 			zap.String("ID", uId),
-			zap.String("ERROR", err.Error()),
+			zap.String("ERROR", errors.CookieExpired.Error()),
 			zap.Int("ANSWER STATUS", http.StatusUnauthorized),
 		)
 		return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: errors.CookieExpired.Error()})
 	}
 
 	friendLogin := rwContext.Param("id")
-	err = userD.friendLogic.AddFriend(cookie.Value, friendLogin)
-
-	errRespStatus := 0
-
-	switch err {
-	case errors.InvalidCookie:
-
-		cookie.Expires = time.Now().AddDate(0, 0, -1)
-		rwContext.SetCookie(cookie)
-
-		errRespStatus = http.StatusUnauthorized
-
-	case errors.FailAddFriend:
-		errRespStatus = http.StatusInternalServerError
-	}
+	err := userD.friendLogic.AddFriend(userId, friendLogin)
 
 	if err != nil {
 		userD.logger.Info(
 			zap.String("ID", uId),
 			zap.String("ERROR", err.Error()),
-			zap.Int("ANSWER STATUS", errRespStatus),
+			zap.Int("ANSWER STATUS", http.StatusConflict),
 		)
 
 		return rwContext.NoContent(http.StatusConflict)
@@ -135,42 +118,28 @@ func (userD FriendDeliveryRealisation) AddFriend(rwContext echo.Context) error {
 
 func (userD FriendDeliveryRealisation) DeleteFriend(rwContext echo.Context) error {
 
-	uId := rwContext.Response().Header().Get("REQUEST_ID")
+	uId := rwContext.Get("REQUEST_ID").(string)
 
-	cookie, err := rwContext.Cookie("session_id")
+	userId := rwContext.Get("user_id").(int)
+	friendLogin := rwContext.Param("id")
 
-	if err != nil {
+	if userId == -1 {
 
 		userD.logger.Debug(
 			zap.String("ID", uId),
-			zap.String("ERROR", err.Error()),
+			zap.String("ERROR", errors.CookieExpired.Error()),
 			zap.Int("ANSWER STATUS", http.StatusUnauthorized),
 		)
 		return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: errors.CookieExpired.Error()})
 	}
 
-	friendLogin := rwContext.Param("id")
-	err = userD.friendLogic.DeleteFriend(cookie.Value, friendLogin)
-
-	errRespStatus := 0
-
-	switch err {
-	case errors.InvalidCookie:
-
-		cookie.Expires = time.Now().AddDate(0, 0, -1)
-		rwContext.SetCookie(cookie)
-
-		errRespStatus = http.StatusUnauthorized
-
-	case errors.FailDeleteFriend:
-		errRespStatus = http.StatusInternalServerError
-	}
+	err := userD.friendLogic.DeleteFriend(userId, friendLogin)
 
 	if err != nil {
 		userD.logger.Info(
 			zap.String("ID", uId),
 			zap.String("ERROR", err.Error()),
-			zap.Int("ANSWER STATUS", errRespStatus),
+			zap.Int("ANSWER STATUS", http.StatusConflict),
 		)
 
 		return rwContext.NoContent(http.StatusConflict)
@@ -189,10 +158,10 @@ func NewUserDelivery(log *zap.SugaredLogger, friendRealisation friends.FriendUse
 }
 
 func (userD FriendDeliveryRealisation) InitHandlers(server *echo.Echo) {
-	server.PUT("/api/v1/user/:id", userD.AddFriend)      //
+	server.PUT("/api/v1/user/:id", userD.AddFriend)
 
-	server.GET("api/v1/friends/:id", userD.FriendList)     //
-	server.GET("api/v1/friends", userD.GetMainUserFriends) //
+	server.GET("api/v1/friends/:id", userD.FriendList)
+	server.GET("api/v1/friends", userD.GetMainUserFriends)
 
-	server.DELETE("/api/v1/user/:id", userD.DeleteFriend)      //
+	server.DELETE("/api/v1/user/:id", userD.DeleteFriend)
 }

@@ -19,11 +19,11 @@ func TestFeedUseCaseRealisation_Feed(t *testing.T) {
 
 	cRepoMock := mock.NewMockCookieRepository(ctrl)
 	fRepoMock := mock.NewMockFeedRepository(ctrl)
-	fRepoTest := NewFeedUseCaseRealisation(fRepoMock,cRepoMock)
+	fRepoTest := NewFeedUseCaseRealisation(fRepoMock, cRepoMock)
 
-	cookieErr := []error{nil, nil, errors.InvalidCookie , errors.InvalidCookie}
-	feedErr := []error{nil , errors.FailReadFromDB , nil , errors.FailReadFromDB}
-	expectErr := []error{nil, errors.FailReadFromDB , errors.InvalidCookie , errors.InvalidCookie}
+	cookieErr := []error{nil, nil, errors.InvalidCookie, errors.InvalidCookie}
+	feedErr := []error{nil, errors.FailReadFromDB, nil, errors.FailReadFromDB}
+	expectErr := []error{nil, errors.FailReadFromDB, errors.InvalidCookie, errors.InvalidCookie}
 	expectValues := [][]models.Post{[]models.Post{models.Post{
 		Id:            0,
 		Text:          "",
@@ -36,24 +36,23 @@ func TestFeedUseCaseRealisation_Feed(t *testing.T) {
 		AuthorSurname: "",
 		AuthorUrl:     "",
 		AuthorPhoto:   "",
-	}}, nil , nil , nil}
+	}}, nil, nil, nil}
 
-	for iter , _ := range(expectValues) {
+	for iter, _ := range expectValues {
 
 		uId := rand.Int()
 		cookieVal := cVal.String()
 
-		cRepoMock.EXPECT().GetUserIdByCookie(cookieVal).Return(uId , cookieErr[iter])
+		cRepoMock.EXPECT().GetUserIdByCookie(cookieVal).Return(uId, cookieErr[iter])
 		if cookieErr[iter] == nil {
-			fRepoMock.EXPECT().GetUserFeedById(uId,30).Return(expectValues[iter] , feedErr[iter])
+			fRepoMock.EXPECT().GetUserFeedById(uId, 30).Return(expectValues[iter], feedErr[iter])
 		}
 
-		eVal , eErr := fRepoTest.Feed(cookieVal)
+		eVal, eErr := fRepoTest.Feed(cookieVal)
 
 		if eErr != expectErr[iter] {
-			t.Error("expected value :" , expectValues[iter] , " got value : ", eVal)
+			t.Error("expected value :", expectValues[iter], " got value : ", eVal)
 		}
-
 
 	}
 
@@ -68,11 +67,11 @@ func TestFeedUseCaseRealisation_CreatePost(t *testing.T) {
 
 	cRepoMock := mock.NewMockCookieRepository(ctrl)
 	fRepoMock := mock.NewMockFeedRepository(ctrl)
-	fRepoTest := NewFeedUseCaseRealisation(fRepoMock,cRepoMock)
+	fRepoTest := NewFeedUseCaseRealisation(fRepoMock, cRepoMock)
 
-	cookieErr := []error{nil, nil, errors.InvalidCookie , errors.InvalidCookie}
-	createErr := []error{nil , errors.FailReadFromDB , nil , errors.FailReadFromDB}
-	expectErr := []error{nil, errors.FailReadFromDB , errors.InvalidCookie , errors.InvalidCookie}
+	cookieErr := []error{nil, nil, errors.InvalidCookie, errors.InvalidCookie}
+	createErr := []error{nil, errors.FailReadFromDB, nil, errors.FailReadFromDB}
+	expectErr := []error{nil, errors.FailReadFromDB, errors.InvalidCookie, errors.InvalidCookie}
 	expectValues := models.Post{
 		Id:            0,
 		Text:          "",
@@ -87,24 +86,22 @@ func TestFeedUseCaseRealisation_CreatePost(t *testing.T) {
 		AuthorPhoto:   "",
 	}
 
-	for iter , _ := range(expectErr) {
+	for iter, _ := range expectErr {
 
 		uId := rand.Int()
 		cookieVal := cVal.String()
 
-		cRepoMock.EXPECT().GetUserIdByCookie(cookieVal).Return(uId , cookieErr[iter])
+		cRepoMock.EXPECT().GetUserIdByCookie(cookieVal).Return(uId, cookieErr[iter])
 		if cookieErr[iter] == nil {
-			fRepoMock.EXPECT().CreatePost(uId,expectValues).Return(createErr[iter])
+			fRepoMock.EXPECT().CreatePost(uId, expectValues).Return(createErr[iter])
 		}
 
 		eErr := fRepoTest.CreatePost(cookieVal, expectValues)
 
 		if eErr != expectErr[iter] {
-			t.Error("expected value :" , expectErr[iter] , " got value : ", eErr)
+			t.Error("expected value :", expectErr[iter], " got value : ", eErr)
 		}
 
-
 	}
-
 
 }

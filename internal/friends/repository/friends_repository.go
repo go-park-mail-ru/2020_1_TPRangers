@@ -104,7 +104,13 @@ func (Data FriendRepositoryRealisation) GetUserFriendsByLogin(login string, frie
 }
 
 func (Data FriendRepositoryRealisation) AddFriend(firstFriend, secondFriend int) error {
-	_, err := Data.friendDB.Exec("INSERT INTO Friends (u_id , f_id) VALUES ($1 , $2) , ($2 , $1)", firstFriend, secondFriend)
+	var err error
+
+	if firstFriend != secondFriend {
+		_, err = Data.friendDB.Exec("INSERT INTO Friends (u_id , f_id) VALUES ($1 , $2) , ($2 , $1)", firstFriend, secondFriend)
+	} else {
+		err = errors.FailAddFriend
+	}
 	return err
 }
 

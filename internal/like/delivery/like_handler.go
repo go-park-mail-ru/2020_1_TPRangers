@@ -1,7 +1,6 @@
 package delivery
 
 import (
-	"fmt"
 	"github.com/labstack/echo"
 	"go.uber.org/zap"
 	"main/internal/like"
@@ -10,7 +9,6 @@ import (
 	"main/internal/tools/errors"
 	"net/http"
 	"strconv"
-	"time"
 )
 
 type LikeDelivery struct {
@@ -24,33 +22,20 @@ func NewLikeDelivery(log *zap.SugaredLogger, likeRealisation usecase.LikesUseRea
 
 func (Like LikeDelivery) LikePhoto(rwContext echo.Context) error {
 	photoId, err := strconv.Atoi(rwContext.Param("id"))
-	uId := rwContext.Response().Header().Get("REQUEST_ID")
+	uId := rwContext.Get("REQUEST_ID").(string)
 
-	cookie , err := rwContext.Cookie("session_id")
+	userId := rwContext.Get("user_id").(int)
 
-	if err != nil {
+	if userId == -1 {
 		Like.logger.Debug(
 			zap.String("ID", uId),
-			zap.String("ERROR", err.Error()),
+			zap.String("ERROR", errors.CookieExpired.Error()),
 			zap.Int("ANSWER STATUS", http.StatusUnauthorized),
 		)
 		return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: errors.CookieExpired.Error()})
 	}
 
-	err = Like.likeLogic.LikePhoto(photoId, cookie.Value)
-
-	if err == errors.InvalidCookie{
-		Like.logger.Debug(
-			zap.String("ID", uId),
-			zap.String("ERROR", err.Error()),
-			zap.Int("ANSWER STATUS", http.StatusUnauthorized),
-		)
-
-		cookie.Expires = time.Now().AddDate(0, 0, -1)
-		rwContext.SetCookie(cookie)
-
-		return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: err.Error()})
-	}
+	err = Like.likeLogic.LikePhoto(photoId, userId)
 
 	if err != nil {
 		Like.logger.Debug(
@@ -72,11 +57,11 @@ func (Like LikeDelivery) LikePhoto(rwContext echo.Context) error {
 
 func (Like LikeDelivery) DislikePhoto(rwContext echo.Context) error {
 	photoId, err := strconv.Atoi(rwContext.Param("id"))
-	uId := rwContext.Response().Header().Get("REQUEST_ID")
+	uId := rwContext.Get("REQUEST_ID").(string)
 
-	cookie , err := rwContext.Cookie("session_id")
+	userId := rwContext.Get("user_id").(int)
 
-	if err != nil {
+	if userId == -1 {
 		Like.logger.Debug(
 			zap.String("ID", uId),
 			zap.String("ERROR", err.Error()),
@@ -85,20 +70,7 @@ func (Like LikeDelivery) DislikePhoto(rwContext echo.Context) error {
 		return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: errors.CookieExpired.Error()})
 	}
 
-	err = Like.likeLogic.DislikePhoto(photoId, cookie.Value)
-
-	if err == errors.InvalidCookie{
-		Like.logger.Debug(
-			zap.String("ID", uId),
-			zap.String("ERROR", err.Error()),
-			zap.Int("ANSWER STATUS", http.StatusUnauthorized),
-		)
-
-		cookie.Expires = time.Now().AddDate(0, 0, -1)
-		rwContext.SetCookie(cookie)
-
-		return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: err.Error()})
-	}
+	err = Like.likeLogic.DislikePhoto(photoId, userId)
 
 	if err != nil {
 		Like.logger.Debug(
@@ -120,13 +92,11 @@ func (Like LikeDelivery) DislikePhoto(rwContext echo.Context) error {
 
 func (Like LikeDelivery) LikePost(rwContext echo.Context) error {
 	postId, err := strconv.Atoi(rwContext.Param("id"))
-	uId := rwContext.Response().Header().Get("REQUEST_ID")
+	uId := rwContext.Get("REQUEST_ID").(string)
 
-	fmt.Println(postId)
+	userId := rwContext.Get("user_id").(int)
 
-	cookie , err := rwContext.Cookie("session_id")
-
-	if err != nil {
+	if userId == -1 {
 		Like.logger.Debug(
 			zap.String("ID", uId),
 			zap.String("ERROR", err.Error()),
@@ -135,20 +105,7 @@ func (Like LikeDelivery) LikePost(rwContext echo.Context) error {
 		return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: errors.CookieExpired.Error()})
 	}
 
-	err = Like.likeLogic.LikePost(postId, cookie.Value)
-
-	if err == errors.InvalidCookie{
-		Like.logger.Debug(
-			zap.String("ID", uId),
-			zap.String("ERROR", err.Error()),
-			zap.Int("ANSWER STATUS", http.StatusUnauthorized),
-		)
-
-		cookie.Expires = time.Now().AddDate(0, 0, -1)
-		rwContext.SetCookie(cookie)
-
-		return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: err.Error()})
-	}
+	err = Like.likeLogic.LikePost(postId, userId)
 
 	if err != nil {
 		Like.logger.Debug(
@@ -170,9 +127,9 @@ func (Like LikeDelivery) LikePost(rwContext echo.Context) error {
 
 func (Like LikeDelivery) DislikePost(rwContext echo.Context) error {
 	photoId, err := strconv.Atoi(rwContext.Param("id"))
-	uId := rwContext.Response().Header().Get("REQUEST_ID")
+	uId := rwContext.Get("REQUEST_ID").(string)
 
-	cookie , err := rwContext.Cookie("session_id")
+	userId := rwContext.Get("user_id").(int)
 
 	if err != nil {
 		Like.logger.Debug(
@@ -183,20 +140,7 @@ func (Like LikeDelivery) DislikePost(rwContext echo.Context) error {
 		return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: errors.CookieExpired.Error()})
 	}
 
-	err = Like.likeLogic.DislikePost(photoId, cookie.Value)
-
-	if err == errors.InvalidCookie{
-		Like.logger.Debug(
-			zap.String("ID", uId),
-			zap.String("ERROR", err.Error()),
-			zap.Int("ANSWER STATUS", http.StatusUnauthorized),
-		)
-
-		cookie.Expires = time.Now().AddDate(0, 0, -1)
-		rwContext.SetCookie(cookie)
-
-		return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: err.Error()})
-	}
+	err = Like.likeLogic.DislikePost(photoId, userId)
 
 	if err != nil {
 		Like.logger.Debug(
@@ -216,11 +160,10 @@ func (Like LikeDelivery) DislikePost(rwContext echo.Context) error {
 
 }
 
+func (Like LikeDelivery) InitHandlers(server *echo.Echo) {
+	server.POST("/api/v1/photo/:id/like", Like.LikePhoto)
+	server.DELETE("/api/v1/photo/:id/like", Like.DislikePhoto)
 
-func (likeD LikeDelivery) InitHandlers(server *echo.Echo) {
-	server.POST("/api/v1/photo/:id/like", likeD.LikePhoto)
-	server.DELETE("/api/v1/photo/:id/like", likeD.DislikePhoto)
-
-	server.POST("/api/v1/post/:id/like", likeD.LikePost)
-	server.DELETE("/api/v1/post/:id/like", likeD.DislikePost)
+	server.POST("/api/v1/post/:id/like", Like.LikePost)
+	server.DELETE("/api/v1/post/:id/like", Like.DislikePost)
 }

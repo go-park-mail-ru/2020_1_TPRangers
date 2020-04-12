@@ -25,8 +25,6 @@ func CryptPassword(pass string, salt []byte) []byte {
 }
 
 func CheckPassword(plainPass string, hashPass []byte) bool {
-
-	fmt.Println(plainPass, hashPass)
 	salt := hashPass[0:8]
 	checkPass := CryptPassword(plainPass, salt)
 	return bytes.Equal(hashPass, checkPass)
@@ -39,41 +37,22 @@ type UserUseCaseRealisation struct {
 	sessionDB Sess.CookieRepository
 }
 
-func (userR UserUseCaseRealisation) GetAlbums(cookie string) ([]models.Album, error) {
-	id, err := userR.sessionDB.GetUserIdByCookie(cookie)
-
-	if err != nil {
-		return nil, errors.InvalidCookie
-	}
-
-	albums, err := userR.userDB.GetAlbums(id)
-
-	fmt.Println(albums)
+func (userR UserUseCaseRealisation) GetAlbums(userId int) ([]models.Album, error) {
+	albums, _ := userR.userDB.GetAlbums(userId)
 
 	return albums, nil
 
 }
 
-func (userR UserUseCaseRealisation) GetPhotosFromAlbum(cookie string, albumID int) (models.Photos, error) {
-	_, err := userR.sessionDB.GetUserIdByCookie(cookie)
-
-	if err != nil {
-		return models.Photos{}, errors.InvalidCookie
-	}
-
-	photos, err := userR.userDB.GetPhotosFromAlbum(albumID)
+func (userR UserUseCaseRealisation) GetPhotosFromAlbum(albumID int) (models.Photos, error) {
+	photos, _ := userR.userDB.GetPhotosFromAlbum(albumID)
 
 	return photos, nil
 }
 
-func (userR UserUseCaseRealisation) CreateAlbum(cookie string, albumData models.AlbumReq) error {
-	uID, err := userR.sessionDB.GetUserIdByCookie(cookie)
+func (userR UserUseCaseRealisation) CreateAlbum(userId int, albumData models.AlbumReq) error {
 
-	if err != nil {
-		return errors.InvalidCookie
-	}
-
-	err = userR.userDB.CreateAlbum(uID, albumData)
+	err := userR.userDB.CreateAlbum(userId, albumData)
 
 	if err != nil {
 		return errors.FailReadFromDB
@@ -82,14 +61,9 @@ func (userR UserUseCaseRealisation) CreateAlbum(cookie string, albumData models.
 	return nil
 }
 
-func (userR UserUseCaseRealisation) UploadPhotoToAlbum(cookie string, photoData models.PhotoInAlbum) error {
-	_, err := userR.sessionDB.GetUserIdByCookie(cookie)
+func (userR UserUseCaseRealisation) UploadPhotoToAlbum(photoData models.PhotoInAlbum) error {
 
-	if err != nil {
-		return errors.InvalidCookie
-	}
-
-	err = userR.userDB.UploadPhotoToAlbum(photoData)
+	err := userR.userDB.UploadPhotoToAlbum(photoData)
 
 	if err != nil {
 		return errors.FailReadFromDB
@@ -98,99 +72,73 @@ func (userR UserUseCaseRealisation) UploadPhotoToAlbum(cookie string, photoData 
 	return nil
 }
 
-func (userR UserUseCaseRealisation) GetUser(userLogin string) (map[string]interface{}, error) {
+func (userR UserUseCaseRealisation) GetOtherUserProfileNotLogged(userLogin string) (models.OtherUserProfileData, error) {
 
-	userData, err := userR.userDB.GetUserProfileSettingsByLogin(userLogin)
+	sendData := new(models.OtherUserProfileData)
+	var err error
+
+	sendData.User, err = userR.userDB.GetUserProfileSettingsByLogin(userLogin)
 
 	if err != nil {
-		return nil, errors.NotExist
+		return *sendData, errors.NotExist
 	}
 
-	sendData := make(map[string]interface{})
+	sendData.Feed, _ = userR.feedDB.GetUserPostsByLogin(userLogin)
+	sendData.Friends, err = userR.friendDB.GetUserFriendsByLogin(userLogin, 6)
 
-	sendData["feed"], _ = userR.feedDB.GetUserPostsByLogin(userLogin)
-	sendData["user"] = userData
-	sendData["friends"], err = userR.friendDB.GetUserFriendsByLogin(userLogin, 6)
-
-	return sendData, err
+	return *sendData, err
 
 }
 
-func (userR UserUseCaseRealisation) GetUserWhileLogged(otherUserLogin string, currentUserCookie string) (map[string]interface{}, error) {
+func (userR UserUseCaseRealisation) GetUserProfileWhileLogged(otherUserLogin string, currentUserId int) (models.OtherUserProfileData, error) {
 
-	userData, err := userR.userDB.GetUserProfileSettingsByLogin(otherUserLogin)
-	id, err := userR.sessionDB.GetUserIdByCookie(currentUserCookie)
+	sendData := new(models.OtherUserProfileData)
+	var err error
+
+	sendData.User, err = userR.userDB.GetUserProfileSettingsByLogin(otherUserLogin)
 
 	if err != nil {
-		return nil, errors.NotExist
+		return *sendData, errors.NotExist
 	}
 
-	sendData := make(map[string]interface{})
+	sendData.Feed, _ = userR.feedDB.GetPostsOfOtherUserWhileLogged(otherUserLogin, currentUserId)
+	sendData.Friends, err = userR.friendDB.GetUserFriendsByLogin(otherUserLogin, 6)
 
-	sendData["feed"], _ = userR.feedDB.GetPostsOfOtherUserWhileLogged(otherUserLogin, id)
-	sendData["user"] = userData
-	sendData["friends"], err = userR.friendDB.GetUserFriendsByLogin(otherUserLogin, 6)
-
-	return sendData, err
+	return *sendData, err
 
 }
 
-func (userR UserUseCaseRealisation) Profile(cookie string) (map[string]interface{}, error) {
+func (userR UserUseCaseRealisation) GetMainUserProfile(userId int) (models.MainUserProfileData, error) {
 
-	id, err := userR.sessionDB.GetUserIdByCookie(cookie)
+	sendData := new(models.MainUserProfileData)
+	var err error
 
-	if err != nil {
-		return nil, errors.InvalidCookie
-	}
+	sendData.User, _ = userR.userDB.GetUserProfileSettingsById(userId)
+	sendData.Friends, err = userR.friendDB.GetUserFriendsById(userId, 6)
+	sendData.Feed, err = userR.feedDB.GetUserPostsById(userId)
 
-	sendData := make(map[string]interface{})
-	sendData["user"], _ = userR.userDB.GetUserProfileSettingsById(id)
-	sendData["friends"], err = userR.friendDB.GetUserFriendsById(id, 6)
-	sendData["feed"], err = userR.feedDB.GetUserPostsById(id)
-
-	return sendData, err
+	return *sendData, err
 }
 
-func (userR UserUseCaseRealisation) GetSettings(cookie string) (map[string]interface{}, error) {
+func (userR UserUseCaseRealisation) GetSettings(userId int) (models.Settings, error) {
 
-	id, err := userR.sessionDB.GetUserIdByCookie(cookie)
-
-	if err != nil {
-		return nil, errors.InvalidCookie
-	}
-
-	sendData := make(map[string]interface{})
-
-	sendData["user"], err = userR.userDB.GetUserProfileSettingsById(id)
+	sendData, err := userR.userDB.GetUserProfileSettingsById(userId)
 
 	if err != nil {
-		return nil, errors.FailReadFromDB
+		return sendData, errors.FailReadFromDB
 	}
 
 	return sendData, nil
 
 }
 
-func (userR UserUseCaseRealisation) UploadSettings(cookie string, newUserSettings models.Settings) (map[string]interface{}, error) {
+func (userR UserUseCaseRealisation) UploadSettings(userId int, newUserSettings models.Settings) (models.Settings, error) {
 
-	id, err := userR.sessionDB.GetUserIdByCookie(cookie)
-
-	if err != nil {
-		return nil, errors.InvalidCookie
-	}
-
-	currentUserData, _ := userR.userDB.GetUserDataById(id)
+	currentUserData, _ := userR.userDB.GetUserDataById(userId)
 
 	fmt.Println(currentUserData)
 
 	jsonData := newUserSettings
-
-	//когда нам будут высылать закэшированные настройки
-	//if userData.Password == "" {
-	//	userData.Password = currentUserData.Password
-	//}
-	//
-	//currentUserData = userData
 
 	if jsonData.Login != "" {
 		currentUserData.Login = jsonData.Login
@@ -234,40 +182,34 @@ func (userR UserUseCaseRealisation) UploadSettings(cookie string, newUserSetting
 
 	fmt.Println(currentUserData)
 
-	err = userR.userDB.UploadSettings(id, currentUserData)
+	err := userR.userDB.UploadSettings(userId, currentUserData)
+
+	sendData := models.Settings{}
 
 	if err != nil {
-		return nil, err
+		return sendData, err
 	}
 
-	sendData := make(map[string]interface{})
-
-	sendData["user"], err = userR.userDB.GetUserProfileSettingsById(id)
+	sendData, err = userR.userDB.GetUserProfileSettingsById(userId)
 
 	return sendData, err
 }
 
-func (userR UserUseCaseRealisation) CheckFriendship(cookie, friendLogin string, answer map[string]interface{}) (map[string]interface{}, error) {
-
-	mainUserId, err := userR.sessionDB.GetUserIdByCookie(cookie)
-
-	if err != nil {
-		return answer, errors.FailReadFromDB
-	}
+func (userR UserUseCaseRealisation) CheckFriendship(mainUserId int, friendLogin string) (bool, error) {
 
 	friendId, err := userR.friendDB.GetFriendIdByLogin(friendLogin)
 
 	if err != nil {
-		return answer, errors.FailReadFromDB
+		return false, errors.FailReadFromDB
 	}
 
-	answer["isFriends"], err = userR.friendDB.CheckFriendship(mainUserId, friendId)
+	friendShipStatus, err := userR.friendDB.CheckFriendship(mainUserId, friendId)
 
 	if err != nil {
-		return answer, errors.FailReadFromDB
+		return false, errors.FailReadFromDB
 	}
 
-	return answer, nil
+	return friendShipStatus, nil
 }
 
 func (userR UserUseCaseRealisation) Login(userData models.Auth, cookieValue string, exprTime time.Duration) error {
@@ -280,7 +222,7 @@ func (userR UserUseCaseRealisation) Login(userData models.Auth, cookieValue stri
 		return errors.WrongLogin
 	}
 
-	if ! CheckPassword(password, dbPassword) {
+	if !CheckPassword(password, dbPassword) {
 		return errors.WrongPassword
 	}
 
@@ -290,9 +232,9 @@ func (userR UserUseCaseRealisation) Login(userData models.Auth, cookieValue stri
 		return errors.WrongLogin
 	}
 
-	userR.sessionDB.AddCookie(id, cookieValue, exprTime)
+	err := userR.sessionDB.AddCookie(id, cookieValue, exprTime)
 
-	return nil
+	return err
 
 }
 
@@ -331,9 +273,9 @@ func (userR UserUseCaseRealisation) Register(userData models.Register, cookieVal
 		return errors.FailReadFromDB
 	}
 
-	userR.sessionDB.AddCookie(id, cookieValue, exprTime)
+	err = userR.sessionDB.AddCookie(id, cookieValue, exprTime)
 
-	return nil
+	return err
 
 }
 
@@ -344,10 +286,9 @@ func (userR UserUseCaseRealisation) Logout(cookie string) error {
 	return err
 }
 
-func (userR UserUseCaseRealisation) GetUserLoginByCookie(cookieValue string) (string, error) {
-	id, _ := userR.sessionDB.GetUserIdByCookie(cookieValue)
+func (userR UserUseCaseRealisation) GetUserLoginByCookie(userId int) (string, error) {
 
-	return userR.userDB.GetUserLoginById(id)
+	return userR.userDB.GetUserLoginById(userId)
 }
 
 func NewUserUseCaseRealisation(userDB UserRep.UserRepositoryRealisation, friendDb FriendRep.FriendRepository, feedDB repository.FeedRepositoryRealisation, sesDB SessRep.CookieRepositoryRealisation) UserUseCaseRealisation {

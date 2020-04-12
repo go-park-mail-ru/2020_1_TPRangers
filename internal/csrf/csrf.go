@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 )
+
 var Tokens *HashToken
 
 func init() {

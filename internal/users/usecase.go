@@ -6,19 +6,18 @@ import (
 )
 
 type UserUseCase interface {
-	GetUser(string) (map[string]interface{}, error)
-	Profile(string) (map[string]interface{}, error)
-	GetSettings(string) (map[string]interface{}, error)
-	UploadSettings(string, models.Settings) (map[string]interface{}, error)
+	GetOtherUserProfileNotLogged(string) (models.OtherUserProfileData, error)
+	GetMainUserProfile(int) (models.MainUserProfileData, error)
+	GetSettings(int) (models.Settings, error)
+	UploadSettings(int, models.Settings) (models.Settings, error)
 	Logout(string) error
 	Login(models.Auth, string, time.Duration) error
 	Register(models.Register, string, time.Duration) error
-	GetAlbums(string) ([]models.Album, error)
-	GetPhotosFromAlbum(string, int) (models.Photos, error)
-	CreateAlbum(string, models.AlbumReq) error
-	UploadPhotoToAlbum(string, models.PhotoInAlbum) error
-	CheckFriendship(string, string, map[string]interface{}) (map[string]interface{}, error)
-	GetUserLoginByCookie(string) (string, error)
-	GetUserWhileLogged(string,string) (map[string]interface{}, error)
+	GetAlbums(int) ([]models.Album, error)
+	GetPhotosFromAlbum(int) (models.Photos, error)
+	CreateAlbum(int, models.AlbumReq) error
+	UploadPhotoToAlbum(models.PhotoInAlbum) error
+	CheckFriendship(int, string) (bool, error)
+	GetUserLoginByCookie(int) (string, error)
+	GetUserProfileWhileLogged(string, int) (models.OtherUserProfileData, error)
 }
-

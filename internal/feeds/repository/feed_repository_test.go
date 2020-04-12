@@ -16,10 +16,9 @@ func TestFeedRepositoryRealisation_GetUserPostsById(t *testing.T) {
 	testCounter := 4
 	rVal := uuid.NewV4()
 
-
 	errs := []error{nil, sql.ErrNoRows, nil, nil}
 
-	for iter := 0 ; iter < testCounter ; iter++ {
+	for iter := 0; iter < testCounter; iter++ {
 		uId := rand.Int()
 		post := models.Post{
 			Id:            rand.Int(),
@@ -39,7 +38,7 @@ func TestFeedRepositoryRealisation_GetUserPostsById(t *testing.T) {
 		if errs[iter] == nil {
 			mock.ExpectQuery(`SELECT P\.post_id,PH\.photo_id,P\.txt_data, P\.posts_likes_count, P\.creation_date,P\.attachments,UPL\.postlike_id,PH\.url,A\.login,A\.name,A\.surname,AP\.url FROM UsersPosts UP INNER JOIN Posts P ON\(P\.post_id\=UP\.post_id\) LEFT JOIN Photos PH ON\(PH\.photo_id\=P\.photo_id\) LEFT JOIN UsersPostsLikes UPL ON\(UPL\.u_id \= \$1 AND P\.post_id \= UPL\.post_id\) LEFT JOIN PostsAuthor PA ON\(PA\.post_id\=P\.post_id\) LEFT JOIN Users A ON\(PA\.u_id\=A\.u_id\) INNER JOIN Photos AP ON\(A\.photo_id\=AP\.photo_id\) WHERE UP\.u_id \= \$1`).
 				WithArgs(uId).
-				WillReturnRows(sqlmock.NewRows([]string{"P.post_id","PH.photo_id","P.txt_data", "P.posts_likes_count", "P.creation_date","P.attachments","UPL.postlike_id","PH.url","A.login","A.name","A.surname","AP.url"}).AddRow(post.Id,post.Photo.Id,post.Text, post.Likes, "&postTime", post.Attachments,2 , post.Photo.Url , post.AuthorUrl, post.AuthorName, post.AuthorSurname, post.AuthorPhoto))
+				WillReturnRows(sqlmock.NewRows([]string{"P.post_id", "PH.photo_id", "P.txt_data", "P.posts_likes_count", "P.creation_date", "P.attachments", "UPL.postlike_id", "PH.url", "A.login", "A.name", "A.surname", "AP.url"}).AddRow(post.Id, post.Photo.Id, post.Text, post.Likes, "&postTime", post.Attachments, 2, post.Photo.Url, post.AuthorUrl, post.AuthorName, post.AuthorSurname, post.AuthorPhoto))
 
 		} else {
 			mock.ExpectQuery(`SELECT P\.post_id,PH\.photo_id,P\.txt_data, P\.posts_likes_count, P\.creation_date,P\.attachments,UPL\.postlike_id,PH\.url,A\.login,A\.name,A\.surname,AP\.url FROM UsersPosts UP INNER JOIN Posts P ON\(P\.post_id\=UP\.post_id\) LEFT JOIN Photos PH ON\(PH\.photo_id\=P\.photo_id\) LEFT JOIN UsersPostsLikes UPL ON\(UPL\.u_id \= \$1 AND P\.post_id \= UPL\.post_id\) LEFT JOIN PostsAuthor PA ON\(PA\.post_id\=P\.post_id\) LEFT JOIN Users A ON\(PA\.u_id\=A\.u_id\) INNER JOIN Photos AP ON\(A\.photo_id\=AP\.photo_id\) WHERE UP\.u_id \= \$1`).
@@ -58,7 +57,7 @@ func TestFeedRepositoryRealisation_GetUserPostsById(t *testing.T) {
 		stmt, err := tx.Prepare("SELECT P.post_id,PH.photo_id,P.txt_data, P.posts_likes_count, P.creation_date,P.attachments,UPL.postlike_id,PH.url,A.login,A.name,A.surname,AP.url FROM UsersPosts UP INNER JOIN Posts P ON(P.post_id=UP.post_id) LEFT JOIN Photos PH ON(PH.photo_id=P.photo_id) LEFT JOIN UsersPostsLikes UPL ON(UPL.u_id = $1 AND P.post_id = UPL.post_id) LEFT JOIN PostsAuthor PA ON(PA.post_id=P.post_id) LEFT JOIN Users A ON(PA.u_id=A.u_id) INNER JOIN Photos AP ON(A.photo_id=AP.photo_id) WHERE UP.u_id = $1")
 		var postTime string
 		var likeId int
-		err = stmt.QueryRow(uId).Scan(&post.Id,&post.Photo.Id,&post.Text, &post.Likes, &postTime, &post.Attachments, &likeId, &post.Photo.Url , &post.AuthorUrl, &post.AuthorName, &post.AuthorSurname, &post.AuthorPhoto)
+		err = stmt.QueryRow(uId).Scan(&post.Id, &post.Photo.Id, &post.Text, &post.Likes, &postTime, &post.Attachments, &likeId, &post.Photo.Url, &post.AuthorUrl, &post.AuthorName, &post.AuthorSurname, &post.AuthorPhoto)
 
 		if err == errs[iter] {
 			err = nil
@@ -72,7 +71,6 @@ func TestFeedRepositoryRealisation_GetUserPostsById(t *testing.T) {
 
 	}
 
-
 }
 
 func TestFeedRepositoryRealisation_GetUserPostsByLogin(t *testing.T) {
@@ -81,10 +79,9 @@ func TestFeedRepositoryRealisation_GetUserPostsByLogin(t *testing.T) {
 	testCounter := 4
 	rVal := uuid.NewV4()
 
-
 	errs := []error{nil, sql.ErrNoRows, nil, nil}
 
-	for iter := 0 ; iter < testCounter ; iter++ {
+	for iter := 0; iter < testCounter; iter++ {
 		uId := rand.Int()
 		login := rVal.String()
 		post := models.Post{
@@ -110,7 +107,7 @@ func TestFeedRepositoryRealisation_GetUserPostsByLogin(t *testing.T) {
 		if errs[iter] == nil {
 			mock.ExpectQuery(`SELECT P\.post_id,PH\.photo_id,P\.txt_data, P\.posts_likes_count, P\.creation_date,P\.attachments,UPL\.postlike_id,PH\.url,A\.login,A\.name,A\.surname,AP\.url FROM UsersPosts UP INNER JOIN Posts P ON\(P\.post_id\=UP\.post_id\) LEFT JOIN Photos PH ON\(PH\.photo_id\=P\.photo_id\) LEFT JOIN UsersPostsLikes UPL ON\(UPL\.u_id \= \$1 AND P\.post_id \= UPL\.post_id\) LEFT JOIN PostsAuthor PA ON\(PA\.post_id\=P\.post_id\) LEFT JOIN Users A ON\(PA\.u_id\=A\.u_id\) INNER JOIN Photos AP ON\(A\.photo_id\=AP\.photo_id\) WHERE UP\.u_id \= \$1`).
 				WithArgs(uId).
-				WillReturnRows(sqlmock.NewRows([]string{"P.post_id","PH.photo_id","P.txt_data", "P.posts_likes_count", "P.creation_date","P.attachments","UPL.postlike_id","PH.url","A.login","A.name","A.surname","AP.url"}).AddRow(post.Id,post.Photo.Id,post.Text, post.Likes, "&postTime", post.Attachments,2 , post.Photo.Url , post.AuthorUrl, post.AuthorName, post.AuthorSurname, post.AuthorPhoto))
+				WillReturnRows(sqlmock.NewRows([]string{"P.post_id", "PH.photo_id", "P.txt_data", "P.posts_likes_count", "P.creation_date", "P.attachments", "UPL.postlike_id", "PH.url", "A.login", "A.name", "A.surname", "AP.url"}).AddRow(post.Id, post.Photo.Id, post.Text, post.Likes, "&postTime", post.Attachments, 2, post.Photo.Url, post.AuthorUrl, post.AuthorName, post.AuthorSurname, post.AuthorPhoto))
 		} else {
 			mock.ExpectQuery(`SELECT P\.post_id,PH\.photo_id,P\.txt_data, P\.posts_likes_count, P\.creation_date,P\.attachments,UPL\.postlike_id,PH\.url,A\.login,A\.name,A\.surname,AP\.url FROM UsersPosts UP INNER JOIN Posts P ON\(P\.post_id\=UP\.post_id\) LEFT JOIN Photos PH ON\(PH\.photo_id\=P\.photo_id\) LEFT JOIN UsersPostsLikes UPL ON\(UPL\.u_id \= \$1 AND P\.post_id \= UPL\.post_id\) LEFT JOIN PostsAuthor PA ON\(PA\.post_id\=P\.post_id\) LEFT JOIN Users A ON\(PA\.u_id\=A\.u_id\) INNER JOIN Photos AP ON\(A\.photo_id\=AP\.photo_id\) WHERE UP\.u_id \= \$1`).
 				WithArgs(uId).WillReturnError(errs[iter])
@@ -124,7 +121,7 @@ func TestFeedRepositoryRealisation_GetUserPostsByLogin(t *testing.T) {
 			return
 		}
 
-		smtId , err := tx.Prepare("SELECT u_id FROM Users WHERE login = $1")
+		smtId, err := tx.Prepare("SELECT u_id FROM Users WHERE login = $1")
 		currentUId := 0
 		smtId.QueryRow(login).Scan(&currentUId)
 
@@ -132,7 +129,7 @@ func TestFeedRepositoryRealisation_GetUserPostsByLogin(t *testing.T) {
 
 		var postTime string
 		var likeId int
-		err = stmt.QueryRow(currentUId).Scan(&post.Id,&post.Photo.Id,&post.Text, &post.Likes, &postTime, &post.Attachments, &likeId, &post.Photo.Url , &post.AuthorUrl, &post.AuthorName, &post.AuthorSurname, &post.AuthorPhoto)
+		err = stmt.QueryRow(currentUId).Scan(&post.Id, &post.Photo.Id, &post.Text, &post.Likes, &postTime, &post.Attachments, &likeId, &post.Photo.Url, &post.AuthorUrl, &post.AuthorName, &post.AuthorSurname, &post.AuthorPhoto)
 
 		if err == errs[iter] {
 			err = nil

@@ -13,8 +13,8 @@ type CookieRepositoryRealisation struct {
 func NewCookieRepositoryRealisation(addr, pass string) CookieRepositoryRealisation {
 	client := redis.NewClient(&redis.Options{
 		Addr:     addr,
-		Password: pass, // no password set
-		DB:       0,    // use default DB
+		Password: pass,
+		DB:       0,
 	})
 
 	return CookieRepositoryRealisation{sessionDB: client}

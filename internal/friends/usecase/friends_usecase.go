@@ -1,14 +1,12 @@
 package usecase
 
 import (
-	Sess "main/internal/cookies"
 	Friend "main/internal/friends"
 	"main/internal/tools/errors"
 )
 
 type FriendUseCaseRealisation struct {
-	friendDB  Friend.FriendRepository
-	sessionDB Sess.CookieRepository
+	friendDB Friend.FriendRepository
 }
 
 func (userR FriendUseCaseRealisation) GetAllFriends(login string) (map[string]interface{}, error) {
@@ -21,17 +19,11 @@ func (userR FriendUseCaseRealisation) GetAllFriends(login string) (map[string]in
 
 }
 
-func (userR FriendUseCaseRealisation) AddFriend(cookie, friendLogin string) error {
-
-	id, err := userR.sessionDB.GetUserIdByCookie(cookie)
-
-	if err != nil {
-		return errors.InvalidCookie
-	}
+func (userR FriendUseCaseRealisation) AddFriend(userId int, friendLogin string) error {
 
 	friendId, _ := userR.friendDB.GetFriendIdByLogin(friendLogin)
 
-	err = userR.friendDB.AddFriend(id, friendId)
+	err := userR.friendDB.AddFriend(userId, friendId)
 
 	if err != nil {
 		return errors.FailAddFriend
@@ -40,34 +32,25 @@ func (userR FriendUseCaseRealisation) AddFriend(cookie, friendLogin string) erro
 	return err
 }
 
-func (userR FriendUseCaseRealisation) DeleteFriend(cookie, friendLogin string) error {
-
-	id, err := userR.sessionDB.GetUserIdByCookie(cookie)
-
-	if err != nil {
-		return errors.InvalidCookie
-	}
+func (userR FriendUseCaseRealisation) DeleteFriend(userId int, friendLogin string) error {
 
 	friendId, _ := userR.friendDB.GetFriendIdByLogin(friendLogin)
 
-	err = userR.friendDB.DeleteFriend(id, friendId)
+	err := userR.friendDB.DeleteFriend(userId, friendId)
 
 	if err != nil {
 		return errors.FailDeleteFriend
 	}
 
-	return err
+	return nil
 }
 
-func (userR FriendUseCaseRealisation) GetUserLoginByCookie(cookieValue string) (string, error) {
-	id, _ := userR.sessionDB.GetUserIdByCookie(cookieValue)
-
-	return userR.friendDB.GetUserLoginById(id)
+func (userR FriendUseCaseRealisation) GetUserLoginById(userId int) (string, error) {
+	return userR.friendDB.GetUserLoginById(userId)
 }
 
-func NewFriendUseCaseRealisation(userDB Friend.FriendRepository, sesDB Sess.CookieRepository) FriendUseCaseRealisation {
+func NewFriendUseCaseRealisation(userDB Friend.FriendRepository) FriendUseCaseRealisation {
 	return FriendUseCaseRealisation{
-		friendDB:  userDB,
-		sessionDB: sesDB,
+		friendDB: userDB,
 	}
 }

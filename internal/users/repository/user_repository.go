@@ -18,8 +18,7 @@ func NewUserRepositoryRealisation(db *sql.DB) UserRepositoryRealisation {
 
 }
 
-
-func (Data UserRepositoryRealisation ) UploadPhotoToAlbum(photoData models.PhotoInAlbum) error {
+func (Data UserRepositoryRealisation) UploadPhotoToAlbum(photoData models.PhotoInAlbum) error {
 	albumId, err := strconv.ParseInt(photoData.AlbumID, 10, 32)
 
 	album := Data.userDB.QueryRow("select name from albums where album_id = $1;", int(albumId))
@@ -34,7 +33,7 @@ func (Data UserRepositoryRealisation ) UploadPhotoToAlbum(photoData models.Photo
 		return errors.FailSendToDB
 	}
 	var photoID int
-	row := Data.userDB.QueryRow("select photo_id from photos where url = $1",photoData.Url)
+	row := Data.userDB.QueryRow("select photo_id from photos where url = $1", photoData.Url)
 	err = row.Scan(&photoID)
 	if err != nil {
 		return errors.FailReadToVar
@@ -47,10 +46,10 @@ func (Data UserRepositoryRealisation ) UploadPhotoToAlbum(photoData models.Photo
 	return nil
 }
 
-func (Data UserRepositoryRealisation ) CreateAlbum(u_id int, albumData models.AlbumReq) error {
+func (Data UserRepositoryRealisation) CreateAlbum(u_id int, albumData models.AlbumReq) error {
 
-	_, err := Data.userDB.Exec("INSERT INTO albums (name, u_id) VALUES ($1, $2);", albumData.Name,  u_id)
-	if err != nil{
+	_, err := Data.userDB.Exec("INSERT INTO albums (name, u_id) VALUES ($1, $2);", albumData.Name, u_id)
+	if err != nil {
 		return errors.FailSendToDB
 	}
 
@@ -58,7 +57,7 @@ func (Data UserRepositoryRealisation ) CreateAlbum(u_id int, albumData models.Al
 
 }
 
-func (Data UserRepositoryRealisation ) GetPhotosFromAlbum(albumID int) (models.Photos, error) {
+func (Data UserRepositoryRealisation) GetPhotosFromAlbum(albumID int) (models.Photos, error) {
 	photosAlb := models.Photos{}
 	phUrls := make([]string, 0, 20)
 	rows, err := Data.userDB.Query("select photo_url from photosfromalbums where album_id = $1;", albumID)
@@ -90,7 +89,7 @@ func (Data UserRepositoryRealisation ) GetPhotosFromAlbum(albumID int) (models.P
 }
 
 func (Data UserRepositoryRealisation) GetAlbums(id int) ([]models.Album, error) {
-	albums := make([]models.Album,0, 20)
+	albums := make([]models.Album, 0, 20)
 
 	rows, err := Data.userDB.Query("select DISTINCT ON (a.album_id) a.name, a.album_id, ph.photo_url from albums AS a LEFT JOIN photosfromalbums AS ph ON ph.album_id = a.album_id WHERE a.u_id = $1;", id)
 	defer rows.Close()
@@ -130,7 +129,7 @@ func (Data UserRepositoryRealisation) GetUserLoginById(userId int) (string, erro
 
 	err := row.Scan(&login)
 
-	return login , err
+	return login, err
 }
 
 func (Data UserRepositoryRealisation) GetIdByLogin(login string) (int, error) {
@@ -153,7 +152,7 @@ func (Data UserRepositoryRealisation) GetUserDataById(id int) (models.User, erro
 	user := models.User{}
 
 	row := Data.userDB.QueryRow("SELECT login, phone, mail, name, surname, birthdate , photo_id , password FROM users WHERE u_id=$1", id)
-	errScan := row.Scan(&user.Login, &user.Telephone, &user.Email, &user.Name, &user.Surname, &user.Date, &user.Photo , &user.CryptedPassword)
+	errScan := row.Scan(&user.Login, &user.Telephone, &user.Email, &user.Name, &user.Surname, &user.Date, &user.Photo, &user.CryptedPassword)
 
 	if errScan != nil {
 		fmt.Println("ERROR", errScan.Error())
@@ -243,12 +242,10 @@ func (Data UserRepositoryRealisation) GetDefaultProfilePhotoId() (int, error) {
 }
 
 func (Data UserRepositoryRealisation) AddNewUser(userData models.User) error {
-	//result
 	_, err := Data.userDB.Exec("insert into Users (phone, mail, name, surname, password, birthdate, login, photo_id) values ($1, $2, $3, $4, $5::bytea, $6, $7, $8)", userData.Telephone, userData.Email, userData.Name, userData.Surname, userData.CryptedPassword, userData.Date, userData.Login, userData.Photo)
 	if err != nil {
 		return errors.FailSendToDB
 	}
-	//fmt.Println(result)
 	return nil
 }
 
@@ -261,5 +258,3 @@ func (Data UserRepositoryRealisation) IsUserExist(email string) (bool, error) {
 	}
 	return true, nil
 }
-
-
