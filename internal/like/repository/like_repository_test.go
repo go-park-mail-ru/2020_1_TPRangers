@@ -33,7 +33,7 @@ func TestLikeRepositoryRealisation_LikePhoto(t *testing.T) {
 		tx, err := db.Begin()
 
 		db.Begin()
-		err = lRepo.LikePhoto(photoId,uId)
+		err = lRepo.LikePhoto(photoId, uId)
 
 		if err != errs[iter] {
 			t.Error(err)
@@ -70,14 +70,14 @@ func TestLikeRepositoryRealisation_DislikePhoto(t *testing.T) {
 		if errs[iter] == nil {
 			mock.ExpectQuery(`DELETE FROM UsersPhotosLikes WHERE u_id \= \$1 AND photo_id \= \$2 RETURNING photolike_id`).WithArgs(uId, photoId).WillReturnRows(sqlmock.NewRows([]string{"photolike_id"}).AddRow(likeId))
 		} else {
-			mock.ExpectQuery(`DELETE FROM UsersPhotosLikes WHERE u_id \= \$1 AND photo_id \= \$2 RETURNING photolike_id`).WithArgs(uId, photoId).WillReturnError( errs[iter] )
+			mock.ExpectQuery(`DELETE FROM UsersPhotosLikes WHERE u_id \= \$1 AND photo_id \= \$2 RETURNING photolike_id`).WithArgs(uId, photoId).WillReturnError(errs[iter])
 		}
 		mock.ExpectCommit()
 
 		tx, err := db.Begin()
 
 		db.Begin()
-		err = lRepo.DislikePhoto(photoId,uId)
+		err = lRepo.DislikePhoto(photoId, uId)
 
 		if err != errs[iter] {
 			t.Error(err)
@@ -102,7 +102,6 @@ func TestLikeRepositoryRealisation_LikePost(t *testing.T) {
 	testCounter := 3
 	lRepo := NewLikeRepositoryRealisation(db)
 
-
 	errs := []error{nil, sql.ErrNoRows, nil}
 
 	for iter := 0; iter < testCounter; iter++ {
@@ -122,7 +121,7 @@ func TestLikeRepositoryRealisation_LikePost(t *testing.T) {
 		tx, err := db.Begin()
 
 		db.Begin()
-		err = lRepo.LikePost(postId,uId)
+		err = lRepo.LikePost(postId, uId)
 
 		if err != errs[iter] {
 			t.Error(err)
@@ -166,7 +165,7 @@ func TestLikeRepositoryRealisation_DislikePost(t *testing.T) {
 		tx, err := db.Begin()
 
 		db.Begin()
-		err = lRepo.DislikePost(postId,uId)
+		err = lRepo.DislikePost(postId, uId)
 
 		if err != errs[iter] {
 			t.Error(err)

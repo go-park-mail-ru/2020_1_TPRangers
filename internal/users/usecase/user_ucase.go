@@ -191,7 +191,7 @@ func (userR UserUseCaseRealisation) Login(userData models.Auth, cookieValue stri
 	}
 
 	if !CheckPassword(password, dbPassword) {
-		return "",errors.WrongPassword
+		return "", errors.WrongPassword
 	}
 
 	id, existErr := userR.userDB.GetIdByEmail(login)

@@ -17,8 +17,6 @@ import (
 
 func TestLikeDelivery_LikePhoto(t *testing.T) {
 
-
-
 	ctrl := gomock.NewController(t)
 	lUseCase := mock_like.NewMockUseCaseLike(ctrl)
 	config := zap.NewDevelopmentConfig()
@@ -26,35 +24,34 @@ func TestLikeDelivery_LikePhoto(t *testing.T) {
 	prLogger, _ := config.Build()
 	logger := prLogger.Sugar()
 	defer prLogger.Sync()
-	likeD := NewLikeDelivery(logger,lUseCase)
+	likeD := NewLikeDelivery(logger, lUseCase)
 
-	usersId := []int{-1,1,2}
-	likeBehaviour := []error{nil,nil,errors.New("smth happend")}
-	expectedBehaviour := []int{http.StatusUnauthorized,http.StatusOK, http.StatusConflict}
+	usersId := []int{-1, 1, 2}
+	likeBehaviour := []error{nil, nil, errors.New("smth happend")}
+	expectedBehaviour := []int{http.StatusUnauthorized, http.StatusOK, http.StatusConflict}
 
-	for iter , _ := range(usersId) {
+	for iter, _ := range usersId {
 		photoId := rand.Int()
 
 		if expectedBehaviour[iter] != http.StatusUnauthorized {
-			lUseCase.EXPECT().LikePhoto(photoId,usersId[iter]).Return(likeBehaviour[iter])
+			lUseCase.EXPECT().LikePhoto(photoId, usersId[iter]).Return(likeBehaviour[iter])
 		}
 
-		e:= echo.New()
-		req:= httptest.NewRequest(echo.POST, "/", nil)
+		e := echo.New()
+		req := httptest.NewRequest(echo.POST, "/", nil)
 		rec := httptest.NewRecorder()
-		c := e.NewContext(req,rec)
+		c := e.NewContext(req, rec)
 		c.SetPath("api/v1/photo/:id/like")
 		c.SetParamNames("id")
 		c.SetParamValues(strconv.Itoa(photoId))
-		c.Set("REQUEST_ID" , "123")
-		c.Set("user_id" , usersId[iter])
+		c.Set("REQUEST_ID", "123")
+		c.Set("user_id", usersId[iter])
 
 		if assert.NoError(t, likeD.LikePhoto(c)) {
 			assert.Equal(t, expectedBehaviour[iter], rec.Code)
 		}
 
 	}
-
 
 }
 
@@ -67,28 +64,28 @@ func TestLikeDelivery_DislikePhoto(t *testing.T) {
 	prLogger, _ := config.Build()
 	logger := prLogger.Sugar()
 	defer prLogger.Sync()
-	likeD := NewLikeDelivery(logger,lUseCase)
+	likeD := NewLikeDelivery(logger, lUseCase)
 
-	usersId := []int{-1,1,2}
-	likeBehaviour := []error{nil,nil,errors.New("smth happend")}
-	expectedBehaviour := []int{http.StatusUnauthorized,http.StatusOK, http.StatusConflict}
+	usersId := []int{-1, 1, 2}
+	likeBehaviour := []error{nil, nil, errors.New("smth happend")}
+	expectedBehaviour := []int{http.StatusUnauthorized, http.StatusOK, http.StatusConflict}
 
-	for iter , _ := range(usersId) {
+	for iter, _ := range usersId {
 		photoId := rand.Int()
 
 		if expectedBehaviour[iter] != http.StatusUnauthorized {
-			lUseCase.EXPECT().DislikePhoto(photoId,usersId[iter]).Return(likeBehaviour[iter])
+			lUseCase.EXPECT().DislikePhoto(photoId, usersId[iter]).Return(likeBehaviour[iter])
 		}
 
-		e:= echo.New()
-		req:= httptest.NewRequest(echo.DELETE, "/", nil)
+		e := echo.New()
+		req := httptest.NewRequest(echo.DELETE, "/", nil)
 		rec := httptest.NewRecorder()
-		c := e.NewContext(req,rec)
+		c := e.NewContext(req, rec)
 		c.SetPath("api/v1/photo/:id/like")
 		c.SetParamNames("id")
 		c.SetParamValues(strconv.Itoa(photoId))
-		c.Set("REQUEST_ID" , "123")
-		c.Set("user_id" , usersId[iter])
+		c.Set("REQUEST_ID", "123")
+		c.Set("user_id", usersId[iter])
 
 		if assert.NoError(t, likeD.DislikePhoto(c)) {
 			assert.Equal(t, expectedBehaviour[iter], rec.Code)
@@ -96,12 +93,9 @@ func TestLikeDelivery_DislikePhoto(t *testing.T) {
 
 	}
 
-
 }
 
 func TestLikeDelivery_LikePost(t *testing.T) {
-
-
 
 	ctrl := gomock.NewController(t)
 	lUseCase := mock_like.NewMockUseCaseLike(ctrl)
@@ -110,35 +104,34 @@ func TestLikeDelivery_LikePost(t *testing.T) {
 	prLogger, _ := config.Build()
 	logger := prLogger.Sugar()
 	defer prLogger.Sync()
-	likeD := NewLikeDelivery(logger,lUseCase)
+	likeD := NewLikeDelivery(logger, lUseCase)
 
-	usersId := []int{-1,1,2}
-	likeBehaviour := []error{nil,nil,errors.New("smth happend")}
-	expectedBehaviour := []int{http.StatusUnauthorized,http.StatusOK, http.StatusConflict}
+	usersId := []int{-1, 1, 2}
+	likeBehaviour := []error{nil, nil, errors.New("smth happend")}
+	expectedBehaviour := []int{http.StatusUnauthorized, http.StatusOK, http.StatusConflict}
 
-	for iter , _ := range(usersId) {
+	for iter, _ := range usersId {
 		postId := rand.Int()
 
 		if expectedBehaviour[iter] != http.StatusUnauthorized {
-			lUseCase.EXPECT().LikePost(postId,usersId[iter]).Return(likeBehaviour[iter])
+			lUseCase.EXPECT().LikePost(postId, usersId[iter]).Return(likeBehaviour[iter])
 		}
 
-		e:= echo.New()
-		req:= httptest.NewRequest(echo.POST, "/", nil)
+		e := echo.New()
+		req := httptest.NewRequest(echo.POST, "/", nil)
 		rec := httptest.NewRecorder()
-		c := e.NewContext(req,rec)
+		c := e.NewContext(req, rec)
 		c.SetPath("api/v1/post/:id/like")
 		c.SetParamNames("id")
 		c.SetParamValues(strconv.Itoa(postId))
-		c.Set("REQUEST_ID" , "123")
-		c.Set("user_id" , usersId[iter])
+		c.Set("REQUEST_ID", "123")
+		c.Set("user_id", usersId[iter])
 
 		if assert.NoError(t, likeD.LikePost(c)) {
 			assert.Equal(t, expectedBehaviour[iter], rec.Code)
 		}
 
 	}
-
 
 }
 
@@ -151,34 +144,33 @@ func TestLikeDelivery_DislikePost(t *testing.T) {
 	prLogger, _ := config.Build()
 	logger := prLogger.Sugar()
 	defer prLogger.Sync()
-	likeD := NewLikeDelivery(logger,lUseCase)
+	likeD := NewLikeDelivery(logger, lUseCase)
 
-	usersId := []int{-1,1,2}
-	likeBehaviour := []error{nil,nil,errors.New("smth happend")}
-	expectedBehaviour := []int{http.StatusUnauthorized,http.StatusOK, http.StatusConflict}
+	usersId := []int{-1, 1, 2}
+	likeBehaviour := []error{nil, nil, errors.New("smth happend")}
+	expectedBehaviour := []int{http.StatusUnauthorized, http.StatusOK, http.StatusConflict}
 
-	for iter , _ := range(usersId) {
+	for iter, _ := range usersId {
 		postId := rand.Int()
 
 		if expectedBehaviour[iter] != http.StatusUnauthorized {
-			lUseCase.EXPECT().DislikePost(postId,usersId[iter]).Return(likeBehaviour[iter])
+			lUseCase.EXPECT().DislikePost(postId, usersId[iter]).Return(likeBehaviour[iter])
 		}
 
-		e:= echo.New()
-		req:= httptest.NewRequest(echo.DELETE, "/", nil)
+		e := echo.New()
+		req := httptest.NewRequest(echo.DELETE, "/", nil)
 		rec := httptest.NewRecorder()
-		c := e.NewContext(req,rec)
+		c := e.NewContext(req, rec)
 		c.SetPath("api/v1/post/:id/like")
 		c.SetParamNames("id")
 		c.SetParamValues(strconv.Itoa(postId))
-		c.Set("REQUEST_ID" , "123")
-		c.Set("user_id" , usersId[iter])
+		c.Set("REQUEST_ID", "123")
+		c.Set("user_id", usersId[iter])
 
 		if assert.NoError(t, likeD.DislikePost(c)) {
 			assert.Equal(t, expectedBehaviour[iter], rec.Code)
 		}
 
 	}
-
 
 }
