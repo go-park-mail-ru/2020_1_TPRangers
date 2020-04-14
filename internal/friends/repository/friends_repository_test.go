@@ -285,15 +285,12 @@ func TestFriendRepositoryRealisation_GetUserFriendsById(t *testing.T) {
 			if errs[iter] != nil {
 				mock.ExpectQuery(`  select name, url , login from friends F inner join users U on F\.f_id\=U\.u_id INNER JOIN photos P ON U\.photo_id\=P\.photo_id WHERE F\.u_id\=\$1 GROUP BY F\.u_id,F\.f_id,U\.u_id,P\.photo_id LIMIT \$2   `).WithArgs(id, rowsNumber).WillReturnRows(sqlmock.NewRows([]string{"name", "url", "login"}).AddRow(nil, "2", "3").AddRow(1, "2", "3").RowError(1, errs[iter]))
 			} else {
-				userFriends := make([]models.FriendLandingInfo, 6, 6)
+
 				row := sqlmock.NewRows([]string{"name", "url", "login"})
 				for i := 0; i < rowsNumber; i++ {
 					uniqueLogin := uuid.NewV4()
 					uniqueUrl := uuid.NewV4()
 					uniqueName := uuid.NewV4()
-					userFriends[i].Login = uniqueLogin.String()
-					userFriends[i].Photo = uniqueUrl.String()
-					userFriends[i].Name = uniqueName.String()
 
 					row.AddRow(uniqueName, uniqueUrl, uniqueLogin)
 				}
@@ -368,6 +365,65 @@ func TestFriendRepositoryRealisation_GetUserFriendsByLogin(t *testing.T) {
 
 		tx, err := db.Begin()
 		_, err = fRepo.GetUserFriendsByLogin(login.String(), rowsNumber)
+
+		if err != expectBehaviour[iter] {
+			t.Error(iter, err, expectBehaviour[iter])
+			return
+		}
+		err = nil
+
+		switch err {
+		case nil:
+			err = tx.Commit()
+		default:
+			tx.Rollback()
+		}
+	}
+
+}
+
+func TestFriendRepositoryRealisation_GetAllFriendsByLogin(t *testing.T) {
+	db, mock, _ := sqlmock.New()
+	fRepo := NewFriendRepositoryRealisation(db)
+	rowsNumber := 6
+
+	errs := []error{nil, _error.FailReadFromDB, _error.FailReadToVar, nil}
+	expectBehaviour := []error{nil, _error.FailReadFromDB, _error.FailReadToVar, _error.FailReadFromDB}
+	userErr := []error{nil, nil, nil, errors.New("some err")}
+
+	for iter, _ := range errs {
+		login := uuid.NewV4()
+		id := rand.Int()
+		mock.ExpectBegin()
+		if userErr[iter] == nil {
+			mock.ExpectQuery(`   SELECT users\.u_id FROM users WHERE users\.login \= \$1    `).WithArgs(login.String()).WillReturnRows(sqlmock.NewRows([]string{"u_id"}).AddRow(id))
+
+			if errs[iter] == _error.FailReadFromDB {
+				mock.ExpectQuery(`  select name, url , login , surname from friends F inner join users U on F\.f_id\=U\.u_id INNER JOIN photos P ON U\.photo_id\=P\.photo_id WHERE F\.u_id\=\$1 GROUP BY F\.u_id,F\.f_id,U\.u_id,P\.photo_id  `).WithArgs(id).WillReturnError(errs[iter])
+			} else {
+				if errs[iter] != nil {
+					mock.ExpectQuery(`  select name, url , login , surname from friends F inner join users U on F\.f_id\=U\.u_id INNER JOIN photos P ON U\.photo_id\=P\.photo_id WHERE F\.u_id\=\$1 GROUP BY F\.u_id,F\.f_id,U\.u_id,P\.photo_id  `).WithArgs(id).WillReturnRows(sqlmock.NewRows([]string{"name", "url", "login", "surname"}).AddRow(nil, "2", "3", "4").AddRow(1, "2", "3", "4").RowError(1, errs[iter]))
+				} else {
+					row := sqlmock.NewRows([]string{"name", "url", "login", "surname"})
+					for i := 0; i < rowsNumber; i++ {
+						uniqueLogin := uuid.NewV4()
+						uniqueUrl := uuid.NewV4()
+						uniqueName := uuid.NewV4()
+						uniqueSurname := uuid.NewV4()
+
+						row.AddRow(uniqueName.String(), uniqueUrl.String(), uniqueLogin.String(), uniqueSurname.String())
+					}
+
+					mock.ExpectQuery(`  select name, url , login , surname from friends F inner join users U on F\.f_id\=U\.u_id INNER JOIN photos P ON U\.photo_id\=P\.photo_id WHERE F\.u_id\=\$1 GROUP BY F\.u_id,F\.f_id,U\.u_id,P\.photo_id  `).WithArgs(id).WillReturnRows(row)
+				}
+				mock.ExpectCommit()
+			}
+		} else {
+			mock.ExpectQuery(` SELECT users\.u_id FROM users WHERE users\.login \= \$1 `).WithArgs(login.String()).WillReturnError(userErr[iter])
+		}
+
+		tx, err := db.Begin()
+		_, err = fRepo.GetAllFriendsByLogin(login.String())
 
 		if err != expectBehaviour[iter] {
 			t.Error(iter, err, expectBehaviour[iter])

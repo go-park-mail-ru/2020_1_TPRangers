@@ -2,6 +2,7 @@ package usecase
 
 import (
 	Friend "main/internal/friends"
+	"main/internal/models"
 	"main/internal/tools/errors"
 )
 
@@ -9,11 +10,9 @@ type FriendUseCaseRealisation struct {
 	friendDB Friend.FriendRepository
 }
 
-func (userR FriendUseCaseRealisation) GetAllFriends(login string) (map[string]interface{}, error) {
+func (userR FriendUseCaseRealisation) GetAllFriends(login string) ([]models.FriendLandingInfo, error) {
 
-	sendData := make(map[string]interface{})
-	var err error
-	sendData["friends"], err = userR.friendDB.GetAllFriendsByLogin(login)
+	sendData, err := userR.friendDB.GetAllFriendsByLogin(login)
 
 	return sendData, err
 
@@ -21,9 +20,13 @@ func (userR FriendUseCaseRealisation) GetAllFriends(login string) (map[string]in
 
 func (userR FriendUseCaseRealisation) AddFriend(userId int, friendLogin string) error {
 
-	friendId, _ := userR.friendDB.GetFriendIdByLogin(friendLogin)
+	friendId, err := userR.friendDB.GetFriendIdByLogin(friendLogin)
 
-	err := userR.friendDB.AddFriend(userId, friendId)
+	if err != nil {
+		return errors.FailAddFriend
+	}
+
+	err = userR.friendDB.AddFriend(userId, friendId)
 
 	if err != nil {
 		return errors.FailAddFriend
@@ -34,9 +37,13 @@ func (userR FriendUseCaseRealisation) AddFriend(userId int, friendLogin string) 
 
 func (userR FriendUseCaseRealisation) DeleteFriend(userId int, friendLogin string) error {
 
-	friendId, _ := userR.friendDB.GetFriendIdByLogin(friendLogin)
+	friendId, err := userR.friendDB.GetFriendIdByLogin(friendLogin)
 
-	err := userR.friendDB.DeleteFriend(userId, friendId)
+	if err != nil {
+		return errors.FailDeleteFriend
+	}
+
+	err = userR.friendDB.DeleteFriend(userId, friendId)
 
 	if err != nil {
 		return errors.FailDeleteFriend

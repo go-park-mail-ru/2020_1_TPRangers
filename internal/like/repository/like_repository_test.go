@@ -32,7 +32,6 @@ func TestLikeRepositoryRealisation_LikePhoto(t *testing.T) {
 
 		tx, err := db.Begin()
 
-		db.Begin()
 		err = lRepo.LikePhoto(photoId, uId)
 
 		if err != errs[iter] {
@@ -76,7 +75,6 @@ func TestLikeRepositoryRealisation_DislikePhoto(t *testing.T) {
 
 		tx, err := db.Begin()
 
-		db.Begin()
 		err = lRepo.DislikePhoto(photoId, uId)
 
 		if err != errs[iter] {
@@ -120,7 +118,6 @@ func TestLikeRepositoryRealisation_LikePost(t *testing.T) {
 
 		tx, err := db.Begin()
 
-		db.Begin()
 		err = lRepo.LikePost(postId, uId)
 
 		if err != errs[iter] {
@@ -164,7 +161,6 @@ func TestLikeRepositoryRealisation_DislikePost(t *testing.T) {
 
 		tx, err := db.Begin()
 
-		db.Begin()
 		err = lRepo.DislikePost(postId, uId)
 
 		if err != errs[iter] {
