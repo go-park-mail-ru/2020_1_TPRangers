@@ -91,7 +91,7 @@ func NewRequestHandler(db *sql.DB, sessionDB repositoryCookie.CookieRepositoryRe
 	photoH := deliveryPhoto.NewPhotoDelivery(logger, photoUseCase)
 	albumH := deliveryAlbum.NewAlbumDelivery(logger, albumUseCase)
 
-	friendH := deliveryFriends.NewUserDelivery(logger, friendsUse)
+	friendH := deliveryFriends.NewFriendDelivery(logger, friendsUse)
 
 	api := &(RequestHandlers{
 

@@ -10,7 +10,6 @@ import (
 // Source: main/internal/users (interfaces: UserRepository)
 // Package mock_users is a generated GoMock package.
 
-
 // MockUserRepository is a mock of UserRepository interface
 type MockUserRepository struct {
 	ctrl     *gomock.Controller
