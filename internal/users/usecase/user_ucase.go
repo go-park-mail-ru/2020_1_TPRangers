@@ -4,19 +4,15 @@ import (
 	"bytes"
 	"crypto/rand"
 	"crypto/sha1"
-	"fmt"
 	uuid "github.com/satori/go.uuid"
 	"golang.org/x/crypto/pbkdf2"
 	Sess "main/internal/cookies"
-	SessRep "main/internal/cookies/repository"
 	"main/internal/csrf"
 	FeedRep "main/internal/feeds"
-	"main/internal/feeds/repository"
 	FriendRep "main/internal/friends"
 	"main/internal/models"
 	"main/internal/tools/errors"
 	"main/internal/users"
-	UserRep "main/internal/users/repository"
 	"time"
 )
 
@@ -102,8 +98,6 @@ func (userR UserUseCaseRealisation) UploadSettings(userId int, newUserSettings m
 
 	currentUserData, _ := userR.userDB.GetUserDataById(userId)
 
-	fmt.Println(currentUserData)
-
 	jsonData := newUserSettings
 
 	if jsonData.Login != "" {
@@ -131,9 +125,7 @@ func (userR UserUseCaseRealisation) UploadSettings(userId int, newUserSettings m
 
 	if jsonData.Photo != "" {
 
-		fmt.Println(jsonData.Photo)
-
-		photoId, _ := userR.userDB.UploadPhoto(jsonData.Photo)
+		photoId, _ := userR.userDB.UploadProfilePhoto(jsonData.Photo)
 
 		currentUserData.Photo = photoId
 	}
@@ -145,8 +137,6 @@ func (userR UserUseCaseRealisation) UploadSettings(userId int, newUserSettings m
 	if jsonData.Email != "" {
 		currentUserData.Email = jsonData.Email
 	}
-
-	fmt.Println(currentUserData)
 
 	err := userR.userDB.UploadSettings(userId, currentUserData)
 
@@ -191,7 +181,7 @@ func (userR UserUseCaseRealisation) Login(userData models.Auth, cookieValue stri
 	}
 
 	if !CheckPassword(password, dbPassword) {
-		return "",errors.WrongPassword
+		return "", errors.WrongPassword
 	}
 
 	id, existErr := userR.userDB.GetIdByEmail(login)
@@ -255,11 +245,10 @@ func (userR UserUseCaseRealisation) Logout(cookie string) error {
 }
 
 func (userR UserUseCaseRealisation) GetUserLoginByCookie(userId int) (string, error) {
-
 	return userR.userDB.GetUserLoginById(userId)
 }
 
-func NewUserUseCaseRealisation(userDB UserRep.UserRepositoryRealisation, friendDb FriendRep.FriendRepository, feedDB repository.FeedRepositoryRealisation, sesDB SessRep.CookieRepositoryRealisation) UserUseCaseRealisation {
+func NewUserUseCaseRealisation(userDB users.UserRepository, friendDb FriendRep.FriendRepository, feedDB FeedRep.FeedRepository, sesDB Sess.CookieRepository) UserUseCaseRealisation {
 	return UserUseCaseRealisation{
 		userDB:    userDB,
 		feedDB:    feedDB,

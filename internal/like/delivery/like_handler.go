@@ -4,7 +4,6 @@ import (
 	"github.com/labstack/echo"
 	"go.uber.org/zap"
 	"main/internal/like"
-	"main/internal/like/usecase"
 	"main/internal/models"
 	"main/internal/tools/errors"
 	"net/http"
@@ -16,7 +15,7 @@ type LikeDelivery struct {
 	logger    *zap.SugaredLogger
 }
 
-func NewLikeDelivery(log *zap.SugaredLogger, likeRealisation usecase.LikesUseRealisation) LikeDelivery {
+func NewLikeDelivery(log *zap.SugaredLogger, likeRealisation like.UseCaseLike) LikeDelivery {
 	return LikeDelivery{likeLogic: likeRealisation, logger: log}
 }
 
@@ -64,7 +63,7 @@ func (Like LikeDelivery) DislikePhoto(rwContext echo.Context) error {
 	if userId == -1 {
 		Like.logger.Debug(
 			zap.String("ID", uId),
-			zap.String("ERROR", err.Error()),
+			zap.String("ERROR", errors.CookieExpired.Error()),
 			zap.Int("ANSWER STATUS", http.StatusUnauthorized),
 		)
 		return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: errors.CookieExpired.Error()})
@@ -99,7 +98,7 @@ func (Like LikeDelivery) LikePost(rwContext echo.Context) error {
 	if userId == -1 {
 		Like.logger.Debug(
 			zap.String("ID", uId),
-			zap.String("ERROR", err.Error()),
+			zap.String("ERROR", errors.CookieExpired.Error()),
 			zap.Int("ANSWER STATUS", http.StatusUnauthorized),
 		)
 		return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: errors.CookieExpired.Error()})
@@ -126,21 +125,21 @@ func (Like LikeDelivery) LikePost(rwContext echo.Context) error {
 }
 
 func (Like LikeDelivery) DislikePost(rwContext echo.Context) error {
-	photoId, err := strconv.Atoi(rwContext.Param("id"))
+	postId, err := strconv.Atoi(rwContext.Param("id"))
 	uId := rwContext.Get("REQUEST_ID").(string)
 
 	userId := rwContext.Get("user_id").(int)
 
-	if err != nil {
+	if userId == -1 {
 		Like.logger.Debug(
 			zap.String("ID", uId),
-			zap.String("ERROR", err.Error()),
+			zap.String("ERROR", errors.CookieExpired.Error()),
 			zap.Int("ANSWER STATUS", http.StatusUnauthorized),
 		)
 		return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: errors.CookieExpired.Error()})
 	}
 
-	err = Like.likeLogic.DislikePost(photoId, userId)
+	err = Like.likeLogic.DislikePost(postId, userId)
 
 	if err != nil {
 		Like.logger.Debug(

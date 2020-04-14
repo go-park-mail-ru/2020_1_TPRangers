@@ -2,7 +2,6 @@ package repository
 
 import (
 	"database/sql"
-	"fmt"
 	_ "github.com/lib/pq"
 	"main/internal/models"
 	"main/internal/tools/errors"
@@ -28,18 +27,16 @@ func (Data UserRepositoryRealisation) GetUserLoginById(userId int) (string, erro
 
 func (Data UserRepositoryRealisation) GetIdByLogin(login string) (int, error) {
 
-	var i *int
+	var id *int
 
 	row := Data.userDB.QueryRow("select users.u_id from users where users.login = $1", login)
 
-	err := row.Scan(&i)
+	err := row.Scan(&id)
 	if err != nil {
-		fmt.Println(err.Error())
-
 		return 0, err
 	}
 
-	return *i, err
+	return *id, err
 }
 
 func (Data UserRepositoryRealisation) GetUserDataById(id int) (models.User, error) {
@@ -49,7 +46,6 @@ func (Data UserRepositoryRealisation) GetUserDataById(id int) (models.User, erro
 	errScan := row.Scan(&user.Login, &user.Telephone, &user.Email, &user.Name, &user.Surname, &user.Date, &user.Photo, &user.CryptedPassword)
 
 	if errScan != nil {
-		fmt.Println("ERROR", errScan.Error())
 		return models.User{}, errors.FailReadToVar
 	}
 
@@ -76,7 +72,7 @@ func (Data UserRepositoryRealisation) UploadSettings(id int, currentUserData mod
 	return nil
 }
 
-func (Data UserRepositoryRealisation) UploadPhoto(photoUrl string) (int, error) {
+func (Data UserRepositoryRealisation) UploadProfilePhoto(photoUrl string) (int, error) {
 
 	row := Data.userDB.QueryRow("INSERT INTO photos (url, photos_likes_count) VALUES ($1 , 0) RETURNING photo_id", photoUrl)
 	var photo_id int
@@ -90,7 +86,6 @@ func (Data UserRepositoryRealisation) GetUserProfileSettingsByLogin(login string
 
 	row := Data.userDB.QueryRow("SELECT U.login, U.phone, U.mail, U.name, U.surname, U.birthdate , P.url FROM users U INNER JOIN photos P USING (photo_id) WHERE U.login=$1 GROUP BY U.login, U.phone, U.mail, U.name, U.surname, U.birthdate , P.url", login)
 	errScan := row.Scan(&user.Login, &user.Telephone, &user.Email, &user.Name, &user.Surname, &user.Date, &user.Photo)
-
 	return user, errScan
 }
 
@@ -99,8 +94,6 @@ func (Data UserRepositoryRealisation) GetUserProfileSettingsById(id int) (models
 
 	row := Data.userDB.QueryRow("SELECT U.login, U.phone, U.mail, U.name, U.surname, U.birthdate , P.url FROM users U INNER JOIN photos P USING (photo_id) WHERE U.u_id=$1 GROUP BY U.login, U.phone, U.mail, U.name, U.surname, U.birthdate , P.url", id)
 	errScan := row.Scan(&user.Login, &user.Telephone, &user.Email, &user.Name, &user.Surname, &user.Date, &user.Photo)
-	fmt.Println(user)
-	fmt.Println(errScan)
 
 	return user, errScan
 }

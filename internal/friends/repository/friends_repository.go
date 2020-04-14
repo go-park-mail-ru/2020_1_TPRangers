@@ -2,7 +2,6 @@ package repository
 
 import (
 	"database/sql"
-	"fmt"
 	_ "github.com/lib/pq"
 	"main/internal/models"
 	"main/internal/tools/errors"
@@ -31,20 +30,21 @@ func (Data FriendRepositoryRealisation) GetUserFriendsById(id, friendsCount int)
 
 	row, err := Data.friendDB.Query("select name, url , login from friends F inner join users U on F.f_id=U.u_id INNER JOIN photos P ON U.photo_id=P.photo_id "+
 		"WHERE F.u_id=$1 GROUP BY F.u_id,F.f_id,U.u_id,P.photo_id LIMIT $2", id, friendsCount)
-	defer row.Close()
+	defer func() {
+		if row != nil {
+			row.Close()
+		}
+	}()
 
 	if err != nil {
 		return nil, errors.FailReadFromDB
 	}
-
 	for row.Next() {
 
 		var friendInfo models.FriendLandingInfo
 
 		err = row.Scan(&friendInfo.Name, &friendInfo.Photo, &friendInfo.Login)
-
 		if err != nil {
-			fmt.Println(err)
 			return nil, errors.FailReadToVar
 		}
 
@@ -66,8 +66,11 @@ func (Data FriendRepositoryRealisation) GetAllFriendsByLogin(login string) ([]mo
 
 	row, err := Data.friendDB.Query("select name, url , login , surname from friends F inner join users U on F.f_id=U.u_id INNER JOIN photos P ON U.photo_id=P.photo_id "+
 		"WHERE F.u_id=$1 GROUP BY F.u_id,F.f_id,U.u_id,P.photo_id", id)
-	defer row.Close()
-
+	defer func() {
+		if row != nil {
+			row.Close()
+		}
+	}()
 	if err != nil {
 		return nil, errors.FailReadFromDB
 	}
@@ -79,15 +82,12 @@ func (Data FriendRepositoryRealisation) GetAllFriendsByLogin(login string) ([]mo
 		err = row.Scan(&friendInfo.Name, &friendInfo.Photo, &friendInfo.Login, &friendInfo.Surname)
 
 		if err != nil {
-			fmt.Println(err)
 			return nil, errors.FailReadToVar
 		}
 
 		userFriends = append(userFriends, friendInfo)
 
 	}
-
-	fmt.Println(userFriends)
 
 	return userFriends, nil
 }
@@ -133,12 +133,10 @@ func (Data FriendRepositoryRealisation) GetIdByLogin(login string) (int, error) 
 
 	var i *int
 
-	row := Data.friendDB.QueryRow("select users.u_id from users where users.login = $1", login)
+	row := Data.friendDB.QueryRow("SELECT users.u_id FROM users WHERE users.login = $1", login)
 
 	err := row.Scan(&i)
 	if err != nil {
-		fmt.Println(err.Error())
-
 		return 0, err
 	}
 
