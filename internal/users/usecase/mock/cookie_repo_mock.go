@@ -75,4 +75,3 @@ func (mr *MockCookieRepositoryMockRecorder) GetUserIdByCookie(arg0 interface{}) 
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserIdByCookie", reflect.TypeOf((*MockCookieRepository)(nil).GetUserIdByCookie), arg0)
 }
-

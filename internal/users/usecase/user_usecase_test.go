@@ -98,13 +98,13 @@ func TestUserUseCaseRealisation_UploadSettings(t *testing.T) {
 		}
 
 		newUploadModel := models.User{
-			Login:           "222",
-			Telephone:       "123",
-			Email:           "123",
-			Name:            "123",
-			Surname:         "123",
-			Date:            "123",
-			Photo:           4,
+			Login:     "222",
+			Telephone: "123",
+			Email:     "123",
+			Name:      "123",
+			Surname:   "123",
+			Date:      "123",
+			Photo:     4,
 		}
 
 		newUserModel := models.Settings{
@@ -132,7 +132,7 @@ func TestUserUseCaseRealisation_UploadSettings(t *testing.T) {
 		uUseMock.EXPECT().UploadSettings(uId, newUploadModel).Return(settingsErr[iter])
 
 		if newUserModel.Photo != "" {
-			uUseMock.EXPECT().UploadProfilePhoto(newUserModel.Photo).Return(4 , nil)
+			uUseMock.EXPECT().UploadProfilePhoto(newUserModel.Photo).Return(4, nil)
 		}
 
 		if settingsErr[iter] == nil {
@@ -157,14 +157,14 @@ func TestUserUseCaseRealisation_GetUserLoginByCookie(t *testing.T) {
 	errs := []error{nil, _error.FailReadFromDB}
 	expectBehaviour := []error{nil, _error.FailReadFromDB}
 
-	for iter , _ := range expectBehaviour {
+	for iter, _ := range expectBehaviour {
 		uId := rand.Int()
 		login := uuid.NewV4()
 
-		uUseMock.EXPECT().GetUserLoginById(uId).Return(login.String() , errs[iter])
+		uUseMock.EXPECT().GetUserLoginById(uId).Return(login.String(), errs[iter])
 
-		if currLog , err := uTest.GetUserLoginByCookie(uId) ; !( currLog == login.String() && err == expectBehaviour[iter]){
-			t.Error(iter , currLog , login.String() , err , expectBehaviour[iter])
+		if currLog, err := uTest.GetUserLoginByCookie(uId); !(currLog == login.String() && err == expectBehaviour[iter]) {
+			t.Error(iter, currLog, login.String(), err, expectBehaviour[iter])
 		}
 	}
 }
