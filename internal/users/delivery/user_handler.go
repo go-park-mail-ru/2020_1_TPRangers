@@ -129,6 +129,13 @@ func (userD UserDeliveryRealisation) UploadSettings(rwContext echo.Context) erro
 
 	uId := rwContext.Get("REQUEST_ID").(string)
 
+	//cookie, err := rwContext.Cookie("session_id")
+
+	//token := rwContext.Request().Header.Get("X-CSRF-Token")
+	//
+	//res, err := csrf.Tokens.Check( cookie.Value,  token)
+	//fmt.Print(res)
+
 	userId := rwContext.Get("user_id").(int)
 
 	if userId == -1 {
