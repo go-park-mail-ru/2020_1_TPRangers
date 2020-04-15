@@ -5,8 +5,11 @@ import (
 	uuid "github.com/satori/go.uuid"
 	"go.uber.org/zap"
 	"main/internal/cookies"
+	"main/internal/csrf"
 	"main/internal/models"
+	"main/internal/tools/errors"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -25,9 +28,12 @@ func (mh MiddlewareHandler) SetMiddleware(server *echo.Echo) {
 
 	logFunc := mh.AccessLog()
 	authFunc := mh.CheckAuthentication()
+	csrfFunc := mh.CSRF()
 
 	server.Use(authFunc)
 	server.Use(logFunc)
+	server.Use(csrfFunc)
+
 }
 
 func (mh MiddlewareHandler) SetCorsMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
@@ -35,7 +41,7 @@ func (mh MiddlewareHandler) SetCorsMiddleware(next echo.HandlerFunc) echo.Handle
 
 		c.Response().Header().Set("Access-Control-Allow-Origin", "https://social-hub.ru")
 		c.Response().Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS, PUT, DELETE, POST")
-		c.Response().Header().Set("Access-Control-Allow-Headers", "Origin, X-Login, Set-Cookie, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, csrf-token, Authorization")
+		c.Response().Header().Set("Access-Control-Allow-Headers", "Origin, X-Login, Set-Cookie, Content-Type, Content-Length, Accept-Encoding, X-Csrf-Token, csrf-token, Authorization")
 		c.Response().Header().Set("Access-Control-Allow-Credentials", "true")
 		c.Response().Header().Set("Vary", "Cookie")
 
@@ -115,6 +121,45 @@ func (mh MiddlewareHandler) CheckAuthentication() echo.MiddlewareFunc {
 
 			return next(rwContext)
 
+		}
+	}
+}
+
+func (mh MiddlewareHandler) CSRF() echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc{
+		return func(rwContext echo.Context) error {
+			cookie, err := rwContext.Cookie("session_id")
+			userId, err := mh.sessions.GetUserIdByCookie(cookie.Value)
+			if rwContext.Request().RequestURI == "/api/v1/login" || rwContext.Request().RequestURI == "/api/v1/registration"{
+				token, _ := csrf.Tokens.Create(cookie.Value,  900 + time.Now().Unix()) // 900 с = 15 минут
+				rwContext.Response().Header().Set("X-Csrf-Token", token)
+				return nil
+			}
+			if err != nil {
+				mh.logger.Debug(
+					zap.String("ID", strconv.Itoa(userId)),
+					zap.String("COOKIE", errors.CookieExpired.Error()),
+					zap.Int("ANSWER STATUS", http.StatusUnauthorized),
+				)
+
+				return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: errors.CookieExpired.Error()})
+			}
+			tokenReq := rwContext.Request().Header.Get("X-CSRF-Token")
+
+			isValidCsrf, err := csrf.Tokens.Check(cookie.Value, tokenReq)
+
+			if err != nil {
+				return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: errors.CookieExpired.Error()})
+			}
+
+
+			if isValidCsrf == false {
+				token, _ := csrf.Tokens.Create(cookie.Value,  900 + time.Now().Unix()) // 900 с = 15 минут
+				rwContext.Response().Header().Set("X-Csrf-Token", token)
+				return rwContext.JSON(http.StatusForbidden, models.JsonStruct{Err: errors.CookieExpired.Error()})
+			}
+
+			return nil
 		}
 	}
 }

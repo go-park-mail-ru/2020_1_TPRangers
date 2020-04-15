@@ -19,4 +19,6 @@ var (
 	FailAddFriend    = errors.New("Ошибка при добавлении друга")
 	FailDeleteFriend = errors.New("Ошибка при удалении друга")
 	AlbumDoesntExist = errors.New("Такого альбома не существует")
+	CsrfExprired 	 = errors.New("Время токена истекло")
+	InvalidCsrf		 = errors.New("Неверный токен")
 )

@@ -5,8 +5,10 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"main/internal/tools/errors"
 	"strconv"
 	"strings"
+	"time"
 )
 
 var Tokens *HashToken
@@ -23,15 +25,15 @@ func NewHMACHashToken(secret string) (*HashToken, error) {
 	return &HashToken{Secret: []byte(secret)}, nil
 }
 
-func (tk *HashToken) Create(userID string, cookie string, tokenExpTime int64) (string, error) {
+func (tk *HashToken) Create( cookie string, tokenExpTime int64) (string, error) {
 	h := hmac.New(sha256.New, []byte(tk.Secret))
-	data := fmt.Sprintf("%s:%s:%d", userID, cookie, tokenExpTime)
+	data := fmt.Sprintf("%s:%d", cookie, tokenExpTime)
 	h.Write([]byte(data))
 	token := hex.EncodeToString(h.Sum(nil)) + ":" + strconv.FormatInt(tokenExpTime, 10)
 	return token, nil
 }
-
-func (tk *HashToken) Check(userLogin string, cookie string, inputToken string) (bool, error) {
+//isOK?
+func (tk *HashToken) Check(cookie string, inputToken string) (bool, error) {
 	tokenData := strings.Split(inputToken, ":")
 	if len(tokenData) != 2 {
 		return false, fmt.Errorf("bad token data")
@@ -42,16 +44,17 @@ func (tk *HashToken) Check(userLogin string, cookie string, inputToken string) (
 		return false, fmt.Errorf("error token exp operation")
 	}
 
-	//if tokenExp < time.Now().Unix() {
-	//	return false, fmt.Errorf("token expired")
-	//}
+	if tokenExp < time.Now().Unix() {
+		return false, errors.CookieExpired
+	}
 
 	h := hmac.New(sha256.New, []byte(tk.Secret))
-	data := fmt.Sprintf("%s:%s:%d", userLogin, cookie, tokenExp)
+	data := fmt.Sprintf("%s:%d",  cookie, tokenExp)
 	h.Write([]byte(data))
 	expectedMAC := h.Sum(nil)
 	messageMAC, err := hex.DecodeString(tokenData[0])
 	if err != nil {
+		fmt.Print("Error csrf in hex decode")
 		return false, fmt.Errorf("can't hex decode token")
 	}
 
