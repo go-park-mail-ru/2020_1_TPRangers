@@ -4,6 +4,7 @@ import (
 	"github.com/labstack/echo"
 	uuid "github.com/satori/go.uuid"
 	"go.uber.org/zap"
+	"main/internal/csrf"
 	"main/internal/models"
 	"main/internal/tools/errors"
 	"main/internal/users"
@@ -507,6 +508,18 @@ func (userD UserDeliveryRealisation) UploadPhotoToAlbum(rwContext echo.Context) 
 
 }
 
+func (userD UserDeliveryRealisation) GetCsrf(rwContext echo.Context) error {
+
+	cookie, err := rwContext.Cookie("session_id")
+	if err != nil {
+		return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: errors.CookieExpired.Error()})
+	}
+	token, _ := csrf.Tokens.Create(cookie.Value,  900 + time.Now().Unix()) // 900 с = 15 минут
+	csrf := models.Csrf{}
+	csrf.Token = token
+	return rwContext.JSON(http.StatusOK, models.JsonStruct{Body: csrf})
+}
+
 func NewUserDelivery(log *zap.SugaredLogger, userRealisation usecase.UserUseCaseRealisation) UserDeliveryRealisation {
 	return UserDeliveryRealisation{userLogic: userRealisation, logger: log}
 }
@@ -524,6 +537,7 @@ func (userD UserDeliveryRealisation) InitHandlers(server *echo.Echo) {
 	server.GET("/api/v1/user/:id", userD.GetUser)
 	server.GET("api/v1/albums", userD.GetAlbums)
 	server.GET("api/v1/albums/:id", userD.GetPhotosFromAlbum)
+	server.GET("api/v1/csrf", userD.GetCsrf)
 
 	server.DELETE("/api/v1/login", userD.Logout)
 

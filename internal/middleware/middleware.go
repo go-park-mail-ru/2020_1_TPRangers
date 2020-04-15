@@ -33,7 +33,6 @@ func (mh MiddlewareHandler) SetMiddleware(server *echo.Echo) {
 	server.Use(authFunc)
 	server.Use(logFunc)
 	server.Use(csrfFunc)
-
 }
 
 func (mh MiddlewareHandler) SetCorsMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
@@ -128,38 +127,30 @@ func (mh MiddlewareHandler) CheckAuthentication() echo.MiddlewareFunc {
 func (mh MiddlewareHandler) CSRF() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc{
 		return func(rwContext echo.Context) error {
-			cookie, err := rwContext.Cookie("session_id")
-			userId, err := mh.sessions.GetUserIdByCookie(cookie.Value)
-			if rwContext.Request().RequestURI == "/api/v1/login" || rwContext.Request().RequestURI == "/api/v1/registration"{
-				token, _ := csrf.Tokens.Create(cookie.Value,  900 + time.Now().Unix()) // 900 с = 15 минут
-				rwContext.Response().Header().Set("X-Csrf-Token", token)
-				return nil
+			if rwContext.Request().RequestURI == "/api/v1/settings" || rwContext.Request().Method == "PUT" {
+				cookie, err := rwContext.Cookie("session_id")
+				if err != nil {
+					mh.logger.Debug(
+						zap.String("COOKIE", errors.CookieExpired.Error()),
+						zap.Int("ANSWER STATUS", http.StatusUnauthorized),
+					)
+
+					return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: errors.CookieExpired.Error()})
+				}
+
+				tokenReq := rwContext.Request().Header.Get("X-CSRF-Token")
+
+				isValidCsrf, err := csrf.Tokens.Check(cookie.Value, tokenReq)
+
+				if err != nil {
+					return rwContext.JSON(http.StatusForbidden, models.JsonStruct{Err: errors.CookieExpired.Error()})
+				}
+
+				if isValidCsrf == false {
+					return rwContext.JSON(http.StatusForbidden, models.JsonStruct{Err: errors.CookieExpired.Error()})
+				}
 			}
-			if err != nil {
-				mh.logger.Debug(
-					zap.String("ID", strconv.Itoa(userId)),
-					zap.String("COOKIE", errors.CookieExpired.Error()),
-					zap.Int("ANSWER STATUS", http.StatusUnauthorized),
-				)
-
-				return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: errors.CookieExpired.Error()})
-			}
-			tokenReq := rwContext.Request().Header.Get("X-CSRF-Token")
-
-			isValidCsrf, err := csrf.Tokens.Check(cookie.Value, tokenReq)
-
-			if err != nil {
-				return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: errors.CookieExpired.Error()})
-			}
-
-
-			if isValidCsrf == false {
-				token, _ := csrf.Tokens.Create(cookie.Value,  900 + time.Now().Unix()) // 900 с = 15 минут
-				rwContext.Response().Header().Set("X-Csrf-Token", token)
-				return rwContext.JSON(http.StatusForbidden, models.JsonStruct{Err: errors.CookieExpired.Error()})
-			}
-
-			return nil
+			return next(rwContext)
 		}
 	}
 }
