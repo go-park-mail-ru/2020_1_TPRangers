@@ -7,7 +7,7 @@ import (
 	uuid "github.com/satori/go.uuid"
 	"golang.org/x/crypto/pbkdf2"
 	Sess "main/internal/cookies"
-	"main/internal/csrf"
+	SessRep "main/internal/cookies/repository"
 	FeedRep "main/internal/feeds"
 	FriendRep "main/internal/friends"
 	"main/internal/models"
@@ -170,8 +170,10 @@ func (userR UserUseCaseRealisation) CheckFriendship(mainUserId int, friendLogin 
 
 func (userR UserUseCaseRealisation) Login(userData models.Auth, cookieValue string, exprTime time.Duration) (string, error) {
 	login := userData.Login
+  
+	//token, _ := csrf.Tokens.Create(cookieValue,  900 + time.Now().Unix())
 
-	token, _ := csrf.Tokens.Create(login, cookieValue, 999999)
+
 
 	password := userData.Password
 	dbPassword, existErr := userR.userDB.GetPassword(login)
@@ -191,8 +193,12 @@ func (userR UserUseCaseRealisation) Login(userData models.Auth, cookieValue stri
 	}
 
 	err := userR.sessionDB.AddCookie(id, cookieValue, exprTime)
+	if err != nil {
+		return "", errors.FailSendToDB
+	}
 
-	return token, err
+	return "", nil
+
 
 }
 
