@@ -1,9 +1,10 @@
 package usecase
 
 import (
+	errors2 "errors"
 	"github.com/golang/mock/gomock"
 	uuid "github.com/satori/go.uuid"
-	"main/internal/friends/usecase/mock"
+	mock "main/internal/friends/usecase/mock"
 	"main/internal/models"
 	"main/internal/tools/errors"
 	"math/rand"
@@ -16,9 +17,8 @@ func TestFriendUseCaseRealisation_GetAllFriends(t *testing.T) {
 
 	ctrl := gomock.NewController(t)
 	fRepoMock := mock.NewMockFriendRepository(ctrl)
-	cRepoMock := mock.NewMockCookieRepository(ctrl)
 
-	fTest := NewFriendUseCaseRealisation(fRepoMock, cRepoMock)
+	fTest := NewFriendUseCaseRealisation(fRepoMock)
 
 	errs := []error{nil, errors.FailReadFromDB}
 
@@ -37,7 +37,7 @@ func TestFriendUseCaseRealisation_GetAllFriends(t *testing.T) {
 
 		val, err := fTest.GetAllFriends(randLogin)
 
-		if val["friends"].([]models.FriendLandingInfo)[0] != retVal[0] && err != errs[iter] {
+		if val[0] != retVal[0] && err != errs[iter] {
 			t.Error("got : ", err, val, " expected :", retVal[iter], errs[iter])
 		}
 	}
@@ -49,29 +49,26 @@ func TestFriendUseCaseRealisation_AddFriend(t *testing.T) {
 
 	ctrl := gomock.NewController(t)
 	fRepoMock := mock.NewMockFriendRepository(ctrl)
-	cRepoMock := mock.NewMockCookieRepository(ctrl)
 
-	fTest := NewFriendUseCaseRealisation(fRepoMock, cRepoMock)
+	fTest := NewFriendUseCaseRealisation(fRepoMock)
 
-	cookieErr := []error{nil, nil, errors.InvalidCookie}
+	friendErr := []error{nil, nil, errors.InvalidCookie}
 	addErr := []error{nil, errors.FailAddFriend, nil}
-	expectErr := []error{nil, errors.FailAddFriend, errors.InvalidCookie}
+	expectErr := []error{nil, errors.FailAddFriend, errors.FailAddFriend}
 
 	for iter, _ := range expectErr {
 
-		cookie := uVal.String()
 		friendLogin := uVal.String()
 		uId := rand.Int()
 		fId := rand.Int()
 
-		cRepoMock.EXPECT().GetUserIdByCookie(cookie).Return(uId, cookieErr[iter])
-
-		if cookieErr[iter] == nil {
+		if friendErr[iter] == nil {
 			fRepoMock.EXPECT().AddFriend(uId, fId).Return(addErr[iter])
-			fRepoMock.EXPECT().GetFriendIdByLogin(friendLogin).Return(fId, nil)
-		}
 
-		if fTest.AddFriend(cookie, friendLogin) != expectErr[iter] {
+		}
+		fRepoMock.EXPECT().GetFriendIdByLogin(friendLogin).Return(fId, friendErr[iter])
+
+		if fTest.AddFriend(uId, friendLogin) != expectErr[iter] {
 			t.Error("expected :", expectErr[iter], "  iter :", iter)
 		}
 	}
@@ -83,30 +80,26 @@ func TestFriendUseCaseRealisation_DeleteFriend(t *testing.T) {
 
 	ctrl := gomock.NewController(t)
 	fRepoMock := mock.NewMockFriendRepository(ctrl)
-	cRepoMock := mock.NewMockCookieRepository(ctrl)
 
-	fTest := NewFriendUseCaseRealisation(fRepoMock, cRepoMock)
+	fTest := NewFriendUseCaseRealisation(fRepoMock)
 
-	cookieErr := []error{nil, nil, errors.InvalidCookie}
-	addErr := []error{nil, errors.FailDeleteFriend, nil}
-	expectErr := []error{nil, errors.FailDeleteFriend, errors.InvalidCookie}
+	friendErr := []error{nil, nil, errors.InvalidCookie}
+	deleteErr := []error{nil, errors.FailDeleteFriend, nil}
+	expectErr := []error{nil, errors.FailDeleteFriend, errors.FailDeleteFriend}
 
 	for iter, _ := range expectErr {
 
-		cookie := uVal.String()
 		friendLogin := uVal.String()
 		uId := rand.Int()
 		fId := rand.Int()
 
-		cRepoMock.EXPECT().GetUserIdByCookie(cookie).Return(uId, cookieErr[iter])
-
-		if cookieErr[iter] == nil {
-			fRepoMock.EXPECT().DeleteFriend(uId, fId).Return(addErr[iter])
-			fRepoMock.EXPECT().GetFriendIdByLogin(friendLogin).Return(fId, nil)
+		if friendErr[iter] == nil {
+			fRepoMock.EXPECT().DeleteFriend(uId, fId).Return(deleteErr[iter])
 		}
+		fRepoMock.EXPECT().GetFriendIdByLogin(friendLogin).Return(fId, friendErr[iter])
 
-		if fTest.DeleteFriend(cookie, friendLogin) != expectErr[iter] {
-			t.Error("expected :", expectErr[iter], "  iter :", iter)
+		if err := fTest.DeleteFriend(uId, friendLogin); err != expectErr[iter] {
+			t.Error("expected :", expectErr[iter], "  iter :", iter, err)
 		}
 	}
 }
@@ -117,25 +110,20 @@ func TestFriendUseCaseRealisation_GetUserLoginByCookie(t *testing.T) {
 
 	ctrl := gomock.NewController(t)
 	fRepoMock := mock.NewMockFriendRepository(ctrl)
-	cRepoMock := mock.NewMockCookieRepository(ctrl)
 
-	fTest := NewFriendUseCaseRealisation(fRepoMock, cRepoMock)
+	fTest := NewFriendUseCaseRealisation(fRepoMock)
 
-	cookieErr := []error{nil, nil, errors.InvalidCookie}
-	returnErr := []error{nil, errors.FailDeleteFriend, nil}
-	expectErr := []error{nil, errors.FailDeleteFriend, nil}
+	customErr := errors2.New("new error")
+	returnErr := []error{nil, errors.FailDeleteFriend, customErr}
+	expectErr := []error{nil, errors.FailDeleteFriend, customErr}
 
 	for iter, _ := range expectErr {
-
-		cookie := uVal.String()
 		friendLogin := uVal.String()
 		uId := rand.Int()
 
-		cRepoMock.EXPECT().GetUserIdByCookie(cookie).Return(uId, cookieErr[iter])
-
 		fRepoMock.EXPECT().GetUserLoginById(uId).Return(friendLogin, returnErr[iter])
 
-		if gotV, gotE := fTest.GetUserLoginByCookie(cookie); gotV != friendLogin || gotE != expectErr[iter] {
+		if gotV, gotE := fTest.GetUserLoginById(uId); gotV != friendLogin || gotE != expectErr[iter] {
 			t.Error("expected :", expectErr[iter], "  iter :", iter)
 		}
 	}

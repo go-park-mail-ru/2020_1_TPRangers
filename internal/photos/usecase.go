@@ -5,6 +5,6 @@ import (
 )
 
 type PhotoUseCase interface {
-	GetPhotosFromAlbum(string, int) (models.Photos, error)
-	UploadPhotoToAlbum(string, models.PhotoInAlbum) error
+	GetPhotosFromAlbum(int) (models.Photos, error)
+	UploadPhotoToAlbum(models.PhotoInAlbum) error
 }

@@ -16,7 +16,7 @@ func NewPhotoRepositoryRealisation(db *sql.DB) PhotoRepositoryRealisation {
 
 }
 
-func (Data PhotoRepositoryRealisation ) UploadPhotoToAlbum(photoData models.PhotoInAlbum) error {
+func (Data PhotoRepositoryRealisation) UploadPhotoToAlbum(photoData models.PhotoInAlbum) error {
 	albumId, err := strconv.ParseInt(photoData.AlbumID, 10, 32)
 
 	album := Data.photoDB.QueryRow("select name from albums where album_id = $1;", int(albumId))
@@ -31,7 +31,7 @@ func (Data PhotoRepositoryRealisation ) UploadPhotoToAlbum(photoData models.Phot
 		return errors.FailSendToDB
 	}
 	var photoID int
-	row := Data.photoDB.QueryRow("select photo_id from photos where url = $1",photoData.Url)
+	row := Data.photoDB.QueryRow("select photo_id from photos where url = $1", photoData.Url)
 	err = row.Scan(&photoID)
 	if err != nil {
 		return errors.FailReadToVar
@@ -44,8 +44,7 @@ func (Data PhotoRepositoryRealisation ) UploadPhotoToAlbum(photoData models.Phot
 	return nil
 }
 
-
-func (Data PhotoRepositoryRealisation ) GetPhotosFromAlbum(albumID int) (models.Photos, error) {
+func (Data PhotoRepositoryRealisation) GetPhotosFromAlbum(albumID int) (models.Photos, error) {
 	photosAlb := models.Photos{}
 	phUrls := make([]string, 0, 20)
 	rows, err := Data.photoDB.Query("select photo_url from photosfromalbums where album_id = $1;", albumID)
@@ -75,4 +74,3 @@ func (Data PhotoRepositoryRealisation ) GetPhotosFromAlbum(albumID int) (models.
 
 	return photosAlb, nil
 }
-

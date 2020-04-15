@@ -153,12 +153,12 @@ func (userD FriendDeliveryRealisation) DeleteFriend(rwContext echo.Context) erro
 	return rwContext.NoContent(http.StatusOK)
 }
 
-func NewUserDelivery(log *zap.SugaredLogger, friendRealisation friends.FriendUseCase) FriendDeliveryRealisation {
+func NewFriendDelivery(log *zap.SugaredLogger, friendRealisation friends.FriendUseCase) FriendDeliveryRealisation {
 	return FriendDeliveryRealisation{friendLogic: friendRealisation, logger: log}
 }
 
 func (userD FriendDeliveryRealisation) InitHandlers(server *echo.Echo) {
-	server.PUT("/api/v1/user/:id", userD.AddFriend)
+	server.POST("/api/v1/user/:id", userD.AddFriend)
 
 	server.GET("api/v1/friends/:id", userD.FriendList)
 	server.GET("api/v1/friends", userD.GetMainUserFriends)

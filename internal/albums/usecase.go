@@ -5,6 +5,6 @@ import (
 )
 
 type AlbumUseCase interface {
-	GetAlbums(string) ([]models.Album, error)
-	CreateAlbum(string, models.AlbumReq) error
+	GetAlbums(int) ([]models.Album, error)
+	CreateAlbum(int, models.AlbumReq) error
 }

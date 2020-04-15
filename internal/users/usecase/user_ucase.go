@@ -4,18 +4,15 @@ import (
 	"bytes"
 	"crypto/rand"
 	"crypto/sha1"
-	"fmt"
 	uuid "github.com/satori/go.uuid"
 	"golang.org/x/crypto/pbkdf2"
 	Sess "main/internal/cookies"
 	SessRep "main/internal/cookies/repository"
 	FeedRep "main/internal/feeds"
-	"main/internal/feeds/repository"
 	FriendRep "main/internal/friends"
 	"main/internal/models"
 	"main/internal/tools/errors"
 	"main/internal/users"
-	UserRep "main/internal/users/repository"
 	"time"
 )
 
@@ -35,43 +32,6 @@ type UserUseCaseRealisation struct {
 	friendDB  FriendRep.FriendRepository
 	feedDB    FeedRep.FeedRepository
 	sessionDB Sess.CookieRepository
-}
-
-func (userR UserUseCaseRealisation) GetAlbums(userId int) ([]models.Album, error) {
-	albums, _ := userR.userDB.GetAlbums(userId)
-
-	return albums, nil
-
-}
-
-func (userR UserUseCaseRealisation) GetPhotosFromAlbum(albumID int) (models.Photos, error) {
-	photos, _ := userR.userDB.GetPhotosFromAlbum(albumID)
-
-	return photos, nil
-}
-
-
-func (userR UserUseCaseRealisation) CreateAlbum(userId int, albumData models.AlbumReq) error {
-
-
-	err := userR.userDB.CreateAlbum(userId, albumData)
-
-	if err != nil {
-		return errors.FailReadFromDB
-	}
-
-	return nil
-}
-
-func (userR UserUseCaseRealisation) UploadPhotoToAlbum(photoData models.PhotoInAlbum) error {
-
-	err := userR.userDB.UploadPhotoToAlbum(photoData)
-
-	if err != nil {
-		return errors.FailReadFromDB
-	}
-
-	return nil
 }
 
 func (userR UserUseCaseRealisation) GetOtherUserProfileNotLogged(userLogin string) (models.OtherUserProfileData, error) {
@@ -138,8 +98,6 @@ func (userR UserUseCaseRealisation) UploadSettings(userId int, newUserSettings m
 
 	currentUserData, _ := userR.userDB.GetUserDataById(userId)
 
-	fmt.Println(currentUserData)
-
 	jsonData := newUserSettings
 
 	if jsonData.Login != "" {
@@ -167,9 +125,7 @@ func (userR UserUseCaseRealisation) UploadSettings(userId int, newUserSettings m
 
 	if jsonData.Photo != "" {
 
-		fmt.Println(jsonData.Photo)
-
-		photoId, _ := userR.userDB.UploadPhoto(jsonData.Photo)
+		photoId, _ := userR.userDB.UploadProfilePhoto(jsonData.Photo)
 
 		currentUserData.Photo = photoId
 	}
@@ -181,8 +137,6 @@ func (userR UserUseCaseRealisation) UploadSettings(userId int, newUserSettings m
 	if jsonData.Email != "" {
 		currentUserData.Email = jsonData.Email
 	}
-
-	fmt.Println(currentUserData)
 
 	err := userR.userDB.UploadSettings(userId, currentUserData)
 
@@ -216,9 +170,9 @@ func (userR UserUseCaseRealisation) CheckFriendship(mainUserId int, friendLogin 
 
 func (userR UserUseCaseRealisation) Login(userData models.Auth, cookieValue string, exprTime time.Duration) (string, error) {
 	login := userData.Login
-
-	//
+  
 	//token, _ := csrf.Tokens.Create(cookieValue,  900 + time.Now().Unix())
+
 
 
 	password := userData.Password
@@ -227,7 +181,6 @@ func (userR UserUseCaseRealisation) Login(userData models.Auth, cookieValue stri
 	if existErr != nil {
 		return "", errors.WrongLogin
 	}
-
 
 	if !CheckPassword(password, dbPassword) {
 		return "", errors.WrongPassword
@@ -243,7 +196,6 @@ func (userR UserUseCaseRealisation) Login(userData models.Auth, cookieValue stri
 	if err != nil {
 		return "", errors.FailSendToDB
 	}
-
 
 	return "", nil
 
@@ -299,11 +251,10 @@ func (userR UserUseCaseRealisation) Logout(cookie string) error {
 }
 
 func (userR UserUseCaseRealisation) GetUserLoginByCookie(userId int) (string, error) {
-
 	return userR.userDB.GetUserLoginById(userId)
 }
 
-func NewUserUseCaseRealisation(userDB UserRep.UserRepositoryRealisation, friendDb FriendRep.FriendRepository, feedDB repository.FeedRepositoryRealisation, sesDB SessRep.CookieRepositoryRealisation) UserUseCaseRealisation {
+func NewUserUseCaseRealisation(userDB users.UserRepository, friendDb FriendRep.FriendRepository, feedDB FeedRep.FeedRepository, sesDB Sess.CookieRepository) UserUseCaseRealisation {
 	return UserUseCaseRealisation{
 		userDB:    userDB,
 		feedDB:    feedDB,
