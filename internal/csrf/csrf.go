@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"main/internal/tools/errors"
 	"strconv"
 	"strings"
 	"time"
@@ -31,7 +32,7 @@ func (tk *HashToken) Create( cookie string, tokenExpTime int64) (string, error) 
 	token := hex.EncodeToString(h.Sum(nil)) + ":" + strconv.FormatInt(tokenExpTime, 10)
 	return token, nil
 }
-
+//isOK?
 func (tk *HashToken) Check(cookie string, inputToken string) (bool, error) {
 	tokenData := strings.Split(inputToken, ":")
 	if len(tokenData) != 2 {
@@ -44,7 +45,7 @@ func (tk *HashToken) Check(cookie string, inputToken string) (bool, error) {
 	}
 
 	if tokenExp < time.Now().Unix() {
-		return false, fmt.Errorf("token expired")
+		return false, errors.CookieExpired
 	}
 
 	h := hmac.New(sha256.New, []byte(tk.Secret))
@@ -53,6 +54,7 @@ func (tk *HashToken) Check(cookie string, inputToken string) (bool, error) {
 	expectedMAC := h.Sum(nil)
 	messageMAC, err := hex.DecodeString(tokenData[0])
 	if err != nil {
+		fmt.Print("Error csrf in hex decode")
 		return false, fmt.Errorf("can't hex decode token")
 	}
 

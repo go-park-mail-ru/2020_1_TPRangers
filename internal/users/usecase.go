@@ -11,7 +11,7 @@ type UserUseCase interface {
 	GetSettings(int) (models.Settings, error)
 	UploadSettings(int, models.Settings) (models.Settings, error)
 	Logout(string) error
-	Login(models.Auth, string, time.Duration) error
+	Login(models.Auth, string, time.Duration) (string, error)
 	Register(models.Register, string, time.Duration) error
 	GetAlbums(int) ([]models.Album, error)
 	GetPhotosFromAlbum(int) (models.Photos, error)
@@ -20,4 +20,5 @@ type UserUseCase interface {
 	CheckFriendship(int, string) (bool, error)
 	GetUserLoginByCookie(int) (string, error)
 	GetUserProfileWhileLogged(string, int) (models.OtherUserProfileData, error)
+
 }

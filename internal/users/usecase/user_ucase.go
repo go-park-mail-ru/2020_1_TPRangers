@@ -50,7 +50,9 @@ func (userR UserUseCaseRealisation) GetPhotosFromAlbum(albumID int) (models.Phot
 	return photos, nil
 }
 
+
 func (userR UserUseCaseRealisation) CreateAlbum(userId int, albumData models.AlbumReq) error {
+
 
 	err := userR.userDB.CreateAlbum(userId, albumData)
 
@@ -212,29 +214,39 @@ func (userR UserUseCaseRealisation) CheckFriendship(mainUserId int, friendLogin 
 	return friendShipStatus, nil
 }
 
-func (userR UserUseCaseRealisation) Login(userData models.Auth, cookieValue string, exprTime time.Duration) error {
-
+func (userR UserUseCaseRealisation) Login(userData models.Auth, cookieValue string, exprTime time.Duration) (string, error) {
 	login := userData.Login
+
+	//
+	//token, _ := csrf.Tokens.Create(cookieValue,  900 + time.Now().Unix())
+
+
 	password := userData.Password
 	dbPassword, existErr := userR.userDB.GetPassword(login)
 
 	if existErr != nil {
-		return errors.WrongLogin
+		return "", errors.WrongLogin
 	}
 
+
 	if !CheckPassword(password, dbPassword) {
-		return errors.WrongPassword
+		return "", errors.WrongPassword
 	}
 
 	id, existErr := userR.userDB.GetIdByEmail(login)
 
 	if existErr != nil {
-		return errors.WrongLogin
+		return "", errors.WrongLogin
 	}
 
 	err := userR.sessionDB.AddCookie(id, cookieValue, exprTime)
+	if err != nil {
+		return "", errors.FailSendToDB
+	}
 
-	return err
+
+	return "", nil
+
 
 }
 

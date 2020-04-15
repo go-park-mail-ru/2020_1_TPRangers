@@ -130,9 +130,17 @@ func (userD UserDeliveryRealisation) UploadSettings(rwContext echo.Context) erro
 
 	uId := rwContext.Get("REQUEST_ID").(string)
 
+	//cookie, err := rwContext.Cookie("session_id")
+
+	//token := rwContext.Request().Header.Get("X-CSRF-Token")
+	//
+	//res, err := csrf.Tokens.Check( cookie.Value,  token)
+	//fmt.Print(res)
+
 	userId := rwContext.Get("user_id").(int)
 
 	if userId == -1 {
+
 		userD.logger.Debug(
 			zap.String("ID", uId),
 			zap.String("COOKIE", errors.CookieExpired.Error()),
@@ -209,7 +217,8 @@ func (userD UserDeliveryRealisation) Login(rwContext echo.Context) error {
 	exprTime := 12 * time.Hour
 	cookieValue := info.String()
 
-	err = userD.userLogic.Login(*userAuthData, cookieValue, exprTime)
+	token, err := userD.userLogic.Login(*userAuthData, cookieValue, exprTime)
+	rwContext.Response().Header().Set("X-CSRF-Token", token)
 
 	if err != nil {
 		userD.logger.Debug(

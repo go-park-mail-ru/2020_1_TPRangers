@@ -9,6 +9,7 @@ import (
 	"main/internal/models"
 	"main/internal/tools/errors"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -37,9 +38,9 @@ func (mh MiddlewareHandler) SetMiddleware(server *echo.Echo) {
 func (mh MiddlewareHandler) SetCorsMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 
-		c.Response().Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+		c.Response().Header().Set("Access-Control-Allow-Origin", "https://social-hub.ru")
 		c.Response().Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS, PUT, DELETE, POST")
-		c.Response().Header().Set("Access-Control-Allow-Headers", "Origin, X-Login, Set-Cookie, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, csrf-token, Authorization")
+		c.Response().Header().Set("Access-Control-Allow-Headers", "Origin, X-Login, Set-Cookie, Content-Type, Content-Length, Accept-Encoding, X-Csrf-Token, csrf-token, Authorization")
 		c.Response().Header().Set("Access-Control-Allow-Credentials", "true")
 		c.Response().Header().Set("Vary", "Cookie")
 
@@ -96,6 +97,7 @@ func (mh MiddlewareHandler) AccessLog() echo.MiddlewareFunc {
 	}
 }
 
+
 func (mh MiddlewareHandler) CheckAuthentication() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 
@@ -125,7 +127,6 @@ func (mh MiddlewareHandler) CheckAuthentication() echo.MiddlewareFunc {
 func (mh MiddlewareHandler) CSRF() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc{
 		return func(rwContext echo.Context) error {
-
 			if rwContext.Request().RequestURI == "/api/v1/settings" || rwContext.Request().Method == "PUT" {
 				cookie, err := rwContext.Cookie("session_id")
 				if err != nil {
@@ -153,3 +154,4 @@ func (mh MiddlewareHandler) CSRF() echo.MiddlewareFunc {
 		}
 	}
 }
+
