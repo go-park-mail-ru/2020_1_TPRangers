@@ -4,6 +4,7 @@ import (
 	"github.com/labstack/echo"
 	uuid "github.com/satori/go.uuid"
 	"go.uber.org/zap"
+	"main/internal/csrf"
 	"main/internal/models"
 	"main/internal/tools/errors"
 	"main/internal/users"
@@ -129,12 +130,6 @@ func (userD UserDeliveryRealisation) UploadSettings(rwContext echo.Context) erro
 
 	uId := rwContext.Get("REQUEST_ID").(string)
 
-	//cookie, err := rwContext.Cookie("session_id")
-
-	//token := rwContext.Request().Header.Get("X-CSRF-Token")
-	//
-	//res, err := csrf.Tokens.Check( cookie.Value,  token)
-	//fmt.Print(res)
 
 	userId := rwContext.Get("user_id").(int)
 
@@ -216,17 +211,6 @@ func (userD UserDeliveryRealisation) Login(rwContext echo.Context) error {
 	exprTime := 12 * time.Hour
 	cookieValue := info.String()
 
-	token, err := userD.userLogic.Login(*userAuthData, cookieValue, exprTime)
-	rwContext.Response().Header().Set("X-CSRF-Token", token)
-
-	if err != nil {
-		userD.logger.Debug(
-			zap.String("ID", uId),
-			zap.String("ERROR", err.Error()),
-			zap.Int("ANSWER STATUS", http.StatusUnauthorized),
-		)
-		return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: err.Error()})
-	}
 
 	userD.logger.Info(
 		zap.String("ID", uId),
@@ -507,6 +491,18 @@ func (userD UserDeliveryRealisation) UploadPhotoToAlbum(rwContext echo.Context) 
 
 }
 
+func (userD UserDeliveryRealisation) GetCsrf(rwContext echo.Context) error {
+
+	cookie, err := rwContext.Cookie("session_id")
+	if err != nil {
+		return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: errors.CookieExpired.Error()})
+	}
+	token, _ := csrf.Tokens.Create(cookie.Value,  900 + time.Now().Unix()) // 900 с = 15 минут
+	csrf := models.Csrf{}
+	csrf.Token = token
+	return rwContext.JSON(http.StatusOK, models.JsonStruct{Body: csrf})
+}
+
 func NewUserDelivery(log *zap.SugaredLogger, userRealisation usecase.UserUseCaseRealisation) UserDeliveryRealisation {
 	return UserDeliveryRealisation{userLogic: userRealisation, logger: log}
 }
@@ -524,6 +520,7 @@ func (userD UserDeliveryRealisation) InitHandlers(server *echo.Echo) {
 	server.GET("/api/v1/user/:id", userD.GetUser)
 	server.GET("api/v1/albums", userD.GetAlbums)
 	server.GET("api/v1/albums/:id", userD.GetPhotosFromAlbum)
+	server.GET("api/v1/csrf", userD.GetCsrf)
 
 	server.DELETE("/api/v1/login", userD.Logout)
 

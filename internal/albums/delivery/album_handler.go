@@ -20,7 +20,6 @@ func (albumD AlbumDeliveryRealisation) GetAlbums(rwContext echo.Context) error {
 	rId := rwContext.Response().Header().Get("REQUEST_ID")
 
 	cookie, err := rwContext.Cookie("session_id")
-
 	if err != nil {
 		albumD.logger.Debug(
 			zap.String("ID", rId),
