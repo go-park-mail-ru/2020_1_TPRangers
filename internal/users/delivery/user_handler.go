@@ -216,8 +216,7 @@ func (userD UserDeliveryRealisation) Login(rwContext echo.Context) error {
 	exprTime := 12 * time.Hour
 	cookieValue := info.String()
 
-	token, err := userD.userLogic.Login(*userAuthData, cookieValue, exprTime)
-	rwContext.Response().Header().Set("X-CSRF-Token", token)
+	err = userD.userLogic.Login(*userAuthData, cookieValue, exprTime)
 
 	if err != nil {
 		userD.logger.Debug(
