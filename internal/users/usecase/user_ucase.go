@@ -7,7 +7,6 @@ import (
 	uuid "github.com/satori/go.uuid"
 	"golang.org/x/crypto/pbkdf2"
 	Sess "main/internal/cookies"
-	SessRep "main/internal/cookies/repository"
 	FeedRep "main/internal/feeds"
 	FriendRep "main/internal/friends"
 	"main/internal/models"
