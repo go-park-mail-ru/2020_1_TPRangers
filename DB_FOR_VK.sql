@@ -128,6 +128,7 @@ CREATE TABLE Messages
     msg_id BIGINT PRIMARY KEY,
     ch_id  BIGINT NOT NULL REFERENCES Chats,
     u_id   INT    NOT NULL REFERENCES Users,
+    send_time TIMESTAMP,
     txt    TEXT
 );
 
