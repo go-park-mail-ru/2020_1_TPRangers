@@ -4,7 +4,6 @@ import (
 	"github.com/labstack/echo"
 	"go.uber.org/zap"
 	"main/internal/albums"
-	"main/internal/albums/usecase"
 	"main/internal/models"
 	"main/internal/tools/errors"
 	"net/http"
@@ -66,6 +65,7 @@ func (albumD AlbumDeliveryRealisation) CreateAlbum(rwContext echo.Context) error
 
 	err := rwContext.Bind(albumData)
 
+
 	if err != nil {
 		albumD.logger.Debug(
 			zap.String("ID", rId),
@@ -96,7 +96,7 @@ func (albumD AlbumDeliveryRealisation) CreateAlbum(rwContext echo.Context) error
 	return rwContext.NoContent(http.StatusOK)
 }
 
-func NewAlbumDelivery(log *zap.SugaredLogger, albumRealisation usecase.AlbumUseCaseRealisation) AlbumDeliveryRealisation {
+func NewAlbumDelivery(log *zap.SugaredLogger, albumRealisation albums.AlbumUseCase) AlbumDeliveryRealisation {
 	return AlbumDeliveryRealisation{albumLogic: albumRealisation, logger: log}
 }
 

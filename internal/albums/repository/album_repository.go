@@ -33,7 +33,14 @@ func (Data AlbumRepositoryRealisation) GetAlbums(id int) ([]models.Album, error)
 	albums := make([]models.Album, 0, 20)
 
 	rows, err := Data.albumDB.Query("select DISTINCT ON (a.album_id) a.name, a.album_id, ph.photo_url from albums AS a LEFT JOIN photosfromalbums AS ph ON ph.album_id = a.album_id WHERE a.u_id = $1;", id)
-	defer rows.Close()
+
+	defer func() {
+		if rows != nil {
+			rows.Close()
+
+		}
+	}()
+
 	if err != nil {
 		return nil, errors.FailReadFromDB
 	}

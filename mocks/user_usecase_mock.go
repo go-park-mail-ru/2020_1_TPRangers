@@ -2,7 +2,7 @@
 // Source: main/internal/users (interfaces: UserUseCase)
 
 // Package mock_users is a generated GoMock package.
-package mock_users
+package mock
 
 import (
 	gomock "github.com/golang/mock/gomock"

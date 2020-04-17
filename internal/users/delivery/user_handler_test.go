@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	mock_users "main/internal/users/delivery/mock"
+	mock_users "main/mocks"
 	"net/http"
 	"net/http/httptest"
 	"testing"

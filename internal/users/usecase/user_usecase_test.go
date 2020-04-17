@@ -11,7 +11,7 @@ import (
 	"golang.org/x/crypto/pbkdf2"
 	"main/internal/models"
 	_error "main/internal/tools/errors"
-	"main/internal/users/usecase/mock"
+	"main/mocks"
 	"math/rand"
 	"testing"
 )

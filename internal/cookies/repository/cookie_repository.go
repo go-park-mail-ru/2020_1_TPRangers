@@ -30,7 +30,6 @@ func (cookR CookieRepositoryRealisation) AddCookie(id int, cookieValue string, e
 func (cookR CookieRepositoryRealisation) DeleteCookie(cookieValue string) error {
 
 	err := cookR.sessionDB.Del(cookieValue).Err()
-
 	return err
 
 }

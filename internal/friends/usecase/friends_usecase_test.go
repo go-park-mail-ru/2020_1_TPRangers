@@ -4,7 +4,7 @@ import (
 	errors2 "errors"
 	"github.com/golang/mock/gomock"
 	uuid "github.com/satori/go.uuid"
-	mock "main/internal/friends/usecase/mock"
+	mock "main/mocks"
 	"main/internal/models"
 	"main/internal/tools/errors"
 	"math/rand"

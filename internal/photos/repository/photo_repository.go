@@ -2,6 +2,7 @@ package repository
 
 import (
 	"database/sql"
+	"fmt"
 	"main/internal/models"
 	"main/internal/tools/errors"
 	"strconv"
@@ -21,13 +22,14 @@ func (Data PhotoRepositoryRealisation) UploadPhotoToAlbum(photoData models.Photo
 
 	album := Data.photoDB.QueryRow("select name from albums where album_id = $1;", int(albumId))
 	var albumName string
-	album.Scan(&albumName)
+	err = album.Scan(&albumName)
 	if albumName == "" {
 		return errors.AlbumDoesntExist
 	}
 
 	_, err = Data.photoDB.Exec("INSERT INTO photos (url, photos_likes_count) VALUES ($1, $2);", photoData.Url, 0)
 	if err != nil {
+		//fmt.Println(err)
 		return errors.FailSendToDB
 	}
 	var photoID int
@@ -49,8 +51,13 @@ func (Data PhotoRepositoryRealisation) GetPhotosFromAlbum(albumID int) (models.P
 	phUrls := make([]string, 0, 20)
 	rows, err := Data.photoDB.Query("select photo_url from photosfromalbums where album_id = $1;", albumID)
 
-	defer rows.Close()
+	defer func() {
+		if rows != nil {
+			rows.Close()
+		}
+	} ()
 	if err != nil {
+		fmt.Println(err)
 		return models.Photos{}, errors.FailReadFromDB
 	}
 
