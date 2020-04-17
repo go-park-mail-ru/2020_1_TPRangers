@@ -11,7 +11,7 @@ type UserUseCase interface {
 	GetSettings(int) (models.Settings, error)
 	UploadSettings(int, models.Settings) (models.Settings, error)
 	Logout(string) error
-	Login(models.Auth, string, time.Duration) (string, error)
+	Login(models.Auth, string, time.Duration)  error
 	Register(models.Register, string, time.Duration) error
 	CheckFriendship(int, string) (bool, error)
 	GetUserLoginByCookie(int) (string, error)

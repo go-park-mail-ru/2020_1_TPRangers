@@ -2,7 +2,7 @@
 // Source: main/internal/users (interfaces: UserUseCase)
 
 // Package mock_users is a generated GoMock package.
-package mock
+package mock_users
 
 import (
 	gomock "github.com/golang/mock/gomock"
@@ -125,12 +125,11 @@ func (mr *MockUserUseCaseMockRecorder) GetUserProfileWhileLogged(arg0, arg1 inte
 }
 
 // Login mocks base method
-func (m *MockUserUseCase) Login(arg0 models.Auth, arg1 string, arg2 time.Duration) (string, error) {
+func (m *MockUserUseCase) Login(arg0 models.Auth, arg1 string, arg2 time.Duration) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Login", arg0, arg1, arg2)
-	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // Login indicates an expected call of Login

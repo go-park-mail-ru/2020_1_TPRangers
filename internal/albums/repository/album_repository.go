@@ -2,6 +2,7 @@ package repository
 
 import (
 	"database/sql"
+	"fmt"
 	_ "github.com/lib/pq"
 	"main/internal/models"
 	"main/internal/tools/errors"
@@ -20,6 +21,7 @@ func (Data AlbumRepositoryRealisation) CreateAlbum(u_id int, albumData models.Al
 
 	_, err := Data.albumDB.Exec("INSERT INTO albums (name, u_id) VALUES ($1, $2);", albumData.Name, u_id)
 	if err != nil {
+		fmt.Print("ERR IS ", err)
 		return errors.FailSendToDB
 	}
 
