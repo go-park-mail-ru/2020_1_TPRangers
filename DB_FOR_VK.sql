@@ -10,6 +10,11 @@ DROP TABLE IF EXISTS UsersPhotosLikes;
 DROP TABLE IF EXISTS AlbumsPhotos;
 DROP TABLE IF EXISTS PhotosFromAlbums;
 DROP TABLE IF EXISTS PostsAuthor;
+DROP TABLE IF EXISTS Chats CASCADE;
+DROP TABLE IF EXISTS ChatsUsers;
+DROP TABLE IF EXISTS Messages;
+
+
 
 CREATE EXTENSION IF NOT EXISTS CITEXT;
 CREATE EXTENSION IF NOT EXISTS BYTEA;
@@ -30,7 +35,7 @@ CREATE TABLE Users
     name      TEXT,
     surname   TEXT,
     password  BYTEA,
-    photo_id  INT DEFAULT 0 REFERENCES Photos,
+    photo_id  INT DEFAULT 1 REFERENCES Photos,
     birthdate VARCHAR(20)
 );
 
@@ -54,8 +59,8 @@ CREATE TABLE Posts
 
 CREATE TABLE PostsAuthor
 (
-    post_id    INT NOT NULL REFERENCES Posts ON DELETE CASCADE,
-    u_id       INT NOT NULL REFERENCES Users
+    post_id INT NOT NULL REFERENCES Posts ON DELETE CASCADE,
+    u_id    INT NOT NULL REFERENCES Users
 );
 
 CREATE TABLE Feeds
@@ -66,9 +71,9 @@ CREATE TABLE Feeds
 
 CREATE TABLE UsersPosts
 (
-    u_id    INT NOT NULL REFERENCES Users,
+    u_id       INT NOT NULL REFERENCES Users,
     post_owner INT NOT NULL REFERENCES Users,
-    post_id INT NOT NULL REFERENCES Posts
+    post_id    INT NOT NULL REFERENCES Posts
 );
 
 CREATE TABLE Albums
@@ -103,9 +108,36 @@ CREATE TABLE UsersPhotosLikes
 
 CREATE UNIQUE INDEX userphotolike_idx ON UsersPhotosLikes (u_id, photo_id);
 
+CREATE TABLE Chats
+(
+    ch_id BIGSERIAL PRIMARY KEY,
+    photo_id  INT DEFAULT 2 REFERENCES Photos,
+    name  TEXT  DEFAULT ''
+);
+
+CREATE TABLE ChatsUsers
+(
+    ch_id BIGINT NOT NULL REFERENCES Chats,
+    u_id  INT    NOT NULL REFERENCES Users
+);
+
+CREATE UNIQUE INDEX chatuser_idx ON ChatsUsers (u_id, ch_id);
+
+CREATE TABLE Messages
+(
+    msg_id BIGINT PRIMARY KEY,
+    ch_id  BIGINT NOT NULL REFERENCES Chats,
+    u_id   INT    NOT NULL REFERENCES Users,
+    txt    TEXT
+);
+
+
 
 INSERT INTO photos (url, photos_likes_count)
 VALUES ('https://social-hub.ru/uploads/img/default.png', 0);
+
+INSERT INTO photos (url, photos_likes_count)
+VALUES ('https://social-hub.ru/uploads/img/default_chat.png', 0);
 
 
 
