@@ -2,21 +2,23 @@ package repository
 
 import (
 	"database/sql"
+	"fmt"
 	"github.com/DATA-DOG/go-sqlmock"
 	"main/internal/models"
+	"main/internal/tools/errors"
 	"math/rand"
 	"testing"
 )
 
-func TestLikeRepositoryRealisation_CreateAlbum(t *testing.T) {
+func TestAlbumRepositoryRealisation_CreateAlbum(t *testing.T) {
 
 	db, mock, _ := sqlmock.New()
-	testCounter := 1
+	testCounter := 3
 
 	lRepo := NewAlbumRepositoryRealisation(db)
 
 	errs := []error{nil, sql.ErrNoRows, nil}
-
+	expectBehavior := []error{nil, errors.FailSendToDB, nil}
 	for iter := 0; iter < testCounter; iter++ {
 
 		uId := rand.Int()
@@ -25,9 +27,9 @@ func TestLikeRepositoryRealisation_CreateAlbum(t *testing.T) {
 		mock.ExpectBegin()
 
 		if errs[iter] == nil{
-			mock.ExpectQuery(`INSERT INTO albums \(name, u_id\) VALUES \(\$1,\$2\)`).WithArgs(albumData.Name, uId)
+			mock.ExpectExec(`INSERT INTO albums \(name, u_id\) VALUES \(\$1, \$2\);`).WithArgs(albumData.Name, uId).WillReturnResult(sqlmock.NewResult(1,1))
 		} else {
-			mock.ExpectQuery(`INSERT INTO albums \(name, u_id\) VALUES \(\$1,\$2\)`).WithArgs(albumData.Name, uId).WillReturnError(errs[iter])
+			mock.ExpectExec(`INSERT INTO albums \(name, u_id\) VALUES \(\$1, \$2\);`).WithArgs(albumData.Name, uId).WillReturnError(errs[iter])
 		}
 
 		mock.ExpectCommit()
@@ -36,7 +38,53 @@ func TestLikeRepositoryRealisation_CreateAlbum(t *testing.T) {
 
 		err = lRepo.CreateAlbum(uId, albumData)
 
-		if err != errs[iter] {
+		if err != expectBehavior[iter] {
+			fmt.Print(err)
+			t.Error(err)
+			return
+		}
+		err = nil
+
+		switch err {
+		case nil:
+			err = tx.Commit()
+		default:
+			tx.Rollback()
+		}
+
+	}
+
+}
+
+func TestAlbumRepositoryRealisation_GetAlbums(t *testing.T) {
+
+	db, mock, _ := sqlmock.New()
+	testCounter := 1
+
+	lRepo := NewAlbumRepositoryRealisation(db)
+
+	errs := []error{nil, errors.FailSendToDB}
+	expectBehavior := []error{nil, errors.FailSendToDB}
+	for iter := 0; iter < testCounter; iter++ {
+
+		Id := rand.Int()
+
+		mock.ExpectBegin()
+		albStr := models.Album{}
+		if errs[iter] == nil{
+			mock.ExpectQuery(`select DISTINCT ON \(a\.album_id\) a\.name, a\.album_id, ph\.photo_url from albums AS a LEFT JOIN photosfromalbums AS ph ON ph\.album_id \= a\.album_id WHERE a\.u_id \= \$1;`).WithArgs(Id).WillReturnRows(sqlmock.NewRows([]string{"a.name", "a.album_id", "ph.photo_url"}).AddRow(albStr.Name, albStr.ID, albStr.PhotoUrl))
+		} else {
+			mock.ExpectExec(`select DISTINCT ON \(a\.album_id\) a\.name, a\.album_id, ph\.photo_url from albums AS a LEFT JOIN photosfromalbums AS ph ON ph\.album_id \= a\.album_id WHERE a\.u_id \= \$1;`).WithArgs(Id).WillReturnError(errs[iter])
+		}
+
+		mock.ExpectCommit()
+
+		tx, err := db.Begin()
+
+		_, err = lRepo.GetAlbums(Id)
+
+		if err != expectBehavior[iter] {
+			fmt.Print(err)
 			t.Error(err)
 			return
 		}

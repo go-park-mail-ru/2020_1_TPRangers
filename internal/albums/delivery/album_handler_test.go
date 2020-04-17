@@ -8,22 +8,21 @@ package delivery
 //	"github.com/stretchr/testify/assert"
 //	"go.uber.org/zap"
 //	"go.uber.org/zap/zapcore"
-//	mock_users "main/internal/users/delivery/mock"
+//	mock_albums "main/internal/albums/delivery/mock"
 //	"net/http"
 //	"net/http/httptest"
 //	"testing"
 //)
 //
-//func TestFriendDeliveryRealisation_GetSettings(t *testing.T) {
+//func TestFriendDeliveryRealisation_AddFriend(t *testing.T) {
 //	ctrl := gomock.NewController(t)
-//	lUseCase := mock_users.NewMockUserUseCase(ctrl)
+//	lUseCase := mock_albums.NewMockAlbumUseCase(ctrl)
 //	config := zap.NewDevelopmentConfig()
 //	config.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
 //	prLogger, _ := config.Build()
 //	logger := prLogger.Sugar()
 //	defer prLogger.Sync()
-//
-//	friendD := NewUserDelivery(logger, lUseCase)
+//	friendD := NewAlbumDelivery(logger, lUseCase)
 //
 //	usersId := []int{-1, 1, 2}
 //	likeBehaviour := []error{nil, nil, errors.New("smth happend")}
