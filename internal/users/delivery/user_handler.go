@@ -8,7 +8,6 @@ import (
 	"main/internal/models"
 	"main/internal/tools/errors"
 	"main/internal/users"
-	"main/internal/users/usecase"
 	"net/http"
 	"time"
 )
@@ -348,7 +347,7 @@ func (userD UserDeliveryRealisation) GetCsrf(rwContext echo.Context) error {
 }
 
 
-func NewUserDelivery(log *zap.SugaredLogger, userRealisation usecase.UserUseCaseRealisation) UserDeliveryRealisation {
+func NewUserDelivery(log *zap.SugaredLogger, userRealisation users.UserUseCase) UserDeliveryRealisation {
 	return UserDeliveryRealisation{userLogic: userRealisation, logger: log}
 }
 
@@ -363,8 +362,5 @@ func (userD UserDeliveryRealisation) InitHandlers(server *echo.Echo) {
 	server.GET("/api/v1/user/:id", userD.GetUser)
 
 	server.GET("api/v1/csrf", userD.GetCsrf)
-
-
 	server.DELETE("/api/v1/login", userD.Logout)
-
 }
