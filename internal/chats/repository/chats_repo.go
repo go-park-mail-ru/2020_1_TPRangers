@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"fmt"
+	"main/internal/models"
 	"strconv"
 	"main/internal/tools/errors"
 )
@@ -88,7 +89,18 @@ func (CR ChatRepositoryRealisation) GetChatMessages(chatId int64 , userId int) e
 		return errors.NotExist
 	}
 
-	row = CR.chatDB.QueryRow("SELECT CH.ch_id , PH.url , CH.name FROM Chats CH LEFT JOIN Photos PH ON(PH.photo_id=CH.photo_id) WHERE CH.ch_id = $1" , chatId)
+	row = CR.chatDB.QueryRow("SELECT CH.ch_id , PH.url , CH.name , COUNT(CU.u_id) AS u_count FROM Chats CH LEFT JOIN Photos PH ON(PH.photo_id=CH.photo_id) INNER JOIN ChatsUsers CU ON(CU.ch_id=CH.ch_id) WHERE CH.ch_id = $1" , chatId)
 
+	chatInfo := new(models.Chat)
+	err = row.Scan(&chatInfo.ChatId , &chatInfo.ChatPhoto , &chatInfo.ChatName , &chatInfo.ChatCounter)
+
+	if err != nil {
+		return err
+	}
+
+	if chatInfo.ChatCounter == 2 {
+		row = CR.chatDB.QueryRow("SELECT U.name , U.surname , P.url FROM ChatsUsers CU INNER JOIN Users U ON(U.u_id=CU.u_id) INNER JOIN Photos P ON(P.photo_id=u.photo_id) WHERE CU.u_id != $1" , userId)
+
+	}
 
 }
