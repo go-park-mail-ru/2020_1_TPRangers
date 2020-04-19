@@ -223,3 +223,79 @@ func (Data FeedRepositoryRealisation) CreatePost(uId int, ownerLogin string, new
 	return errors.FailSendToDB
 
 }
+
+func (Data FeedRepositoryRealisation) CreateComment(uId int, newComment models.Comment) error {
+	photo_id := 0
+	if newComment.Photo.Url != nil {
+		row := Data.feedDB.QueryRow("INSERT INTO photos (url, photos_likes_count) VALUES ($1 , 0) RETURNING photo_id", newComment.Photo.Url)
+		errScan := row.Scan(&photo_id)
+		if errScan != nil {
+			fmt.Println(errScan, "ERR ON CREATE PHOTO FOR NEW POST")
+		}
+	}
+
+
+	commentRow, err := Data.feedDB.Query("INSERT INTO comments (u_id, post_id, txt_data, photo_id, comment_likes_count,creation_date, attachments) VALUES($1 , $2 , $3 , $4 , $5, $6, $7) RETURNING post_id",uId, newComment.PostID, newComment.Text, photo_id, 0, time.Now(), newComment.Attachments)
+	defer commentRow.Close()
+
+	if err != nil {
+		return errors.FailSendToDB
+	}
+
+	fmt.Println(err, "ERROR ON ADDING NEW COMMENT TO DATABASE!!!!", uId)
+	return nil
+}
+
+func (Data FeedRepositoryRealisation) DeleteComment(uID int, commentID string) error {
+	comm_id := new(int)
+	row := Data.feedDB.QueryRow("DELETE FROM Comments WHERE u_id = $1 AND comment_id = $2 RETURNING comment_id", uID, commentID)
+	err := row.Scan(comm_id)
+	if err == sql.ErrNoRows {
+		return errors.DontHavePermission
+	}
+	if err != nil {
+		return errors.FailSendToDB
+	}
+
+	return nil
+}
+
+func (Data FeedRepositoryRealisation) GetComments(userID int, postID string) ([]models.Comment, error) {
+	rows, err := Data.feedDB.Query("select c.comment_id, c.txt_data, c.attachments, c.comment_likes_count, c.creation_date, ph.photo_id, ph.url, ph.photos_likes_count, u.name, u.surname, u.login " +
+		"from comments AS c INNER JOIN users AS u ON (c.u_id = u.u_id) LEFT JOIN photos AS ph ON c.photo_id = ph.photo_id WHERE c.post_id = $1;", postID)
+	if err != nil {
+		return nil, errors.FailReadFromDB
+	}
+	comments := []models.Comment{}
+	for rows.Next() {
+
+		comment := models.Comment{}
+		err := rows.Scan(&comment.CommentID, &comment.Text, &comment.Attachments, &comment.Likes, &comment.Creation, &comment.Photo.Id, &comment.Photo.Url, &comment.Photo.Likes, &comment.AuthorName, &comment.AuthorSurname, &comment.AuthorUrl)
+		if err != nil {
+			return nil, errors.FailReadToVar
+		}
+		additional_row := Data.feedDB.QueryRow("select ucl.commentlike_id, uphl.photolike_id from userscommentslikes AS ucl RIGHT JOIN comments AS c "+
+			"ON (c.comment_id = ucl.comment_id) LEFT JOIN usersphotoslikes AS uphl ON (c.photo_id = uphl.photo_id) INNER JOIN "+
+			"LEFT JOIN users AS u ON (u.u_id = c.u_id) LEFT JOIN photos AS ph ON (u.photo_id = ph.photo_id) WHERE c.comment_id = $1 AND upl.u_id = $2;", comment.CommentID, userID)
+
+		var commentLikes *int
+		var photoLikes *int
+		add_row := Data.feedDB.QueryRow("select ph.url from photos AS ph INNER JOIN users AS u ON (u.photo_id = ph.photo_id) INNER JOIN comments AS c ON (c.post_id = $1 AND c.u_id = u.u_id);", postID)
+		add_row.Scan(&comment.AuthorPhoto)
+		additional_row.Scan(&commentLikes, &photoLikes)
+		if commentLikes != nil {
+			comment.WasLike = true
+		} else {
+			comment.WasLike = false
+		}
+		if photoLikes != nil {
+			comment.Photo.WasLike = true
+		} else {
+			comment.Photo.WasLike = false
+		}
+
+		comments = append(comments, comment)
+	}
+
+	return comments, nil
+}

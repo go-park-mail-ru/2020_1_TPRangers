@@ -10,9 +10,9 @@ type FeedUseCaseRealisation struct {
 	feedDB feeds.FeedRepository
 }
 
-func (feedR FeedUseCaseRealisation) Feed(userId int) ([]models.Post, error) {
+func (feedR FeedUseCaseRealisation) Feed(userID int) ([]models.Post, error) {
 
-	feed, err := feedR.feedDB.GetUserFeedById(userId, 30)
+	feed, err := feedR.feedDB.GetUserFeedById(userID, 30)
 
 	if err != nil {
 		return nil, errors.FailReadFromDB
@@ -21,9 +21,24 @@ func (feedR FeedUseCaseRealisation) Feed(userId int) ([]models.Post, error) {
 	return feed, nil
 }
 
-func (feedR FeedUseCaseRealisation) CreatePost(userId int, ownerLogin string, newPost models.Post) error {
+func (feedR FeedUseCaseRealisation) CreatePost(userID int, ownerLogin string, newPost models.Post) error {
 
-	return feedR.feedDB.CreatePost(userId, ownerLogin, newPost)
+	return feedR.feedDB.CreatePost(userID, ownerLogin, newPost)
+}
+
+func (feedR FeedUseCaseRealisation) CreateComment(userID int, newComment models.Comment) error {
+
+	return feedR.feedDB.CreateComment(userID,  newComment)
+}
+
+func (feedR FeedUseCaseRealisation) DeleteComment(userID int, commentID string) error {
+
+	return feedR.feedDB.DeleteComment(userID,  commentID)
+}
+
+func (feedR FeedUseCaseRealisation) GetComments(userID int, postID string) ([]models.Comment, error) {
+
+	return feedR.feedDB.GetComments(userID,  postID)
 }
 
 func NewFeedUseCaseRealisation(feedDB feeds.FeedRepository) FeedUseCaseRealisation {
