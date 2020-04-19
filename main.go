@@ -8,13 +8,12 @@ import (
 	"go.uber.org/zap/zapcore"
 
 	repositoryMessage "main/internal/message/repository"
-	usecaseMessage "main/internal/socket/usecase"
 	deliveryMessage "main/internal/socket/delivery"
+	usecaseMessage "main/internal/socket/usecase"
 
-	repositoryChat 	"main/internal/chats/repository"
-	deliveryChat 	"main/internal/chats/delivery"
-	usecaseChat 	"main/internal/chats/usecase"
-
+	deliveryChat "main/internal/chats/delivery"
+	repositoryChat "main/internal/chats/repository"
+	usecaseChat "main/internal/chats/usecase"
 
 	deliveryAlbum "main/internal/albums/delivery"
 	repositoryAlbum "main/internal/albums/repository"
@@ -39,22 +38,20 @@ import (
 	repositoryLikes "main/internal/like/repository"
 	usecaseLikes "main/internal/like/usecase"
 	usecasePhoto "main/internal/photos/usecase"
-
 )
 
 type RequestHandlers struct {
-	userHandler   deliveryUser.UserDeliveryRealisation
-	feedHandler   deliveryFeed.FeedDeliveryRealisation
-	likeHandler   deliveryLikes.LikeDelivery
-	photoHandler  deliveryPhoto.PhotoDeliveryRealisation
-	albumHandler  deliveryAlbum.AlbumDeliveryRealisation
-	friendHandler deliveryFriends.FriendDeliveryRealisation
+	userHandler    deliveryUser.UserDeliveryRealisation
+	feedHandler    deliveryFeed.FeedDeliveryRealisation
+	likeHandler    deliveryLikes.LikeDelivery
+	photoHandler   deliveryPhoto.PhotoDeliveryRealisation
+	albumHandler   deliveryAlbum.AlbumDeliveryRealisation
+	friendHandler  deliveryFriends.FriendDeliveryRealisation
 	messageHandler deliveryMessage.SocketDelivery
-	chatHandler 	deliveryChat.ChatsDelivery
-
+	chatHandler    deliveryChat.ChatsDelivery
 }
 
-func InitializeDataBases(server *echo.Echo) (*sql.DB, repositoryCookie.CookieRepositoryRealisation , repositoryMessage.MessageRepositoryRealisation) {
+func InitializeDataBases(server *echo.Echo) (*sql.DB, repositoryCookie.CookieRepositoryRealisation, repositoryMessage.MessageRepositoryRealisation) {
 	err := godotenv.Load("project.env")
 	if err != nil {
 		server.Logger.Fatal("can't load .env file :", err.Error())
@@ -76,12 +73,12 @@ func InitializeDataBases(server *echo.Echo) (*sql.DB, repositoryCookie.CookieRep
 	redisChatPort := os.Getenv("REDIS_CHAT_PORT")
 
 	sessionDB := repositoryCookie.NewCookieRepositoryRealisation(redisPort, redisPas)
-	chatDB := repositoryMessage.NewMessageRepositoryRealisation(redisChatPort , "" , db)
+	chatDB := repositoryMessage.NewMessageRepositoryRealisation(redisChatPort, "", db)
 
-	return db, sessionDB , chatDB
+	return db, sessionDB, chatDB
 }
 
-func NewRequestHandler(db *sql.DB, sessionDB repositoryCookie.CookieRepositoryRealisation, messageDB repositoryMessage.MessageRepositoryRealisation,logger *zap.SugaredLogger) *RequestHandlers {
+func NewRequestHandler(db *sql.DB, sessionDB repositoryCookie.CookieRepositoryRealisation, messageDB repositoryMessage.MessageRepositoryRealisation, logger *zap.SugaredLogger) *RequestHandlers {
 
 	feedDB := repositoryFeed.NewFeedRepositoryRealisation(db)
 	userDB := repositoryUser.NewUserRepositoryRealisation(db)
@@ -105,23 +102,23 @@ func NewRequestHandler(db *sql.DB, sessionDB repositoryCookie.CookieRepositoryRe
 
 	userH := deliveryUser.NewUserDelivery(logger, userUseCase)
 	feedH := deliveryFeed.NewFeedDelivery(logger, feedUseCase)
-	messageH := deliveryMessage.NewSocketDelivery(logger , messageUseCase)
+	messageH := deliveryMessage.NewSocketDelivery(logger, messageUseCase)
 	photoH := deliveryPhoto.NewPhotoDelivery(logger, photoUseCase)
 	albumH := deliveryAlbum.NewAlbumDelivery(logger, albumUseCase)
-	chatH := deliveryChat.NewChatsDelivery(logger , chatUse)
+	chatH := deliveryChat.NewChatsDelivery(logger, chatUse)
 
 	friendH := deliveryFriends.NewFriendDelivery(logger, friendsUse)
 
 	api := &(RequestHandlers{
 
-		photoHandler:  photoH,
-		albumHandler:  albumH,
-		userHandler:   userH,
-		feedHandler:   feedH,
-		likeHandler:   likeH,
-		friendHandler: friendH,
+		photoHandler:   photoH,
+		albumHandler:   albumH,
+		userHandler:    userH,
+		feedHandler:    feedH,
+		likeHandler:    likeH,
+		friendHandler:  friendH,
 		messageHandler: messageH,
-		chatHandler: chatH,
+		chatHandler:    chatH,
 	})
 
 	return api
@@ -137,13 +134,13 @@ func main() {
 	logger := prLogger.Sugar()
 	defer prLogger.Sync()
 
-	db, sessions , messages := InitializeDataBases(server)
+	db, sessions, messages := InitializeDataBases(server)
 	defer db.Close()
 
 	midHandler := middleware.NewMiddlewareHandler(logger, sessions)
 	midHandler.SetMiddleware(server)
 
-	api := NewRequestHandler(db, sessions, messages ,logger)
+	api := NewRequestHandler(db, sessions, messages, logger)
 
 	api.userHandler.InitHandlers(server)
 	api.feedHandler.InitHandlers(server)
