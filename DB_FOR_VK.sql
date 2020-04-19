@@ -10,6 +10,8 @@ DROP TABLE IF EXISTS UsersPhotosLikes;
 DROP TABLE IF EXISTS AlbumsPhotos;
 DROP TABLE IF EXISTS PhotosFromAlbums;
 DROP TABLE IF EXISTS PostsAuthor;
+DROP TABLE IF EXISTS Comments;
+DROP TABLE IF EXISTS UsersCommentsLikes;
 
 CREATE EXTENSION IF NOT EXISTS CITEXT;
 CREATE EXTENSION IF NOT EXISTS BYTEA;
@@ -58,6 +60,18 @@ CREATE TABLE PostsAuthor
     u_id       INT NOT NULL REFERENCES Users
 );
 
+CREATE TABLE Comments
+(
+    comment_id SERIAL PRIMARY KEY,
+    u_id       INT NOT NULL REFERENCES Users,
+    post_id    INT NOT NULL REFERENCES Posts ON DELETE CASCADE,
+    txt_data          TEXT,
+    photo_id          INT,
+    comment_likes_count INT,
+    creation_date     TIMESTAMP,
+    attachments       TEXT
+);
+
 CREATE TABLE Feeds
 (
     u_id    INT NOT NULL REFERENCES Users,
@@ -90,6 +104,13 @@ CREATE TABLE UsersPostsLikes
     postlike_id BIGSERIAL PRIMARY KEY,
     u_id        INT NOT NULL REFERENCES Users,
     post_id     INT NOT NULL REFERENCES Posts
+);
+
+CREATE TABLE UsersCommentsLikes
+(
+    commentlike_id BIGSERIAL PRIMARY KEY,
+    u_id        INT NOT NULL REFERENCES Users,
+    comment_id     INT NOT NULL
 );
 
 CREATE UNIQUE INDEX userpostlike_idx ON UsersPostsLikes (u_id, post_id);
