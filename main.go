@@ -137,7 +137,9 @@ func main() {
 	db, sessions, messages := InitializeDataBases(server)
 	defer db.Close()
 
-	midHandler := middleware.NewMiddlewareHandler(logger, sessions)
+	origin := os.Getenv("ORIGIN_POLICY")
+
+	midHandler := middleware.NewMiddlewareHandler(logger, sessions,origin)
 	midHandler.SetMiddleware(server)
 
 	api := NewRequestHandler(db, sessions, messages, logger)

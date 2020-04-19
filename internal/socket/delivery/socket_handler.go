@@ -31,6 +31,7 @@ func (SD SocketDelivery) UpgradeToSocket(rwContext echo.Context) error {
 
 		SD.logger.Debug(
 			zap.String("ID", uId),
+			zap.Int("STAT",1),
 			zap.String("COOKIE", errors.CookieExpired.Error()),
 			zap.Int("ANSWER STATUS", http.StatusUnauthorized),
 		)
@@ -43,6 +44,8 @@ func (SD SocketDelivery) UpgradeToSocket(rwContext echo.Context) error {
 	if err != nil {
 		SD.logger.Debug(
 			zap.String("ID", uId),
+			zap.Int("STAT",2),
+			zap.String("ERROR" , err.Error()),
 			zap.Int("ANSWER STATUS", http.StatusNotModified),
 		)
 
@@ -54,6 +57,8 @@ func (SD SocketDelivery) UpgradeToSocket(rwContext echo.Context) error {
 	if err != nil {
 		SD.logger.Debug(
 			zap.String("ID", uId),
+			zap.Int("STAT",3),
+			zap.String("ERROR" , err.Error()),
 			zap.Int("ANSWER STATUS", http.StatusConflict),
 		)
 
@@ -64,5 +69,5 @@ func (SD SocketDelivery) UpgradeToSocket(rwContext echo.Context) error {
 }
 
 func (SD SocketDelivery) InitHandlers(server *echo.Echo) {
-	server.GET("/", SD.UpgradeToSocket)
+	server.GET("/ws", SD.UpgradeToSocket)
 }

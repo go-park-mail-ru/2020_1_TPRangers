@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"fmt"
 	"github.com/labstack/echo"
 	uuid "github.com/satori/go.uuid"
 	"go.uber.org/zap"
@@ -13,10 +14,11 @@ import (
 type MiddlewareHandler struct {
 	logger   *zap.SugaredLogger
 	sessions cookies.CookieRepository
+	httpOrigin  string
 }
 
-func NewMiddlewareHandler(logger *zap.SugaredLogger, cookiesRepository cookies.CookieRepository) MiddlewareHandler {
-	return MiddlewareHandler{logger: logger, sessions: cookiesRepository}
+func NewMiddlewareHandler(logger *zap.SugaredLogger, cookiesRepository cookies.CookieRepository , origin string) MiddlewareHandler {
+	return MiddlewareHandler{logger: logger, sessions: cookiesRepository , httpOrigin: origin}
 }
 
 func (mh MiddlewareHandler) SetMiddleware(server *echo.Echo) {
@@ -32,8 +34,12 @@ func (mh MiddlewareHandler) SetMiddleware(server *echo.Echo) {
 
 func (mh MiddlewareHandler) SetCorsMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
+		if c.Request().URL.Path == "/ws" {
+			fmt.Println(c.Request().URL.Path)
 
-		c.Response().Header().Set("Access-Control-Allow-Origin", "https://social-hub.ru")
+			c.Response().Header().Set("Access-Control-Allow-Origin", "ws://localhost:3000")
+		}
+		c.Response().Header().Set("Access-Control-Allow-Origin", mh.httpOrigin)
 		c.Response().Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS, PUT, DELETE, POST")
 		c.Response().Header().Set("Access-Control-Allow-Headers", "Origin, X-Login, Set-Cookie, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, csrf-token, Authorization")
 		c.Response().Header().Set("Access-Control-Allow-Credentials", "true")
@@ -111,6 +117,16 @@ func (mh MiddlewareHandler) CheckAuthentication() echo.MiddlewareFunc {
 			}
 
 			rwContext.Set("user_id", userId)
+
+			mh.logger.Info(
+				zap.Int("ID", userId),
+				zap.String("URL", rwContext.Request().URL.Path),
+				zap.String("METHOD", rwContext.Request().Method),
+			)
+
+			fmt.Println(rwContext.Request())
+			fmt.Println("\n")
+			fmt.Println(rwContext.Response())
 
 			return next(rwContext)
 
