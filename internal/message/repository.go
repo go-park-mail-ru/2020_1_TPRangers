@@ -10,5 +10,5 @@ type MessageRepository interface {
 	// get new messages , return array of new messages
 	ReceiveNewMessages(int) ([]models.Message, error)
 	// main user , chat with user , count of needed messages , from counter of message , return array of messages
-	GetMessagesFromChat(int, int, int, int) ([]models.Message, error)
+	//GetMessagesFromChat(int, int, int, int) ([]models.Message, error)
 }

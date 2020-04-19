@@ -6,6 +6,16 @@ import (
 	"github.com/labstack/echo"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+
+	repositoryMessage "main/internal/message/repository"
+	usecaseMessage "main/internal/socket/usecase"
+	deliveryMessage "main/internal/socket/delivery"
+
+	repositoryChat 	"main/internal/chats/repository"
+	deliveryChat 	"main/internal/chats/delivery"
+	usecaseChat 	"main/internal/chats/usecase"
+
+
 	deliveryAlbum "main/internal/albums/delivery"
 	repositoryAlbum "main/internal/albums/repository"
 	repositoryCookie "main/internal/cookies/repository"
@@ -29,6 +39,7 @@ import (
 	repositoryLikes "main/internal/like/repository"
 	usecaseLikes "main/internal/like/usecase"
 	usecasePhoto "main/internal/photos/usecase"
+
 )
 
 type RequestHandlers struct {
@@ -38,9 +49,12 @@ type RequestHandlers struct {
 	photoHandler  deliveryPhoto.PhotoDeliveryRealisation
 	albumHandler  deliveryAlbum.AlbumDeliveryRealisation
 	friendHandler deliveryFriends.FriendDeliveryRealisation
+	messageHandler deliveryMessage.SocketDelivery
+	chatHandler 	deliveryChat.ChatsDelivery
+
 }
 
-func InitializeDataBases(server *echo.Echo) (*sql.DB, repositoryCookie.CookieRepositoryRealisation) {
+func InitializeDataBases(server *echo.Echo) (*sql.DB, repositoryCookie.CookieRepositoryRealisation , repositoryMessage.MessageRepositoryRealisation) {
 	err := godotenv.Load("project.env")
 	if err != nil {
 		server.Logger.Fatal("can't load .env file :", err.Error())
@@ -59,16 +73,19 @@ func InitializeDataBases(server *echo.Echo) (*sql.DB, repositoryCookie.CookieRep
 	redisPas := os.Getenv("REDIS_PASSWORD")
 	redisPort := os.Getenv("REDIS_PORT")
 
-	sessionDB := repositoryCookie.NewCookieRepositoryRealisation(redisPort, redisPas)
+	redisChatPort := os.Getenv("REDIS_CHAT_PORT")
 
-	return db, sessionDB
+	sessionDB := repositoryCookie.NewCookieRepositoryRealisation(redisPort, redisPas)
+	chatDB := repositoryMessage.NewMessageRepositoryRealisation(redisChatPort , "" , db)
+
+	return db, sessionDB , chatDB
 }
 
-func NewRequestHandler(db *sql.DB, sessionDB repositoryCookie.CookieRepositoryRealisation, logger *zap.SugaredLogger) *RequestHandlers {
+func NewRequestHandler(db *sql.DB, sessionDB repositoryCookie.CookieRepositoryRealisation, messageDB repositoryMessage.MessageRepositoryRealisation,logger *zap.SugaredLogger) *RequestHandlers {
 
 	feedDB := repositoryFeed.NewFeedRepositoryRealisation(db)
 	userDB := repositoryUser.NewUserRepositoryRealisation(db)
-
+	chatDB := repositoryChat.NewChatRepositoryRealisation(db)
 	photoDB := repositoryPhoto.NewPhotoRepositoryRealisation(db)
 	likesDB := repositoryLikes.NewLikeRepositoryRealisation(db)
 	albumDB := repositoryAlbum.NewAlbumRepositoryRealisation(db)
@@ -77,19 +94,21 @@ func NewRequestHandler(db *sql.DB, sessionDB repositoryCookie.CookieRepositoryRe
 
 	photoUseCase := usecasePhoto.NewPhotoUseCaseRealisation(photoDB)
 	albumUseCase := usecaseAlbum.NewAlbumUseCaseRealisation(albumDB)
-
+	messageUseCase := usecaseMessage.NewSocketUseCaseRealisation(messageDB)
 	feedUseCase := usecaseFeed.NewFeedUseCaseRealisation(feedDB)
 	userUseCase := usecaseUser.NewUserUseCaseRealisation(userDB, friendsDB, feedDB, sessionDB)
 	likesUse := usecaseLikes.NewLikeUseRealisation(likesDB)
 	friendsUse := usecaseFriends.NewFriendUseCaseRealisation(friendsDB)
+	chatUse := usecaseChat.NewChatUseCaseRealisation(chatDB, friendsDB)
 
 	likeH := deliveryLikes.NewLikeDelivery(logger, likesUse)
 
 	userH := deliveryUser.NewUserDelivery(logger, userUseCase)
 	feedH := deliveryFeed.NewFeedDelivery(logger, feedUseCase)
-
+	messageH := deliveryMessage.NewSocketDelivery(logger , messageUseCase)
 	photoH := deliveryPhoto.NewPhotoDelivery(logger, photoUseCase)
 	albumH := deliveryAlbum.NewAlbumDelivery(logger, albumUseCase)
+	chatH := deliveryChat.NewChatsDelivery(logger , chatUse)
 
 	friendH := deliveryFriends.NewFriendDelivery(logger, friendsUse)
 
@@ -101,6 +120,8 @@ func NewRequestHandler(db *sql.DB, sessionDB repositoryCookie.CookieRepositoryRe
 		feedHandler:   feedH,
 		likeHandler:   likeH,
 		friendHandler: friendH,
+		messageHandler: messageH,
+		chatHandler: chatH,
 	})
 
 	return api
@@ -116,13 +137,13 @@ func main() {
 	logger := prLogger.Sugar()
 	defer prLogger.Sync()
 
-	db, sessions := InitializeDataBases(server)
+	db, sessions , messages := InitializeDataBases(server)
 	defer db.Close()
 
 	midHandler := middleware.NewMiddlewareHandler(logger, sessions)
 	midHandler.SetMiddleware(server)
 
-	api := NewRequestHandler(db, sessions, logger)
+	api := NewRequestHandler(db, sessions, messages ,logger)
 
 	api.userHandler.InitHandlers(server)
 	api.feedHandler.InitHandlers(server)
@@ -130,6 +151,8 @@ func main() {
 	api.photoHandler.InitHandlers(server)
 	api.albumHandler.InitHandlers(server)
 	api.friendHandler.InitHandlers(server)
+	api.messageHandler.InitHandlers(server)
+	api.chatHandler.InitHandlers(server)
 
 	port := os.Getenv("PORT")
 

@@ -111,6 +111,7 @@ CREATE UNIQUE INDEX userphotolike_idx ON UsersPhotosLikes (u_id, photo_id);
 CREATE TABLE Chats
 (
     ch_id BIGSERIAL PRIMARY KEY,
+    u_id  INT    NOT NULL REFERENCES Users,
     photo_id  INT DEFAULT 2 REFERENCES Photos,
     name  TEXT  DEFAULT ''
 );
@@ -118,16 +119,18 @@ CREATE TABLE Chats
 CREATE TABLE ChatsUsers
 (
     ch_id BIGINT NOT NULL REFERENCES Chats,
-    u_id  INT    NOT NULL REFERENCES Users
+    u_id  INT    NOT NULL REFERENCES Users,
+    lst_msg_id  BIGINT DEFAULT 0
 );
 
 CREATE UNIQUE INDEX chatuser_idx ON ChatsUsers (u_id, ch_id);
 
 CREATE TABLE Messages
 (
-    msg_id BIGINT PRIMARY KEY,
+    msg_id BIGSERIAL PRIMARY KEY,
     ch_id  BIGINT NOT NULL REFERENCES Chats,
     u_id   INT    NOT NULL REFERENCES Users,
+    del_stat    BOOLEAN DEFAULT TRUE,
     send_time TIMESTAMP,
     txt    TEXT
 );
