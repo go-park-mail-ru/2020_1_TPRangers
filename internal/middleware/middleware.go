@@ -37,6 +37,11 @@ func (mh MiddlewareHandler) SetCorsMiddleware(next echo.HandlerFunc) echo.Handle
 		if c.Request().URL.Path == "/ws" {
 			fmt.Println(c.Request().URL.Path)
 
+			fmt.Println("\n")
+			fmt.Println(c.Request())
+			fmt.Println(c.Cookies())
+			fmt.Println("\n")
+
 			c.Response().Header().Set("Access-Control-Allow-Origin", "ws://localhost:3000")
 		}
 		c.Response().Header().Set("Access-Control-Allow-Origin", mh.httpOrigin)
@@ -123,10 +128,6 @@ func (mh MiddlewareHandler) CheckAuthentication() echo.MiddlewareFunc {
 				zap.String("URL", rwContext.Request().URL.Path),
 				zap.String("METHOD", rwContext.Request().Method),
 			)
-
-			fmt.Println(rwContext.Request())
-			fmt.Println("\n")
-			fmt.Println(rwContext.Response())
 
 			return next(rwContext)
 

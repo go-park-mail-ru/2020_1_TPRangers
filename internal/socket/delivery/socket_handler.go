@@ -8,6 +8,7 @@ import (
 	"main/internal/socket"
 	"main/internal/tools/errors"
 	"net/http"
+	tokens "main/internal/tools/token_generator"
 )
 
 type SocketDelivery struct {
@@ -24,20 +25,19 @@ func NewSocketDelivery(logger *zap.SugaredLogger, sLogic socket.SocketUseCase) S
 
 func (SD SocketDelivery) UpgradeToSocket(rwContext echo.Context) error {
 
-	userId := rwContext.Get("user_id").(int)
 	uId := rwContext.Get("REQUEST_ID").(string)
+	token := rwContext.Param("token")
 
-	if userId == -1 {
+	userId , ok := tokens.CheckToken(token)
 
+	if userId == -1 || !ok {
 		SD.logger.Debug(
 			zap.String("ID", uId),
-			zap.Int("STAT",1),
-			zap.String("COOKIE", errors.CookieExpired.Error()),
-			zap.Int("ANSWER STATUS", http.StatusUnauthorized),
+			zap.String("TOKEN", errors.InvalidToken.Error()),
 		)
-
-		return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: errors.CookieExpired.Error()})
+		return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: errors.InvalidToken.Error()})
 	}
+
 
 	conn, _, _, err := ws.UpgradeHTTP(rwContext.Request(), rwContext.Response())
 
@@ -69,5 +69,5 @@ func (SD SocketDelivery) UpgradeToSocket(rwContext echo.Context) error {
 }
 
 func (SD SocketDelivery) InitHandlers(server *echo.Echo) {
-	server.GET("/ws", SD.UpgradeToSocket)
+	server.GET("/api/v1//ws/:token", SD.UpgradeToSocket)
 }

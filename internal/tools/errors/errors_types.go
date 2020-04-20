@@ -19,4 +19,5 @@ var (
 	FailAddFriend    = errors.New("Ошибка при добавлении друга")
 	FailDeleteFriend = errors.New("Ошибка при удалении друга")
 	AlbumDoesntExist = errors.New("Такого альбома не существует")
+	InvalidToken     = errors.New("Неверный токен")
 )

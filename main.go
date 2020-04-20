@@ -11,6 +11,8 @@ import (
 	deliveryMessage "main/internal/socket/delivery"
 	usecaseMessage "main/internal/socket/usecase"
 
+	deliveryToken "main/internal/socket_token/delivery"
+
 	deliveryChat "main/internal/chats/delivery"
 	repositoryChat "main/internal/chats/repository"
 	usecaseChat "main/internal/chats/usecase"
@@ -49,6 +51,7 @@ type RequestHandlers struct {
 	friendHandler  deliveryFriends.FriendDeliveryRealisation
 	messageHandler deliveryMessage.SocketDelivery
 	chatHandler    deliveryChat.ChatsDelivery
+	socketTokenHandler deliveryToken.TokenDelivery
 }
 
 func InitializeDataBases(server *echo.Echo) (*sql.DB, repositoryCookie.CookieRepositoryRealisation, repositoryMessage.MessageRepositoryRealisation) {
@@ -106,6 +109,7 @@ func NewRequestHandler(db *sql.DB, sessionDB repositoryCookie.CookieRepositoryRe
 	photoH := deliveryPhoto.NewPhotoDelivery(logger, photoUseCase)
 	albumH := deliveryAlbum.NewAlbumDelivery(logger, albumUseCase)
 	chatH := deliveryChat.NewChatsDelivery(logger, chatUse)
+	socketTokenH := deliveryToken.NewTokenDelivery(logger)
 
 	friendH := deliveryFriends.NewFriendDelivery(logger, friendsUse)
 
@@ -119,6 +123,7 @@ func NewRequestHandler(db *sql.DB, sessionDB repositoryCookie.CookieRepositoryRe
 		friendHandler:  friendH,
 		messageHandler: messageH,
 		chatHandler:    chatH,
+		socketTokenHandler: socketTokenH,
 	})
 
 	return api
@@ -152,6 +157,7 @@ func main() {
 	api.friendHandler.InitHandlers(server)
 	api.messageHandler.InitHandlers(server)
 	api.chatHandler.InitHandlers(server)
+	api.socketTokenHandler.InitHandlers(server)
 
 	port := os.Getenv("PORT")
 
