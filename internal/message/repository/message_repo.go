@@ -2,12 +2,10 @@ package repository
 
 import (
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"github.com/gomodule/redigo/redis"
 	"github.com/nitishm/go-rejson"
 	"main/internal/models"
-	"strconv"
 	"time"
 )
 
@@ -27,7 +25,10 @@ func NewMessageRepositoryRealisation(addr, pass string, db *sql.DB) MessageRepos
 
 func (MR MessageRepositoryRealisation) AddNewMessage(author int, message models.Message) error {
 
-	_, err := MR.messageDB.Exec("INSERT INTO Messages (ch_id,u_id,txt,send_time) VALUES($1,$2,$3,$4)", message.ChatId, author, message.Text, time.Now())
+	msgRow := MR.messageDB.QueryRow("INSERT INTO Messages (ch_id,u_id,txt,send_time) VALUES($1,$2,$3,$4) RETURNING m_id", message.ChatId, author, message.Text, time.Now())
+
+	msgId := 0
+	err := msgRow.Scan(&msgId)
 
 	if err != nil {
 		return err
@@ -40,77 +41,49 @@ func (MR MessageRepositoryRealisation) AddNewMessage(author int, message models.
 		}
 	}()
 
+	if err != nil {
+		return err
+	}
+
 	for recRows.Next() {
 		reciever := 0
 
 		err = recRows.Scan(&reciever)
 
-		if err != nil {
-			return err
-		}
+		MR.messageDB.Exec("INSERT INTO NewMessages (msg_id,receiver_id) VALUES($1,$2)", msgId, reciever)
 
-		var res interface{}
-
-		if _, err = redis.Bytes(MR.msgNotifier.JSONGet(strconv.Itoa(author), "")); err != nil {
-			res, err = MR.msgNotifier.JSONSet(strconv.Itoa(author), "", message)
-		} else {
-			MR.msgNotifier.JSONArrAppend(strconv.Itoa(author), "", message)
-		}
-
-		if err != nil || res.(string) != "OK" {
-			return err
-		}
 	}
 	return nil
 }
 
 func (MR MessageRepositoryRealisation) ReceiveNewMessages(userId int) ([]models.Message, error) {
 
-	_, errsss := MR.msgNotifier.JSONSet("2", "", models.Message{
-		ChatId:        1,
-		ChatPhoto:     "",
-		ChatName:      "",
-		AuthorName:    "",
-		AuthorSurname: "",
-		AuthorUrl:     "",
-		AuthorPhoto:   "",
-		Text:          "123123123123123123123123123",
-		Time:          "",
-	})
+	msgsArray := make([]models.Message, 0)
 
-	if errsss != nil {
-		fmt.Println(errsss)
-	}
-
-	msgsInt, err := MR.msgNotifier.JSONArrLen(strconv.Itoa(userId), "")
+	msgsRow, err := MR.messageDB.Query("SELECT M.msg_id ,M.ch_id , M.u_id ,  M.send_time , M.txt  FROM Messages M INNER JOIN NewMessages NM ON(NM.msg_id=M.msg_id) WHERE NM.receiver_id = $1 AND M.del_stat = true", userId)
 
 	if err != nil {
-		fmt.Println(err)
-		return nil, err
+		return msgsArray, err
 	}
 
-	msgsArray := msgsInt.([]models.Message)
+	for msgsRow.Next() {
 
-	for iter := msgsInt.(int); iter >= 0; iter-- {
-		msg, err := MR.msgNotifier.JSONArrPop(strconv.Itoa(userId), "", iter)
+		msg := new(models.Message)
+		msgId := 0
+		userid := 0
+		err = msgsRow.Scan(&msgId, &msg.ChatId, &userid, &msg.Time, &msg.Text)
 
 		if err != nil {
-			fmt.Println(err)
 			return nil, err
 		}
 
-		msgJSON := new(models.Message)
+		MR.messageDB.Exec("DELETE FROM NewMessages WHERE msg_id = $1 AND receiver_id = $2", msgId, userId)
 
-		err = json.Unmarshal(msg.([]byte), &msgJSON)
-
-		if err != nil {
-			fmt.Println(err)
-			msgsArray = append(msgsArray, msg.(models.Message))
-		} else {
-			msgsArray = append(msgsArray, *msgJSON)
-		}
+		msgsArray = append(msgsArray, *msg)
 
 	}
+
+	fmt.Println(msgsArray)
 
 	return msgsArray, nil
 }

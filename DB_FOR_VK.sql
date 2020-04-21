@@ -13,6 +13,7 @@ DROP TABLE IF EXISTS PostsAuthor;
 DROP TABLE IF EXISTS Chats CASCADE;
 DROP TABLE IF EXISTS ChatsUsers;
 DROP TABLE IF EXISTS Messages;
+DROP TABLE IF EXISTS NewMessages;
 
 
 
@@ -110,31 +111,36 @@ CREATE UNIQUE INDEX userphotolike_idx ON UsersPhotosLikes (u_id, photo_id);
 
 CREATE TABLE Chats
 (
-    ch_id BIGSERIAL PRIMARY KEY,
-    u_id  INT    NOT NULL REFERENCES Users,
-    photo_id  INT DEFAULT 2 REFERENCES Photos,
-    name  TEXT  DEFAULT ''
+    ch_id    BIGSERIAL PRIMARY KEY,
+    u_id     INT NOT NULL REFERENCES Users,
+    photo_id INT  DEFAULT 2 REFERENCES Photos,
+    name     TEXT DEFAULT ''
 );
 
 CREATE TABLE ChatsUsers
 (
-    ch_id BIGINT NOT NULL REFERENCES Chats,
-    u_id  INT    NOT NULL REFERENCES Users,
-    lst_msg_id  BIGINT DEFAULT 0
+    ch_id      BIGINT NOT NULL REFERENCES Chats,
+    u_id       INT    NOT NULL REFERENCES Users,
+    lst_msg_id BIGINT DEFAULT 0
 );
 
 CREATE UNIQUE INDEX chatuser_idx ON ChatsUsers (u_id, ch_id);
 
 CREATE TABLE Messages
 (
-    msg_id BIGSERIAL PRIMARY KEY,
-    ch_id  BIGINT NOT NULL REFERENCES Chats,
-    u_id   INT    NOT NULL REFERENCES Users,
-    del_stat    BOOLEAN DEFAULT TRUE,
+    msg_id    BIGSERIAL PRIMARY KEY,
+    ch_id     BIGINT NOT NULL REFERENCES Chats,
+    u_id      INT    NOT NULL REFERENCES Users,
+    del_stat  BOOLEAN DEFAULT TRUE,
     send_time TIMESTAMP,
-    txt    TEXT
+    txt       TEXT
 );
 
+CREATE TABLE NewMessages
+(
+    msg_id BIGINT REFERENCES Messages,
+    receiver_id INT REFERENCES Users
+);
 
 
 INSERT INTO photos (url, photos_likes_count)
