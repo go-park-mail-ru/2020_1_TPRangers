@@ -18,33 +18,71 @@ func NewChatRepositoryRealisation(db *sql.DB) ChatRepositoryRealisation {
 
 func (CR ChatRepositoryRealisation) CreateNewChat(chatPhoto, chatName string, users []int) error {
 
-	photoId := 0
+	if len(users) < 0 {
+		return nil
+	}
 
-	if chatPhoto != "" {
-		row := CR.chatDB.QueryRow("INSERT INTO Photos (url , photos_likes_count) VALUES ($1,$2) RETURNING photo_id", chatPhoto, 0)
+	if len(users) <=2 {
+		privateValues := make([]interface{},0)
+		privateValues = append(privateValues , users[0])
 
-		err := row.Scan(&photoId)
+		insertRow := ""
+		chatsValues := make([]interface{},0)
+		chatsValues = append(chatsValues , users[0])
+
+		if len(users) == 1 {
+			insertRow = "INSERT INTO ChatsUsers (u_id,pch_id) VALUES ($1,$2)"
+			privateValues = append(privateValues , users[0])
+		} else {
+			insertRow = "INSERT INTO ChatsUsers (u_id,pch_id) VALUES ($1,$3),($2,$4)"
+			chatsValues = append(chatsValues , users[1])
+			privateValues = append(privateValues , users[1])
+		}
+
+		row := CR.chatDB.QueryRow("INSERT INTO PrivateChats (fu_id,ch_id) VALUES ($1,$2) RETURNING ch_id" , privateValues...)
+
+		chatId := 0
+		err := row.Scan(&chatId)
 
 		if err != nil {
 			return err
 		}
 
-	}
+		chatsValues = append(chatsValues , chatId)
+		if len(users) == 2 {
+			chatsValues = append(chatsValues , chatId)
+		}
 
-	chatId := int64(0)
-
-	var row *sql.Row
-
-	if photoId == 0 {
-		row = CR.chatDB.QueryRow("INSERT INTO Chats (name , u_id) VALUES ($1, $2) RETURNING ch_id", chatName, users[0])
-	} else {
-		row = CR.chatDB.QueryRow("INSERT INTO Chats (name , photo_id , u_id) VALUES ($1,$2,$3) RETURNING ch_id", chatName, photoId, users[0])
-	}
-
-	err := row.Scan(&chatId)
-
-	if err != nil {
+		_ , err = CR.chatDB.Exec(insertRow, chatsValues...)
 		return err
+	}
+
+
+	chatId := 0
+	if chatPhoto == "" {
+		row := CR.chatDB.QueryRow("INSERT INTO GroupChats (u_id,name) VALUES ($1,$2) RETURNING ch_id", users[0], chatName)
+		err := row.Scan(&chatId)
+
+		if err != nil {
+			return err
+		}
+	} else
+	{
+
+		photoId := 0
+		photoRow := CR.chatDB.QueryRow("INSERT INTO Photos (url) VALUES($1) RETURNING photo_id", chatPhoto)
+		err := photoRow.Scan(&photoId)
+
+		if err != nil {
+			return err
+		}
+
+		row := CR.chatDB.QueryRow("INSERT INTO GroupChats (u_id,name) VALUES ($1,$2) RETURNING ch_id", users[0], chatName)
+		err = row.Scan(&chatId)
+
+		if err != nil {
+			return err
+		}
 	}
 
 	iter := 2
@@ -61,29 +99,19 @@ func (CR ChatRepositoryRealisation) CreateNewChat(chatPhoto, chatName string, us
 
 	insertRow = insertRow[:len(insertRow)-1]
 
-	_, err = CR.chatDB.Exec("INSERT INTO ChatsUsers (ch_id,u_id) VALUES "+insertRow, insertValues...)
+	_, err := CR.chatDB.Exec("INSERT INTO ChatsUsers (gch_id,u_id) VALUES "+insertRow, insertValues...)
 
 	if err != nil {
 		return err
 	}
 
 	return nil
+
 }
 
 func (CR ChatRepositoryRealisation) ExitChat(chatId int64, userId int) error {
 
-	lstMsgrow := CR.chatDB.QueryRow("SELECT msg_id FROM Messages WHERE ch_id = $1 ORDER BY msg_id LIMIT 1", chatId)
-
-	lstMsgId := int64(0)
-
-	err := lstMsgrow.Scan(&lstMsgId)
-
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
-
-	_, err = CR.chatDB.Exec("UPDATE ChatsUsers SET lst_msg_id = $1 WHERE ch_id = $2 AND u_id = $3", lstMsgId, chatId, userId)
+	_ , err := CR.chatDB.Exec("DELETE FROM ChatsUsers WHERE u_id = $1 AND gch_id = $2", userId , chatId)
 
 	return err
 }
