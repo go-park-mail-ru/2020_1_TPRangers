@@ -1,6 +1,7 @@
 package delivery
 
 import (
+	"fmt"
 	"github.com/gobwas/ws"
 	"github.com/labstack/echo"
 	"go.uber.org/zap"
@@ -8,7 +9,6 @@ import (
 	"main/internal/socket"
 	"main/internal/tools/errors"
 	"net/http"
-	tokens "main/internal/tools/token_generator"
 )
 
 type SocketDelivery struct {
@@ -28,9 +28,14 @@ func (SD SocketDelivery) UpgradeToSocket(rwContext echo.Context) error {
 	uId := rwContext.Get("REQUEST_ID").(string)
 	token := rwContext.Param("token")
 
-	userId , ok := tokens.CheckToken(token)
+	fmt.Println(len(token))
 
-	if userId == -1 || !ok {
+	userId , err := SD.socketLogic.CheckToken(token)
+
+	fmt.Println(userId)
+
+
+	if userId == -1 || err != nil {
 		SD.logger.Debug(
 			zap.String("ID", uId),
 			zap.String("TOKEN", errors.InvalidToken.Error()),
@@ -69,5 +74,5 @@ func (SD SocketDelivery) UpgradeToSocket(rwContext echo.Context) error {
 }
 
 func (SD SocketDelivery) InitHandlers(server *echo.Echo) {
-	server.GET("/api/v1//ws/:token", SD.UpgradeToSocket)
+	server.GET("/api/v1/ws/:token", SD.UpgradeToSocket)
 }

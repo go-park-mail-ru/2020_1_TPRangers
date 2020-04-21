@@ -34,16 +34,7 @@ func (mh MiddlewareHandler) SetMiddleware(server *echo.Echo) {
 
 func (mh MiddlewareHandler) SetCorsMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		if c.Request().URL.Path == "/ws" {
-			fmt.Println(c.Request().URL.Path)
 
-			fmt.Println("\n")
-			fmt.Println(c.Request())
-			fmt.Println(c.Cookies())
-			fmt.Println("\n")
-
-			c.Response().Header().Set("Access-Control-Allow-Origin", "ws://localhost:3000")
-		}
 		c.Response().Header().Set("Access-Control-Allow-Origin", mh.httpOrigin)
 		c.Response().Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS, PUT, DELETE, POST")
 		c.Response().Header().Set("Access-Control-Allow-Headers", "Origin, X-Login, Set-Cookie, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, csrf-token, Authorization")
@@ -97,6 +88,8 @@ func (mh MiddlewareHandler) AccessLog() echo.MiddlewareFunc {
 				zap.Duration("TIME FOR ANSWER", time.Since(start)),
 			)
 
+			fmt.Println(err)
+
 			return err
 
 		}
@@ -122,12 +115,6 @@ func (mh MiddlewareHandler) CheckAuthentication() echo.MiddlewareFunc {
 			}
 
 			rwContext.Set("user_id", userId)
-
-			mh.logger.Info(
-				zap.Int("ID", userId),
-				zap.String("URL", rwContext.Request().URL.Path),
-				zap.String("METHOD", rwContext.Request().Method),
-			)
 
 			return next(rwContext)
 

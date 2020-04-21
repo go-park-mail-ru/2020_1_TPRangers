@@ -151,7 +151,7 @@ func (CD ChatsDelivery) GetAllChats(rwContext echo.Context) error {
 		return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: errors.CookieExpired.Error()})
 	}
 
-	chats , err := CD.chatsLogic.GetAllChats(userId)
+	allChats, err := CD.chatsLogic.GetAllChats(userId)
 
 
 	if err != nil {
@@ -168,7 +168,7 @@ func (CD ChatsDelivery) GetAllChats(rwContext echo.Context) error {
 		zap.Int("ANSWER STATUS", http.StatusOK),
 	)
 
-	return rwContext.JSON(http.StatusOK, chats)
+	return rwContext.JSON(http.StatusOK, allChats)
 
 }
 

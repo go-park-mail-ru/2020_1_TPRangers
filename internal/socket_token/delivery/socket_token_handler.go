@@ -4,18 +4,20 @@ import (
 	"github.com/labstack/echo"
 	"go.uber.org/zap"
 	"main/internal/models"
+	stoken "main/internal/socket_token"
 	"main/internal/tools/errors"
-	tokens "main/internal/tools/token_generator"
 	"net/http"
 )
 
 type TokenDelivery struct {
-	logger *zap.SugaredLogger
+	tokenUseCase stoken.TokeUseCase
+	logger       *zap.SugaredLogger
 }
 
-func NewTokenDelivery(logger *zap.SugaredLogger) TokenDelivery {
+func NewTokenDelivery(logger *zap.SugaredLogger, tokenUseCase stoken.TokeUseCase) TokenDelivery {
 	return TokenDelivery{
-		logger: logger,
+		logger:       logger,
+		tokenUseCase: tokenUseCase,
 	}
 }
 
@@ -33,7 +35,15 @@ func (TD TokenDelivery) TokenSetup(rwContext echo.Context) error {
 		return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: errors.CookieExpired.Error()})
 	}
 
-	token := tokens.CryptToken(userId)
+	token, err := TD.tokenUseCase.CreateNewToken(userId)
+
+	if err != nil {
+		TD.logger.Debug(
+			zap.String("ID", uId),
+			zap.String("COOKIE", err.Error()),
+		)
+		return rwContext.JSON(http.StatusConflict, models.JsonStruct{Err: err.Error()})
+	}
 
 	TD.logger.Info(
 		zap.String("ID", uId),
