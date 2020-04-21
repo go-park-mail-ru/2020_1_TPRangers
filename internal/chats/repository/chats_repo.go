@@ -179,45 +179,6 @@ func (CR ChatRepositoryRealisation) GetChatMessages(chatId int64, userId int) (m
 
 func (CR ChatRepositoryRealisation) GetAllChats(userId int) ([]models.Chat, error) {
 
-	chatsRow, err := CR.chatDB.Query("SELECT CU.ch_id , CH.name, P.url FROM ChatsUsers CU INNER JOIN Chats CH ON(CH.ch_id=CU.ch_id) INNER JOIN Photos P ON(CH.photo_id=P.photo_id) WHERE CU.u_id = $1 ORDER BY CU.ch_id DESC", userId)
 
-	defer func() {
-		if chatsRow != nil {
-			chatsRow.Close()
-		}
-	}()
-
-	chats := make([]models.Chat, 0)
-	if err != nil {
-		return chats, err
-	}
-
-	for chatsRow.Next() {
-
-		chat := new(models.Chat)
-
-		err = chatsRow.Scan(&chat.ChatId, &chat.ChatName, &chat.ChatPhoto)
-
-		if err != nil {
-			return chats, err
-		}
-
-		if chat.ChatName == "" {
-			privateChatRow := CR.chatDB.QueryRow("SELECT U.name , U.surname , P.url FROM ChatsUsers CU INNER JOIN Users U ON(CU.u_id=U.u_id) INNER JOIN Photos P ON(P.photo_id=U.photo_id) WHERE CU.u_id != $1", userId)
-
-			name := ""
-			surname := ""
-
-			privateChatRow.Scan(&name, &surname, &chat.ChatPhoto)
-
-			chat.ChatName = name + " " + surname
-
-		}
-
-		chats = append(chats, *chat)
-
-	}
-
-	return chats, nil
 
 }

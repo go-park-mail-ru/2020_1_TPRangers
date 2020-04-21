@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"fmt"
 	"github.com/labstack/echo"
 	uuid "github.com/satori/go.uuid"
 	"go.uber.org/zap"
@@ -87,8 +86,6 @@ func (mh MiddlewareHandler) AccessLog() echo.MiddlewareFunc {
 				zap.String("ID", uniqueID.String()),
 				zap.Duration("TIME FOR ANSWER", time.Since(start)),
 			)
-
-			fmt.Println(err)
 
 			return err
 

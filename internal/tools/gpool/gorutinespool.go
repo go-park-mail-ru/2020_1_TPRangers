@@ -16,14 +16,16 @@ func (p Pool) Schedule(task func()) {
 	select {
 	case p.work <- task:
 	case p.sem <- struct{}{}:
-		go p.worker()
+		go p.worker(task)
 	}
 }
 
-func (p Pool) worker() {
+func (p Pool) worker(task func()) {
 	defer func() { <-p.sem }()
-	for {
-		task := <-p.work
+
+	task()
+
+	for task := range p.work {
 		task()
 	}
 }

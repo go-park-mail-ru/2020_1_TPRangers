@@ -20,32 +20,39 @@ func NewEventer(user int, messages message.MessageRepository) Eventer {
 }
 
 func (EV Eventer) WriteNewMessage(conn net.Conn) {
-	req := wsutil.NewReader(conn, ws.StateClientSide)
+
+	fmt.Println("wrote new message")
+
+	req := wsutil.NewReader(conn, ws.StateServerSide)
 	decoder := json.NewDecoder(req)
-
+	hdr , err := req.NextFrame()
 	resp := wsutil.NewWriter(conn, ws.StateServerSide, ws.OpText)
-	encoder := json.NewEncoder(resp)
-	defer resp.Flush()
 
-	answer := models.JSONEvent{}
+	if err != nil || hdr.OpCode == ws.OpClose{
+		fmt.Println("connection closed")
+		conn.Close()
+		return
+	}
+
+	defer func() {
+		resp.Flush()
+	}()
+
 	msg := new(models.Message)
 
-	if err := decoder.Decode(msg); err != nil {
-		answer.Event = "wrong json"
-		encoder.Encode(&answer)
+	if err = decoder.Decode(&msg); err != nil {
+
 		fmt.Println("DECODE JSON ERROR : ", err)
 		return
 	}
 
 	if err := EV.messageDB.AddNewMessage(EV.userId, *msg); err != nil {
-		answer.Event = "can't add message"
-		encoder.Encode(&answer)
+
 		fmt.Println("ADD NEW MESSAGES ERROR : ", err)
 		return
 	}
 
-	answer.Event = "ok"
-	encoder.Encode(&answer)
+
 }
 
 func (EV Eventer) GetNewMessages(conn net.Conn) {
@@ -53,12 +60,13 @@ func (EV Eventer) GetNewMessages(conn net.Conn) {
 	encoder := json.NewEncoder(resp)
 	answer := models.JSONEvent{}
 
+	defer resp.Flush()
+
 	messages, err := EV.messageDB.ReceiveNewMessages(EV.userId)
 
 	if err != nil {
 		answer.Event = "can't get new messages"
 		encoder.Encode(&answer)
-		resp.Flush()
 		fmt.Println("GET NEW MESSAGES ERROR : ", err)
 		return
 	}
@@ -68,7 +76,6 @@ func (EV Eventer) GetNewMessages(conn net.Conn) {
 	for iter, _ := range messages {
 		answer.Message = messages[iter]
 		encoder.Encode(&answer)
-		resp.Flush()
 	}
 
 }
