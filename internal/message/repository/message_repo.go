@@ -50,6 +50,7 @@ func (MR MessageRepositoryRealisation) AddNewMessage(author int, message models.
 		}
 
 		var res interface{}
+
 		if _, err = redis.Bytes(MR.msgNotifier.JSONGet(strconv.Itoa(author), "")); err != nil {
 			res, err = MR.msgNotifier.JSONSet(strconv.Itoa(author), "", message)
 		} else {
@@ -64,6 +65,22 @@ func (MR MessageRepositoryRealisation) AddNewMessage(author int, message models.
 }
 
 func (MR MessageRepositoryRealisation) ReceiveNewMessages(userId int) ([]models.Message, error) {
+
+	_, errsss := MR.msgNotifier.JSONSet("2", "", models.Message{
+		ChatId:        1,
+		ChatPhoto:     "",
+		ChatName:      "",
+		AuthorName:    "",
+		AuthorSurname: "",
+		AuthorUrl:     "",
+		AuthorPhoto:   "",
+		Text:          "123123123123123123123123123",
+		Time:          "",
+	})
+
+	if errsss != nil {
+		fmt.Println(errsss)
+	}
 
 	msgsInt, err := MR.msgNotifier.JSONArrLen(strconv.Itoa(userId), "")
 
