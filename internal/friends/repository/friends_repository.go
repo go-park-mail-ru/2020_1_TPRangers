@@ -5,6 +5,7 @@ import (
 	_ "github.com/lib/pq"
 	"main/internal/models"
 	"main/internal/tools/errors"
+	"strings"
 )
 
 type FriendRepositoryRealisation struct {
@@ -14,6 +15,45 @@ type FriendRepositoryRealisation struct {
 func NewFriendRepositoryRealisation(db *sql.DB) FriendRepositoryRealisation {
 	return FriendRepositoryRealisation{friendDB: db}
 
+}
+
+func (Data FriendRepositoryRealisation) SearchFriends(userID int, valueOfSearch string) ([]models.Person, error) {
+	persons := make([]models.Person, 0)
+	if strings.Contains(valueOfSearch, " ") {
+		arrayOfvalue := strings.Split(valueOfSearch, " ")
+		nameOrSurname := arrayOfvalue[0]
+		SurnameOrName := arrayOfvalue[1]
+		rows, err := Data.friendDB.Query("SELECT u.name, u.surname, u.login, ph.url FROM users AS u INNER JOIN photos AS ph ON (u.photo_id = ph.photo_id) INNER JOIN friends AS f ON (f.u_id = $1 AND f.f_id = u.u_id) WHERE (u.name = $2 AND u.surname = $3) OR (u.name = $4 AND u.surname = $5);", userID,nameOrSurname, SurnameOrName, SurnameOrName, nameOrSurname)
+		if err != nil {
+			return nil, errors.FailReadFromDB
+		}
+		person := models.Person{}
+		for rows.Next() {
+			err = rows.Scan(&person.Name, &person.Surname, &person.Login, &person.PhotoUrl)
+			if err != nil {
+				return nil, errors.FailReadToVar
+			}
+			persons = append(persons, person)
+		}
+
+	} else {
+		rows, err := Data.friendDB.Query("SELECT u.name, u.surname, u.login, ph.url FROM users AS u INNER JOIN photos AS ph ON (u.photo_id = ph.photo_id) INNER JOIN friends AS f ON (f.u_id = $1 AND f.f_id = u.u_id) WHERE (u.name = $2) OR (u.surname = $3);",userID, valueOfSearch, valueOfSearch)
+		if err != nil {
+			return nil, errors.FailReadFromDB
+		}
+		person := models.Person{}
+		for rows.Next() {
+			err = rows.Scan(&person.Name, &person.Surname, &person.Login, &person.PhotoUrl)
+			if err != nil {
+				return nil, errors.FailReadToVar
+			}
+			persons = append(persons, person)
+		}
+	}
+
+
+
+	return persons, nil
 }
 
 func (Data FriendRepositoryRealisation) GetUserLoginById(userId int) (string, error) {

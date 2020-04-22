@@ -5,6 +5,7 @@ import (
 	_ "github.com/lib/pq"
 	"main/internal/models"
 	"main/internal/tools/errors"
+	"strings"
 )
 
 type UserRepositoryRealisation struct {
@@ -14,6 +15,45 @@ type UserRepositoryRealisation struct {
 func NewUserRepositoryRealisation(db *sql.DB) UserRepositoryRealisation {
 	return UserRepositoryRealisation{userDB: db}
 
+}
+
+func (Data UserRepositoryRealisation) SearchUsers(userID int, valueOfSearch string) ([]models.Person, error) {
+	persons := make([]models.Person, 0)
+	if strings.Contains(valueOfSearch, " ") {
+		arrayOfvalue := strings.Split(valueOfSearch, " ")
+		nameOrSurname := arrayOfvalue[0]
+		SurnameOrName := arrayOfvalue[1]
+		rows, err := Data.userDB.Query("SELECT u.name, u.surname, u.login, ph.url FROM users AS u INNER JOIN photos AS ph ON (u.photo_id = ph.photo_id)  WHERE (u.name = $1 AND u.surname = $2) OR (u.name = $3 AND u.surname = $4);", nameOrSurname, SurnameOrName, SurnameOrName, nameOrSurname)
+		if err != nil {
+			return nil, errors.FailReadFromDB
+		}
+		person := models.Person{}
+		for rows.Next() {
+			err = rows.Scan(&person.Name, &person.Surname, &person.Login, &person.PhotoUrl)
+			if err != nil {
+				return nil, errors.FailReadToVar
+			}
+			persons = append(persons, person)
+		}
+
+	} else {
+		rows, err := Data.userDB.Query("SELECT u.name, u.surname, u.login, ph.url FROM users AS u INNER JOIN photos AS ph ON (u.photo_id = ph.photo_id)  WHERE (u.name = $1) OR (u.surname = $2);", valueOfSearch, valueOfSearch)
+		if err != nil {
+			return nil, errors.FailReadFromDB
+		}
+		person := models.Person{}
+		for rows.Next() {
+			err = rows.Scan(&person.Name, &person.Surname, &person.Login, &person.PhotoUrl)
+			if err != nil {
+				return nil, errors.FailReadToVar
+			}
+			persons = append(persons, person)
+		}
+	}
+
+
+
+	return persons, nil
 }
 
 func (Data UserRepositoryRealisation) GetUserLoginById(userId int) (string, error) {

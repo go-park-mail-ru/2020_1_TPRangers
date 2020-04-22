@@ -16,4 +16,5 @@ type UserUseCase interface {
 	CheckFriendship(int, string) (bool, error)
 	GetUserLoginByCookie(int) (string, error)
 	GetUserProfileWhileLogged(string, int) (models.OtherUserProfileData, error)
+	SearchUsers(int, string) ([]models.Person, error)
 }
