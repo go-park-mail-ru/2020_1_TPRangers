@@ -175,7 +175,7 @@ func (feedD FeedDeliveryRealisation) DeleteComment(rwContext echo.Context) error
 	return rwContext.NoContent(http.StatusOK)
 }
 
-func (feedD FeedDeliveryRealisation) GetComments(rwContext echo.Context) error {
+func (feedD FeedDeliveryRealisation) GetPostAndComments(rwContext echo.Context) error {
 	uId := rwContext.Get("REQUEST_ID").(string)
 	userId := rwContext.Get("user_id").(int)
 	postID := rwContext.Param("id")
@@ -188,7 +188,7 @@ func (feedD FeedDeliveryRealisation) GetComments(rwContext echo.Context) error {
 		return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: errors.CookieExpired.Error()})
 	}
 
-	jsonAnswer, err := feedD.feedLogic.GetComments(userId, postID)
+	jsonAnswer, err := feedD.feedLogic.GetPostAndComments(userId, postID)
 
 	if err != nil {
 
@@ -218,5 +218,5 @@ func (feedD FeedDeliveryRealisation) InitHandlers(server *echo.Echo) {
 	server.POST("/api/v1/:id/post", feedD.CreatePost)
 	server.POST("/api/v1/comment", feedD.CreateComment)
 	server.DELETE("/api/v1/comment/:id", feedD.DeleteComment)
-	server.GET("/api/v1/post/:id/comments", feedD.GetComments)
+	server.GET("/api/v1/post/:id/comments", feedD.GetPostAndComments)
 }

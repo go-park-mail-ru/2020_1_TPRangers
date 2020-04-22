@@ -260,24 +260,23 @@ func (Data FeedRepositoryRealisation) DeleteComment(uID int, commentID string) e
 	return nil
 }
 
-func (Data FeedRepositoryRealisation) GetComments(userID int, postID string) ([]models.Comment, error) {
+func (Data FeedRepositoryRealisation) GetPostAndComments(userID int, postID string) (models.Post, error) {
 	rows, err := Data.feedDB.Query("select c.comment_id, c.txt_data, c.attachments, c.comment_likes_count, c.creation_date, ph.photo_id, ph.url, ph.photos_likes_count, u.name, u.surname, u.login " +
 		"from comments AS c INNER JOIN users AS u ON (c.u_id = u.u_id) LEFT JOIN photos AS ph ON c.photo_id = ph.photo_id WHERE c.post_id = $1;", postID)
 	if err != nil {
-		return nil, errors.FailReadFromDB
+		return models.Post{}, errors.FailReadFromDB
 	}
-	comments := []models.Comment{}
+	post := models.Post{}
 	for rows.Next() {
 
 		comment := models.Comment{}
 		err := rows.Scan(&comment.CommentID, &comment.Text, &comment.Attachments, &comment.Likes, &comment.Creation, &comment.Photo.Id, &comment.Photo.Url, &comment.Photo.Likes, &comment.AuthorName, &comment.AuthorSurname, &comment.AuthorUrl)
 		if err != nil {
-			return nil, errors.FailReadToVar
+			return models.Post{}, errors.FailReadToVar
 		}
 		additional_row := Data.feedDB.QueryRow("select ucl.commentlike_id, uphl.photolike_id from userscommentslikes AS ucl RIGHT JOIN comments AS c "+
 			"ON (c.comment_id = ucl.comment_id) LEFT JOIN usersphotoslikes AS uphl ON (c.photo_id = uphl.photo_id) INNER JOIN "+
 			"LEFT JOIN users AS u ON (u.u_id = c.u_id) LEFT JOIN photos AS ph ON (u.photo_id = ph.photo_id) WHERE c.comment_id = $1 AND upl.u_id = $2;", comment.CommentID, userID)
-
 		var commentLikes *int
 		var photoLikes *int
 		add_row := Data.feedDB.QueryRow("select ph.url from photos AS ph INNER JOIN users AS u ON (u.photo_id = ph.photo_id) INNER JOIN comments AS c ON (c.post_id = $1 AND c.u_id = u.u_id);", postID)
@@ -293,9 +292,37 @@ func (Data FeedRepositoryRealisation) GetComments(userID int, postID string) ([]
 		} else {
 			comment.Photo.WasLike = false
 		}
-
-		comments = append(comments, comment)
+		post.Comments = append(post.Comments, comment)
 	}
 
-	return comments, nil
+	post_rows := Data.feedDB.QueryRow("select  p.post_id, p.txt_data, p.attachments, p.posts_likes_count, p.creation_date, ph.photo_id, ph.url, ph.photos_likes_count, u.name, u.surname, u.login " +
+			"from posts AS p INNER JOIN postsauthor AS pa ON (p.post_id = pa.post_id) INNER JOIN users AS u ON (pa.u_id = u.u_id) LEFT JOIN photos AS ph ON p.photo_id = ph.photo_id WHERE p.post_id = $1", postID)
+	if err != nil {
+		return models.Post{}, errors.FailReadFromDB
+	}
+
+	err = post_rows.Scan(&post.Id, &post.Text, &post.Attachments, &post.Likes, &post.Creation, &post.Photo.Id, &post.Photo.Url, &post.Photo.Likes, &post.AuthorName, &post.AuthorSurname, &post.AuthorUrl)
+	if err != nil {
+		return models.Post{}, errors.FailReadToVar
+	}
+	additional_row := Data.feedDB.QueryRow("select upl.postlike_id, uphl.photolike_id from userspostslikes AS upl RIGHT JOIN posts AS p "+
+		"ON (p.post_id = upl.post_id) LEFT JOIN usersphotoslikes AS uphl ON (p.photo_id = uphl.photo_id) INNER JOIN postsauthor AS pa ON (pa.post_id = p.post_id) "+
+		"LEFT JOIN users AS u ON (u.u_id = pa.u_id) LEFT JOIN photos AS ph ON (u.photo_id = ph.photo_id) WHERE p.post_id = $1 AND upl.u_id = $2;", post.Id, userID)
+	var postLikes *int
+	var photoLikes *int
+	add_row := Data.feedDB.QueryRow("select ph.url from photos AS ph INNER JOIN users AS u ON (u.photo_id = ph.photo_id) INNER JOIN postsauthor AS pa ON (pa.post_id = $1 AND pa.u_id = u.u_id);", postID)
+	add_row.Scan(&post.AuthorPhoto)
+	additional_row.Scan(&postLikes, &photoLikes)
+	if postLikes != nil {
+		post.WasLike = true
+	} else {
+		post.WasLike = false
+	}
+	if photoLikes != nil {
+		post.Photo.WasLike = true
+	} else {
+		post.Photo.WasLike = false
+	}
+
+	return post, nil
 }

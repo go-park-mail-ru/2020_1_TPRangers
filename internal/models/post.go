@@ -12,4 +12,5 @@ type Post struct {
 	AuthorSurname string `json:"authorSurname,omitempty"`
 	AuthorUrl     string `json:"authorUrl,omitempty"`
 	AuthorPhoto   string `json:"authorPhoto,omitempty"`
+	Comments	  []Comment `json:"Comments,omitempty"`
 }
