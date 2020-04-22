@@ -346,6 +346,38 @@ func (userD UserDeliveryRealisation) GetCsrf(rwContext echo.Context) error {
 	return rwContext.JSON(http.StatusOK, models.JsonStruct{Body: csrf})
 }
 
+func (userD UserDeliveryRealisation) SearchUsers(rwContext echo.Context) error {
+	rId := rwContext.Get("REQUEST_ID").(string)
+	userId := rwContext.Get("user_id").(int)
+	valueOfSearch := rwContext.Param("value")
+
+	if userId == -1 {
+		userD.logger.Debug(
+			zap.String("ID", rId),
+			zap.String("ERROR", errors.CookieExpired.Error()),
+			zap.Int("ANSWER STATUS", http.StatusUnauthorized),
+		)
+		return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: errors.CookieExpired.Error()})
+	}
+
+	jsonAnswer, err := userD.userLogic.SearchUsers(userId, valueOfSearch)
+
+	if err != nil {
+		userD.logger.Info(
+			zap.String("ID", rId),
+			zap.String("ERROR", err.Error()),
+			zap.Int("ANSWER STATUS", http.StatusConflict),
+		)
+		return rwContext.NoContent(http.StatusConflict)
+	}
+
+	userD.logger.Info(
+		zap.String("ID", rId),
+		zap.Int("ANSWER STATUS", http.StatusOK),
+	)
+	return rwContext.JSON(http.StatusOK, jsonAnswer)
+}
+
 
 func NewUserDelivery(log *zap.SugaredLogger, userRealisation users.UserUseCase) UserDeliveryRealisation {
 	return UserDeliveryRealisation{userLogic: userRealisation, logger: log}
@@ -360,6 +392,7 @@ func (userD UserDeliveryRealisation) InitHandlers(server *echo.Echo) {
 	server.GET("/api/v1/profile", userD.Profile)
 	server.GET("/api/v1/settings", userD.GetSettings)
 	server.GET("/api/v1/user/:id", userD.GetUser)
+	server.GET("api/v1/users/search/:value", userD.SearchUsers)
 
 	server.GET("api/v1/csrf", userD.GetCsrf)
 	server.DELETE("/api/v1/login", userD.Logout)

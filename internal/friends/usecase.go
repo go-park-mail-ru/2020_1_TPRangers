@@ -7,4 +7,5 @@ type FriendUseCase interface {
 	DeleteFriend(int, string) error
 	GetAllFriends(string) ([]models.FriendLandingInfo, error)
 	GetUserLoginById(int) (string, error)
+	SearchFriends(int, string) ([]models.Person, error)
 }

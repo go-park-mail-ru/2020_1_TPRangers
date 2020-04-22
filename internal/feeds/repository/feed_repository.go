@@ -53,7 +53,6 @@ func (Data FeedRepositoryRealisation) GetUserFeedById(id int, count int) ([]mode
 			post.Photo.WasLike = false
 		}
 		if err != nil {
-			fmt.Println(err.Error(), "FEED ================================ id")
 			return nil, errors.FailReadToVar
 		}
 
