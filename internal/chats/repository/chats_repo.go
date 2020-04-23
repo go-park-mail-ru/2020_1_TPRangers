@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"fmt"
 	"main/internal/models"
-	"main/internal/tools/errors"
 	"strconv"
 )
 
@@ -21,25 +20,24 @@ func (CR ChatRepositoryRealisation) CreateNewChat(chatPhoto, chatName string, us
 	if len(users) < 0 {
 		return nil
 	}
-
-	if len(users) <=2 {
-		privateValues := make([]interface{},0)
-		privateValues = append(privateValues , users[0])
+	if len(users) <= 2 {
+		privateValues := make([]interface{}, 0)
+		privateValues = append(privateValues, users[0])
 
 		insertRow := ""
-		chatsValues := make([]interface{},0)
-		chatsValues = append(chatsValues , users[0])
+		chatsValues := make([]interface{}, 0)
+		chatsValues = append(chatsValues, users[0])
 
 		if len(users) == 1 {
 			insertRow = "INSERT INTO ChatsUsers (u_id,pch_id) VALUES ($1,$2)"
-			privateValues = append(privateValues , users[0])
+			privateValues = append(privateValues, users[0])
 		} else {
 			insertRow = "INSERT INTO ChatsUsers (u_id,pch_id) VALUES ($1,$3),($2,$4)"
-			chatsValues = append(chatsValues , users[1])
-			privateValues = append(privateValues , users[1])
+			chatsValues = append(chatsValues, users[1])
+			privateValues = append(privateValues, users[1])
 		}
-
-		row := CR.chatDB.QueryRow("INSERT INTO PrivateChats (fu_id,ch_id) VALUES ($1,$2) RETURNING ch_id" , privateValues...)
+		fmt.Println(privateValues)
+		row := CR.chatDB.QueryRow("INSERT INTO PrivateChats (fu_id,su_id) VALUES ($1,$2) RETURNING ch_id", privateValues...)
 
 		chatId := 0
 		err := row.Scan(&chatId)
@@ -48,15 +46,14 @@ func (CR ChatRepositoryRealisation) CreateNewChat(chatPhoto, chatName string, us
 			return err
 		}
 
-		chatsValues = append(chatsValues , chatId)
+		chatsValues = append(chatsValues, chatId)
 		if len(users) == 2 {
-			chatsValues = append(chatsValues , chatId)
+			chatsValues = append(chatsValues, chatId)
 		}
 
-		_ , err = CR.chatDB.Exec(insertRow, chatsValues...)
+		_, err = CR.chatDB.Exec(insertRow, chatsValues...)
 		return err
 	}
-
 
 	chatId := 0
 	if chatPhoto == "" {
@@ -77,7 +74,7 @@ func (CR ChatRepositoryRealisation) CreateNewChat(chatPhoto, chatName string, us
 			return err
 		}
 
-		row := CR.chatDB.QueryRow("INSERT INTO GroupChats (u_id,name) VALUES ($1,$2) RETURNING ch_id", users[0], chatName)
+		row := CR.chatDB.QueryRow("INSERT INTO GroupChats (u_id,name,photo_id) VALUES ($1,$2,$3) RETURNING ch_id", users[0], chatName, photoId)
 		err = row.Scan(&chatId)
 
 		if err != nil {
@@ -111,102 +108,191 @@ func (CR ChatRepositoryRealisation) CreateNewChat(chatPhoto, chatName string, us
 
 func (CR ChatRepositoryRealisation) ExitChat(chatId int64, userId int) error {
 
-	_ , err := CR.chatDB.Exec("DELETE FROM ChatsUsers WHERE u_id = $1 AND gch_id = $2", userId , chatId)
+	_, err := CR.chatDB.Exec("DELETE FROM ChatsUsers WHERE u_id = $1 AND gch_id = $2", userId, chatId)
 
 	return err
 }
 
-func (CR ChatRepositoryRealisation) GetChatMessages(chatId int64, userId int) (models.Chat, []models.Message, error) {
+func (CR ChatRepositoryRealisation) GetPrivateChatMessages(chatId int64, userId int) (models.ChatInfo, []models.Message, error) {
+	chatInfo := new(models.ChatInfo)
+	chatInfo.IsGroupChat = false
+	chatInfo.ChatId = strconv.FormatInt(chatId, 10)
 
-	isInChat := 0
+	chatQuery := CR.chatDB.QueryRow("SELECT U.name,U.surname,U.login,P.url FROM PrivateChats PCH INNER JOIN Users U ON CASE "+
+		"WHEN PCH.su_id != $2 AND PCH.su_id=U.u_id THEN 1 "+
+		"WHEN PCH.fu_id != $2 AND PCH.fu_id=U.u_id THEN 1 "+
+		"ELSE 0 "+
+		"END = 1 "+
+		"INNER JOIN Photos P ON(P.photo_id=U.photo_id) "+
+		"WHERE PCH.ch_id = $1 GROUP BY U.name,U.surname,U.login,P.url", chatId, userId)
 
-	row := CR.chatDB.QueryRow("SELECT u_id FROM ChatsUsers WHERE u_id = $1 AND ch_id = $2", userId, chatId)
-
-	err := row.Scan(&isInChat)
-
-	if err != nil || isInChat != userId {
-		fmt.Println(err, isInChat, userId)
-		return models.Chat{}, nil, errors.NotExist
-	}
-
-	row = CR.chatDB.QueryRow("SELECT CH.ch_id , PH.url , CH.name , COUNT(CU.u_id) AS u_count FROM Chats CH LEFT JOIN Photos PH ON(PH.photo_id=CH.photo_id) INNER JOIN ChatsUsers CU ON(CU.ch_id=CH.ch_id) WHERE CH.ch_id = $1 GROUP BY CH.ch_id , PH.url , CH.name ", chatId)
-
-	chatInfo := new(models.Chat)
-	err = row.Scan(&chatInfo.ChatId, &chatInfo.ChatPhoto, &chatInfo.ChatName, &chatInfo.ChatCounter)
-
-	if err != nil {
-		fmt.Println("4" , err)
-		return models.Chat{}, nil, err
-	}
-
-	lastMsgRow := CR.chatDB.QueryRow("SELECT lst_msg_id FROM ChatsUsers WHERE ch_id = $1 AND u_id = $2" , chatInfo.ChatId , userId)
-	lastMsgId := int64(0)
-
-	err = lastMsgRow.Scan(&lastMsgId)
+	err := chatQuery.Scan(&chatInfo.PrivateName, &chatInfo.PrivateSurname, &chatInfo.PrivateUrl, &chatInfo.ChatPhoto)
 
 	if err != nil {
 		fmt.Println(err)
-		return models.Chat{}, nil, err
+		return models.ChatInfo{}, nil, err
 	}
 
-	if chatInfo.ChatCounter == 2 {
-		name := ""
-		surname := ""
-		row = CR.chatDB.QueryRow("SELECT U.name , U.surname , P.url FROM ChatsUsers CU INNER JOIN Users U ON(U.u_id=CU.u_id) INNER JOIN Photos P ON(P.photo_id=u.photo_id) WHERE CU.u_id != $1", userId)
-		err = row.Scan(&name, &surname, &chatInfo.ChatPhoto)
-
-		chatInfo.IsGroupChat = false
-
-		if err != nil {
-			fmt.Println("3" , err)
-			return models.Chat{}, nil, err
-		}
-
-		chatInfo.ChatName = name + " " + surname
-	} else {
-		chatInfo.IsGroupChat = true
-	}
-
-	messages := make([]models.Message, 0)
-
-	var msgRows *sql.Rows
-
-	defer func() {
-		if msgRows != nil {
-			msgRows.Close()
-		}
-	}()
-
-	iter := 0
-	if lastMsgId == 0 {
-		iter = 1
-		msgRows, err = CR.chatDB.Query("SELECT M.msg_id , M.txt, M.send_time ,U.login , U.name , U.surname ,P.url FROM Messages M INNER JOIN Users U ON(U.u_id=M.u_id) INNER JOIN Photos P ON(P.photo_id = U.photo_id) WHERE M.ch_id = $1 AND M.del_stat = TRUE  ORDER BY M.msg_id DESC  LIMIT 30", chatId)
-	} else {
-		iter = 2
-		msgRows, err = CR.chatDB.Query("SELECT M.msg_id , M.txt, M.send_time ,U.login , U.name , U.surname ,P.url FROM Messages M INNER JOIN Users U ON(U.u_id=M.u_id) INNER JOIN Photos P ON(P.photo_id = U.photo_id) WHERE M.ch_id = $1 AND M.del_stat = TRUE AND M.msg_id < $2 ORDER BY M.msg_id DESC LIMIT 30", chatId, lastMsgId)
-	}
+	msgQuery, err := CR.chatDB.Query("SELECT M.u_id , M.txt, M.send_time,U.name,U.surname,U.login,P.url FROM Messages M INNER JOIN Users U ON(U.u_id=M.u_id) INNER JOIN Photos P ON(P.photo_id=U.photo_id) WHERE M.pch_id = $1 ORDER BY M.send_time DESC", chatId)
 
 	if err != nil {
-		fmt.Println(iter, err)
-		return models.Chat{}, nil, err
+		return models.ChatInfo{}, nil, err
 	}
 
-	for msgRows.Next() {
+	msgs := make([]models.Message, 0)
 
+	for msgQuery.Next() {
+
+		var uId *int
 		msg := new(models.Message)
-		msgId := int64(0)
 
-		err = msgRows.Scan(&msgId, &msg.Text, &msg.Time, &msg.AuthorUrl, &msg.AuthorName, &msg.AuthorSurname, &msg.AuthorPhoto)
+		err := msgQuery.Scan(&uId, &msg.Text, &msg.Time, &msg.AuthorName, &msg.AuthorSurname, &msg.AuthorUrl, &msg.AuthorPhoto)
 
-		messages = append(messages, *msg)
+		if *uId != userId {
+			msg.IsMe = false
+		} else {
+			msg.IsMe = true
+		}
 
+		if err != nil {
+			return models.ChatInfo{}, nil, err
+		}
+
+		msgs = append(msgs, *msg)
 	}
 
-	return *chatInfo, messages, nil
+	return *chatInfo, msgs, nil
+}
+
+func (CR ChatRepositoryRealisation) GetGroupChatMessages(chatId int64, userId int) (models.ChatInfo, []models.Message, error) {
+	chatInfo := new(models.ChatInfo)
+	chatInfo.IsGroupChat = true
+	chatInfo.ChatId = "c" + strconv.FormatInt(chatId, 10)
+
+	chatQuery := CR.chatDB.QueryRow("SELECT GC.name,P.url,COUNT(CU.u_id) FROM GroupChats GC INNER JOIN Photos P ON(P.photo_id=GC.photo_id) INNER JOIN ChatsUsers CU ON(CU.gch_id=GC.ch_id) WHERE GC.ch_id = $1 GROUP BY GC.name,P.url", chatId)
+
+	err := chatQuery.Scan(&chatInfo.ChatName, &chatInfo.ChatPhoto, &chatInfo.ChatCounter)
+
+	if err != nil {
+		fmt.Println(err)
+		return models.ChatInfo{}, nil, err
+	}
+
+	msgQuery, err := CR.chatDB.Query("SELECT M.u_id , M.txt, M.send_time,U.name,U.surname,U.login,P.url FROM Messages M INNER JOIN Users U ON(U.u_id=M.u_id) INNER JOIN Photos P ON(P.photo_id=U.photo_id) WHERE M.gch_id = $1 ORDER BY M.send_time DESC", chatId)
+
+	if err != nil {
+		fmt.Println(err , "here")
+		return models.ChatInfo{}, nil, err
+	}
+
+	msgs := make([]models.Message, 0)
+
+	for msgQuery.Next() {
+
+		var uId *int
+		msg := new(models.Message)
+
+		err := msgQuery.Scan(&uId, &msg.Text, &msg.Time, &msg.AuthorName, &msg.AuthorSurname, &msg.AuthorUrl, &msg.AuthorPhoto)
+
+		if *uId != userId {
+			msg.IsMe = false
+		} else {
+			msg.IsMe = true
+		}
+
+		if err != nil {
+			return models.ChatInfo{}, nil, err
+		}
+
+		msgs = append(msgs, *msg)
+	}
+
+	return *chatInfo, msgs, nil
 }
 
 func (CR ChatRepositoryRealisation) GetAllChats(userId int) ([]models.Chat, error) {
 
+	queryRow := "WITH MESS AS " +
+		"( " +
+		"SELECT max(M.msg_id) as msg_id, GC.ch_id as cg_id FROM ChatsUsers CU " +
+		"LEFT JOIN PrivateChats PC ON(PC.ch_id=CU.pch_id) " +
+		"LEFT JOIN Users U ON CASE " +
+		"WHEN PC.fu_id != $1 AND PC.fu_id= U.u_id  THEN 1 " +
+		"WHEN PC.su_id != $1 AND PC.su_id = U.u_id THEN 1 " +
+		"WHEN PC.fu_id = $1 AND PC.su_id = $1 AND U.u_id=PC.fu_id THEN 1 " +
+		"ELSE 0 " +
+		"END = 1 " +
+		"LEFT JOIN GroupChats GC ON(GC.ch_id=CU.gch_id) " +
+		"LEFT JOIN Messages M ON CASE " +
+		"WHEN M.pch_id = PC.ch_id THEN 1 " +
+		"WHEN M.gch_id = GC.ch_id THEN 1 " +
+		"ELSE 0 " +
+		"END = 1 " +
+		"WHERE CU.u_id = $1 GROUP BY CU.cu_id,PC.ch_id,GC.ch_id " +
+		") " +
+		"SELECT PC.ch_id,GC.ch_id,GC.name,U.name,U.surname,U.login,CP.url,P.url,max(M.send_time),M.txt FROM ChatsUsers CU " +
+		"LEFT JOIN PrivateChats PC ON(PC.ch_id=CU.pch_id) " +
+		"LEFT JOIN Users U ON CASE " +
+		"WHEN PC.fu_id != $1 AND PC.fu_id= U.u_id  THEN 1 " +
+		"WHEN PC.su_id != $1 AND PC.su_id = U.u_id THEN 1 " +
+		"WHEN PC.fu_id = $1 AND PC.su_id = $1 AND U.u_id=PC.fu_id THEN 1 " +
+		"ELSE 0 " +
+		"END = 1 " +
+		"LEFT JOIN GroupChats GC ON(GC.ch_id=CU.gch_id) " +
+		"LEFT JOIN Messages M ON CASE " +
+		"WHEN M.pch_id = PC.ch_id THEN 1 " +
+		"WHEN M.gch_id = GC.ch_id THEN 1 " +
+		"ELSE 0 " +
+		"END = 1 " +
+		"INNER JOIN MESS ON CASE " +
+		"WHEN MESS.msg_id=M.msg_id THEN 1 " +
+		"WHEN MESS.msg_id IS NULL AND M.msg_id IS NULL THEN 1 " +
+		"ELSE 0 " +
+		"END = 1 " +
+		"LEFT JOIN Users UM ON(UM.u_id=M.u_id) LEFT JOIN Photos P ON(P.photo_id=UM.photo_id) " +
+		"LEFT JOIN Photos CP ON CASE " +
+		"WHEN CU.pch_id != 0 AND U.photo_id = CP.photo_id THEN 1 " +
+		"WHEN CU.gch_id != 0 AND GC.photo_id = CP.photo_id THEN 1 " +
+		"ELSE 0 " +
+		"END = 1 " +
+		"WHERE CU.u_id = $1 GROUP BY PC.ch_id,GC.ch_id,GC.name,U.name,U.surname,U.login,CP.url,P.url,M.txt ORDER BY max(M.send_time) DESC"
 
+	chatRow, err := CR.chatDB.Query(queryRow, userId)
 
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+
+	chats := make([]models.Chat, 0)
+
+	for chatRow.Next() {
+
+		var (
+			isPrivate *int64
+			isGroup   *int64
+			chatName  *string
+			prName    *string
+			prSurname *string
+			prLogin   *string
+		)
+
+		chat := new(models.Chat)
+		err = chatRow.Scan(&isPrivate, &isGroup, &chatName, &prName, &prSurname, &prLogin, &chat.ChatPhoto, &chat.LastMessageAuthorPhoto, &chat.LastMessageTime, &chat.LastMessageTxt)
+		if isPrivate == nil {
+			chat.IsGroupChat = true
+			chat.ChatId = "c" + strconv.FormatInt(*isGroup, 10)
+			chat.ChatName = *chatName
+		} else {
+			chat.IsGroupChat = false
+			chat.ChatId = strconv.FormatInt(*isPrivate, 10)
+			chat.PrivateName = *prName
+			chat.PrivateSurname = *prSurname
+			chat.PrivateUrl = *prLogin
+		}
+
+		chats = append(chats, * chat)
+	}
+
+	return chats, nil
 }
