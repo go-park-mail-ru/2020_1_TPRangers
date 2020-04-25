@@ -3,6 +3,7 @@ package delivery
 import (
 	"github.com/labstack/echo"
 	"go.uber.org/zap"
+	"main/internal/chats"
 	"main/internal/friends"
 	"main/internal/models"
 	"main/internal/tools/errors"
@@ -11,6 +12,7 @@ import (
 
 type FriendDeliveryRealisation struct {
 	friendLogic friends.FriendUseCase
+	chatLogic   chats.ChatUseCase
 	logger      *zap.SugaredLogger
 }
 
@@ -97,6 +99,11 @@ func (userD FriendDeliveryRealisation) AddFriend(rwContext echo.Context) error {
 
 	friendLogin := rwContext.Param("id")
 	err := userD.friendLogic.AddFriend(userId, friendLogin)
+	userD.chatLogic.CreateChat(models.NewChatUsers{
+		ChatPhoto:  "",
+		ChatName:   "",
+		UsersLogin: []string{friendLogin},
+	}, userId)
 
 	if err != nil {
 		userD.logger.Info(
@@ -185,8 +192,8 @@ func (userD FriendDeliveryRealisation) SearchFriends(rwContext echo.Context) err
 	return rwContext.JSON(http.StatusOK, jsonAnswer)
 }
 
-func NewFriendDelivery(log *zap.SugaredLogger, friendRealisation friends.FriendUseCase) FriendDeliveryRealisation {
-	return FriendDeliveryRealisation{friendLogic: friendRealisation, logger: log}
+func NewFriendDelivery(log *zap.SugaredLogger, friendRealisation friends.FriendUseCase, chatRealisation chats.ChatUseCase) FriendDeliveryRealisation {
+	return FriendDeliveryRealisation{friendLogic: friendRealisation, logger: log, chatLogic: chatRealisation}
 }
 
 func (userD FriendDeliveryRealisation) InitHandlers(server *echo.Echo) {

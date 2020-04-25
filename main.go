@@ -6,6 +6,22 @@ import (
 	"github.com/labstack/echo"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+
+	repositoryMessage "main/internal/message/repository"
+	deliveryMessage "main/internal/socket/delivery"
+	usecaseMessage "main/internal/socket/usecase"
+
+
+
+	deliveryToken "main/internal/socket_token/delivery"
+	usecaseToken "main/internal/socket_token/usecase"
+	repositoryToken "main/internal/socket_token/repository"
+
+
+	deliveryChat "main/internal/chats/delivery"
+	repositoryChat "main/internal/chats/repository"
+	usecaseChat "main/internal/chats/usecase"
+
 	deliveryAlbum "main/internal/albums/delivery"
 	repositoryAlbum "main/internal/albums/repository"
 	repositoryCookie "main/internal/cookies/repository"
@@ -32,15 +48,18 @@ import (
 )
 
 type RequestHandlers struct {
-	userHandler   deliveryUser.UserDeliveryRealisation
-	feedHandler   deliveryFeed.FeedDeliveryRealisation
-	likeHandler   deliveryLikes.LikeDelivery
-	photoHandler  deliveryPhoto.PhotoDeliveryRealisation
-	albumHandler  deliveryAlbum.AlbumDeliveryRealisation
-	friendHandler deliveryFriends.FriendDeliveryRealisation
+	userHandler    deliveryUser.UserDeliveryRealisation
+	feedHandler    deliveryFeed.FeedDeliveryRealisation
+	likeHandler    deliveryLikes.LikeDelivery
+	photoHandler   deliveryPhoto.PhotoDeliveryRealisation
+	albumHandler   deliveryAlbum.AlbumDeliveryRealisation
+	friendHandler  deliveryFriends.FriendDeliveryRealisation
+	messageHandler deliveryMessage.SocketDelivery
+	chatHandler    deliveryChat.ChatsDelivery
+	socketTokenHandler deliveryToken.TokenDelivery
 }
 
-func InitializeDataBases(server *echo.Echo) (*sql.DB, repositoryCookie.CookieRepositoryRealisation) {
+func InitializeDataBases(server *echo.Echo) (*sql.DB, repositoryCookie.CookieRepositoryRealisation, repositoryMessage.MessageRepositoryRealisation , repositoryToken.TokenRepositoryRealisation) {
 	err := godotenv.Load("project.env")
 	if err != nil {
 		server.Logger.Fatal("can't load .env file :", err.Error())
@@ -59,16 +78,20 @@ func InitializeDataBases(server *echo.Echo) (*sql.DB, repositoryCookie.CookieRep
 	redisPas := os.Getenv("REDIS_PASSWORD")
 	redisPort := os.Getenv("REDIS_PORT")
 
-	sessionDB := repositoryCookie.NewCookieRepositoryRealisation(redisPort, redisPas)
+	redisChatPort := os.Getenv("REDIS_CHAT_PORT")
 
-	return db, sessionDB
+	sessionDB := repositoryCookie.NewCookieRepositoryRealisation(redisPort, redisPas)
+	tokenDB := repositoryToken.NewTokenRepositoryRealisation(redisPort,redisPas)
+	chatDB := repositoryMessage.NewMessageRepositoryRealisation(redisChatPort, "", db)
+
+	return db, sessionDB, chatDB , tokenDB
 }
 
-func NewRequestHandler(db *sql.DB, sessionDB repositoryCookie.CookieRepositoryRealisation, logger *zap.SugaredLogger) *RequestHandlers {
+func NewRequestHandler(db *sql.DB, sessionDB repositoryCookie.CookieRepositoryRealisation, messageDB repositoryMessage.MessageRepositoryRealisation, tokenDB repositoryToken.TokenRepositoryRealisation,logger *zap.SugaredLogger) *RequestHandlers {
 
 	feedDB := repositoryFeed.NewFeedRepositoryRealisation(db)
 	userDB := repositoryUser.NewUserRepositoryRealisation(db)
-
+	chatDB := repositoryChat.NewChatRepositoryRealisation(db)
 	photoDB := repositoryPhoto.NewPhotoRepositoryRealisation(db)
 	likesDB := repositoryLikes.NewLikeRepositoryRealisation(db)
 	albumDB := repositoryAlbum.NewAlbumRepositoryRealisation(db)
@@ -77,30 +100,37 @@ func NewRequestHandler(db *sql.DB, sessionDB repositoryCookie.CookieRepositoryRe
 
 	photoUseCase := usecasePhoto.NewPhotoUseCaseRealisation(photoDB)
 	albumUseCase := usecaseAlbum.NewAlbumUseCaseRealisation(albumDB)
-
+	messageUseCase := usecaseMessage.NewSocketUseCaseRealisation(messageDB, tokenDB)
 	feedUseCase := usecaseFeed.NewFeedUseCaseRealisation(feedDB)
 	userUseCase := usecaseUser.NewUserUseCaseRealisation(userDB, friendsDB, feedDB, sessionDB)
 	likesUse := usecaseLikes.NewLikeUseRealisation(likesDB)
 	friendsUse := usecaseFriends.NewFriendUseCaseRealisation(friendsDB)
+	chatUse := usecaseChat.NewChatUseCaseRealisation(chatDB, friendsDB)
+	socketTokenUse := usecaseToken.NewTokenUseCaseRealisation(tokenDB)
 
 	likeH := deliveryLikes.NewLikeDelivery(logger, likesUse)
 
 	userH := deliveryUser.NewUserDelivery(logger, userUseCase)
 	feedH := deliveryFeed.NewFeedDelivery(logger, feedUseCase)
-
+	messageH := deliveryMessage.NewSocketDelivery(logger, messageUseCase)
 	photoH := deliveryPhoto.NewPhotoDelivery(logger, photoUseCase)
 	albumH := deliveryAlbum.NewAlbumDelivery(logger, albumUseCase)
+	chatH := deliveryChat.NewChatsDelivery(logger, chatUse)
+	socketTokenH := deliveryToken.NewTokenDelivery(logger, socketTokenUse)
 
-	friendH := deliveryFriends.NewFriendDelivery(logger, friendsUse)
+	friendH := deliveryFriends.NewFriendDelivery(logger, friendsUse, chatUse)
 
 	api := &(RequestHandlers{
 
-		photoHandler:  photoH,
-		albumHandler:  albumH,
-		userHandler:   userH,
-		feedHandler:   feedH,
-		likeHandler:   likeH,
-		friendHandler: friendH,
+		photoHandler:   photoH,
+		albumHandler:   albumH,
+		userHandler:    userH,
+		feedHandler:    feedH,
+		likeHandler:    likeH,
+		friendHandler:  friendH,
+		messageHandler: messageH,
+		chatHandler:    chatH,
+		socketTokenHandler: socketTokenH,
 	})
 
 	return api
@@ -116,13 +146,15 @@ func main() {
 	logger := prLogger.Sugar()
 	defer prLogger.Sync()
 
-	db, sessions := InitializeDataBases(server)
+	db, sessions, messages , tokens := InitializeDataBases(server)
 	defer db.Close()
 
-	midHandler := middleware.NewMiddlewareHandler(logger, sessions)
+	origin := os.Getenv("ORIGIN_POLICY")
+
+	midHandler := middleware.NewMiddlewareHandler(logger, sessions, origin)
 	midHandler.SetMiddleware(server)
 
-	api := NewRequestHandler(db, sessions, logger)
+	api := NewRequestHandler(db, sessions, messages, tokens, logger)
 
 	api.userHandler.InitHandlers(server)
 	api.feedHandler.InitHandlers(server)
@@ -130,6 +162,9 @@ func main() {
 	api.photoHandler.InitHandlers(server)
 	api.albumHandler.InitHandlers(server)
 	api.friendHandler.InitHandlers(server)
+	api.messageHandler.InitHandlers(server)
+	api.chatHandler.InitHandlers(server)
+	api.socketTokenHandler.InitHandlers(server)
 
 	port := os.Getenv("PORT")
 

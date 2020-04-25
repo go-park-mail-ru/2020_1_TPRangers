@@ -87,7 +87,6 @@ func (userD UserDeliveryRealisation) Profile(rwContext echo.Context) error {
 
 	return rwContext.JSON(http.StatusOK, userProfile)
 }
-
 func (userD UserDeliveryRealisation) GetSettings(rwContext echo.Context) error {
 
 	uId := rwContext.Get("REQUEST_ID").(string)

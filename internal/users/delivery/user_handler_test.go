@@ -1,15 +1,6 @@
 package delivery
 
 import (
-	"github.com/golang/mock/gomock"
-	"github.com/labstack/echo"
-	"github.com/pkg/errors"
-	"github.com/stretchr/testify/assert"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
-	mock_users "main/mocks"
-	"net/http"
-	"net/http/httptest"
 	"testing"
 )
 
