@@ -2,9 +2,11 @@ package repository
 
 import (
 	"database/sql"
+	"errors"
 	"github.com/gomodule/redigo/redis"
 	"github.com/nitishm/go-rejson"
 	"main/internal/models"
+	"strconv"
 	"time"
 )
 
@@ -24,16 +26,35 @@ func NewMessageRepositoryRealisation(addr, pass string, db *sql.DB) MessageRepos
 
 func (MR MessageRepositoryRealisation) AddNewMessage(author int, message models.Message) error {
 
-	msgRow := MR.messageDB.QueryRow("INSERT INTO Messages (ch_id,u_id,txt,send_time) VALUES($1,$2,$3,$4) RETURNING msg_id", message.ChatId, author, message.Text, time.Now())
+	chat := int64(0)
+	groupType := "gch"
+	err := errors.New("")
+
+	if message.ChatId[:1] != "c" {
+		chat , err = strconv.ParseInt(message.ChatId, 10, 64)
+
+		if err != nil {
+			return nil
+		}
+		groupType = "pch"
+	} else {
+		chat , err = strconv.ParseInt(message.ChatId[1:], 10, 64)
+
+		if err != nil {
+			return nil
+		}
+		groupType = "gch"
+	}
+	msgRow := MR.messageDB.QueryRow("INSERT INTO Messages ("+groupType+"_id,u_id,txt,send_time) VALUES($1,$2,$3,$4) RETURNING msg_id", chat, author, message.Text, time.Now())
 
 	msgId := 0
-	err := msgRow.Scan(&msgId)
+	err = msgRow.Scan(&msgId)
 
 	if err != nil {
 		return err
 	}
 
-	recRows, err := MR.messageDB.Query("SELECT u_id FROM ChatsUsers WHERE ch_id = $1", message.ChatId)
+	recRows, err := MR.messageDB.Query("SELECT u_id FROM ChatsUsers WHERE "+groupType+"_id = $1", chat)
 	defer func() {
 		if recRows != nil {
 			recRows.Close()
@@ -59,7 +80,14 @@ func (MR MessageRepositoryRealisation) ReceiveNewMessages(userId int) ([]models.
 
 	msgsArray := make([]models.Message, 0)
 
-	msgsRow, err := MR.messageDB.Query("SELECT M.msg_id ,M.ch_id , M.u_id ,  M.send_time , M.txt  FROM Messages M INNER JOIN NewMessages NM ON(NM.msg_id=M.msg_id) WHERE NM.receiver_id = $1 AND M.del_stat = true", userId)
+	msgsRow, err := MR.messageDB.Query("SELECT M.msg_id, M.gch_id, M.pch_id ,M.u_id ,M.send_time ,M.txt , U.name,P.url FROM Messages M " +
+		"INNER JOIN NewMessages NM ON(NM.msg_id=M.msg_id) INNER JOIN GroupChats GC ON(M.gch_id=GC.ch_id) INNER JOIN Users U ON(U.u_id=M.u_id) " +
+		"INNER JOIN Photos P ON CASE " +
+		"WHEN P.photo_id=GC.photo_id THEN 1 " +
+		"WHEN U.photo_id=P.photo_id THEN 1 " +
+		"ELSE 0 " +
+		"END = 1 "+
+		"WHERE NM.receiver_id = $1 AND M.del_stat = true", userId)
 
 	if err != nil {
 		return nil, err
@@ -70,7 +98,18 @@ func (MR MessageRepositoryRealisation) ReceiveNewMessages(userId int) ([]models.
 		msg := new(models.Message)
 		msgId := 0
 		userid := 0
-		err = msgsRow.Scan(&msgId, &msg.ChatId, &userid, &msg.Time, &msg.Text)
+
+		var isPrivate *int64
+		var isGroup *int64
+		err = msgsRow.Scan(&msgId, &isGroup, &isPrivate ,&userid, &msg.Time, &msg.Text, &msg.ChatName, &msg.ChatPhoto)
+
+		if isGroup != nil {
+			msg.ChatId = "c" + strconv.FormatInt(*isGroup,10)
+		} else {
+			if isPrivate != nil {
+				msg.ChatId = strconv.FormatInt(*isPrivate,10)
+			}
+		}
 
 		if err != nil {
 			return nil, err

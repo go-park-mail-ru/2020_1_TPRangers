@@ -109,7 +109,16 @@ CREATE TABLE UsersPhotosLikes
 
 CREATE UNIQUE INDEX userphotolike_idx ON UsersPhotosLikes (u_id, photo_id);
 
-CREATE TABLE Chats
+CREATE TABLE PrivateChats
+(
+    ch_id BIGSERIAL PRIMARY KEY,
+    fu_id INT REFERENCES Users,
+    su_id INT REFERENCES Users
+);
+
+CREATE UNIQUE INDEX privatechat_idx ON PrivateChats (fu_id, su_id);
+
+CREATE TABLE GroupChats
 (
     ch_id    BIGSERIAL PRIMARY KEY,
     u_id     INT NOT NULL REFERENCES Users,
@@ -119,17 +128,19 @@ CREATE TABLE Chats
 
 CREATE TABLE ChatsUsers
 (
-    ch_id      BIGINT NOT NULL REFERENCES Chats,
-    u_id       INT    NOT NULL REFERENCES Users,
-    lst_msg_id BIGINT DEFAULT 0
+    cu_id  BIGSERIAL PRIMARY KEY,
+    u_id   INT NOT NULL REFERENCES Users,
+    gch_id BIGINT DEFAULT 0,
+    pch_id BIGINT DEFAULT 0
 );
 
-CREATE UNIQUE INDEX chatuser_idx ON ChatsUsers (u_id, ch_id);
+CREATE UNIQUE INDEX chatuser_idx ON ChatsUsers (u_id, gch_id, pch_id);
 
 CREATE TABLE Messages
 (
     msg_id    BIGSERIAL PRIMARY KEY,
-    ch_id     BIGINT NOT NULL REFERENCES Chats,
+    pch_id    BIGINT NOT NULL REFERENCES PrivateChats (ch_id),
+    gch_id    BIGINT NOT NULL REFERENCES GroupChats (ch_id),
     u_id      INT    NOT NULL REFERENCES Users,
     del_stat  BOOLEAN DEFAULT TRUE,
     send_time TIMESTAMP,
@@ -138,7 +149,7 @@ CREATE TABLE Messages
 
 CREATE TABLE NewMessages
 (
-    msg_id BIGINT REFERENCES Messages,
+    msg_id      BIGINT REFERENCES Messages,
     receiver_id INT REFERENCES Users
 );
 

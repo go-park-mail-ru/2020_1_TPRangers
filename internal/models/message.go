@@ -1,7 +1,7 @@
 package models
 
 type Message struct {
-	ChatId        int    `json:"chatId, omitempty"`
+	ChatId        string `json:"chatId, omitempty"`
 	ChatPhoto     string `json:"chatPhoto"`
 	ChatName      string `json:"chatName"`
 	AuthorName    string `json:"authorName, omitempty"`
@@ -10,4 +10,5 @@ type Message struct {
 	AuthorPhoto   string `json:"authorPhoto, omitempty"`
 	Text          string `json:"text, omitempty"`
 	Time          string `json:"time, omitempty"`
+	IsMe		  bool 	  `json:"isMe"`
 }

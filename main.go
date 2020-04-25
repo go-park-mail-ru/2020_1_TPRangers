@@ -118,7 +118,7 @@ func NewRequestHandler(db *sql.DB, sessionDB repositoryCookie.CookieRepositoryRe
 	chatH := deliveryChat.NewChatsDelivery(logger, chatUse)
 	socketTokenH := deliveryToken.NewTokenDelivery(logger, socketTokenUse)
 
-	friendH := deliveryFriends.NewFriendDelivery(logger, friendsUse)
+	friendH := deliveryFriends.NewFriendDelivery(logger, friendsUse, chatUse)
 
 	api := &(RequestHandlers{
 

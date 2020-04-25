@@ -8,16 +8,15 @@ import (
 	"main/internal/models"
 	"main/internal/tools/errors"
 	"net/http"
-	"strconv"
 )
 
 type ChatsDelivery struct {
 	chatsLogic chats.ChatUseCase
-	logger    *zap.SugaredLogger
+	logger     *zap.SugaredLogger
 }
 
-func NewChatsDelivery(log * zap.SugaredLogger , chatsRealisation chats.ChatUseCase) ChatsDelivery {
-	return ChatsDelivery{logger: log , chatsLogic: chatsRealisation}
+func NewChatsDelivery(log *zap.SugaredLogger, chatsRealisation chats.ChatUseCase) ChatsDelivery {
+	return ChatsDelivery{logger: log, chatsLogic: chatsRealisation}
 }
 
 func (CD ChatsDelivery) CreateChat(rwContext echo.Context) error {
@@ -40,7 +39,7 @@ func (CD ChatsDelivery) CreateChat(rwContext echo.Context) error {
 	fmt.Println(err_Bind)
 	fmt.Println(*newChat)
 
-	err := CD.chatsLogic.CreateChat(*newChat , userId)
+	err := CD.chatsLogic.CreateChat(*newChat, userId)
 
 	if err != nil {
 		CD.logger.Debug(
@@ -57,12 +56,11 @@ func (CD ChatsDelivery) CreateChat(rwContext echo.Context) error {
 	)
 
 	return rwContext.NoContent(http.StatusOK)
-
 }
 
 func (CD ChatsDelivery) ExitChat(rwContext echo.Context) error {
 	uId := rwContext.Get("REQUEST_ID").(string)
-	chatId, err := strconv.ParseInt(rwContext.Param("id"), 10 , 64)
+	chatId := rwContext.Param("id")
 
 	userId := rwContext.Get("user_id").(int)
 
@@ -75,7 +73,7 @@ func (CD ChatsDelivery) ExitChat(rwContext echo.Context) error {
 		return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: errors.CookieExpired.Error()})
 	}
 
-	err = CD.chatsLogic.ExitChat(chatId , userId)
+	err := CD.chatsLogic.ExitChat(chatId, userId)
 
 	if err != nil {
 		CD.logger.Debug(
@@ -92,12 +90,11 @@ func (CD ChatsDelivery) ExitChat(rwContext echo.Context) error {
 	)
 
 	return rwContext.NoContent(http.StatusOK)
-
 }
 
 func (CD ChatsDelivery) GetChatMessages(rwContext echo.Context) error {
 	uId := rwContext.Get("REQUEST_ID").(string)
-	chatId, err := strconv.ParseInt(rwContext.Param("id"), 10 , 64)
+	chatId := rwContext.Param("id")
 
 	userId := rwContext.Get("user_id").(int)
 
@@ -110,12 +107,7 @@ func (CD ChatsDelivery) GetChatMessages(rwContext echo.Context) error {
 		return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: errors.CookieExpired.Error()})
 	}
 
-	chatInfo , messages ,err := CD.chatsLogic.GetChatMessages(chatId , userId)
-
-	chatAndMsgs := new(models.ChatAndMessages)
-
-	chatAndMsgs.ChatInfo = chatInfo
-	chatAndMsgs.ChatMessages = messages
+	chatInfo, err := CD.chatsLogic.GetChatMessages(chatId, userId)
 
 	if err != nil {
 		CD.logger.Debug(
@@ -131,12 +123,11 @@ func (CD ChatsDelivery) GetChatMessages(rwContext echo.Context) error {
 		zap.Int("ANSWER STATUS", http.StatusOK),
 	)
 
-	return rwContext.JSON(http.StatusOK, *chatAndMsgs)
+	return rwContext.JSON(http.StatusOK, chatInfo)
 
 }
 
 func (CD ChatsDelivery) GetAllChats(rwContext echo.Context) error {
-
 
 	uId := rwContext.Get("REQUEST_ID").(string)
 
@@ -153,7 +144,6 @@ func (CD ChatsDelivery) GetAllChats(rwContext echo.Context) error {
 
 	allChats, err := CD.chatsLogic.GetAllChats(userId)
 
-
 	if err != nil {
 		CD.logger.Debug(
 			zap.String("ID", uId),
@@ -169,12 +159,11 @@ func (CD ChatsDelivery) GetAllChats(rwContext echo.Context) error {
 	)
 
 	return rwContext.JSON(http.StatusOK, allChats)
-
 }
 
 func (CD ChatsDelivery) InitHandlers(server *echo.Echo) {
 
-	server.POST("/api/v1/chats", CD.CreateChat )
+	server.POST("/api/v1/chats", CD.CreateChat)
 	server.DELETE("/api/v1/chats/:id", CD.ExitChat)
 
 	server.GET("/api/v1/chats/:id", CD.GetChatMessages)
