@@ -27,3 +27,11 @@ func (Like LikesUseRealisation) LikePost(postId int, userId int) error {
 func (Like LikesUseRealisation) DislikePost(postId int, userId int) error {
 	return Like.likeRepo.DislikePost(postId, userId)
 }
+
+func (Like LikesUseRealisation) LikeComment(postId int, userId int) error {
+	return Like.likeRepo.LikeComment(postId, userId)
+}
+
+func (Like LikesUseRealisation) DislikeComment(postId int, userId int) error {
+	return Like.likeRepo.DislikeComment(postId, userId)
+}

@@ -275,7 +275,7 @@ func (Data FeedRepositoryRealisation) GetPostAndComments(userID int, postID stri
 		}
 		additional_row := Data.feedDB.QueryRow("select ucl.commentlike_id, uphl.photolike_id from userscommentslikes AS ucl RIGHT JOIN comments AS c "+
 			"ON (c.comment_id = ucl.comment_id) LEFT JOIN usersphotoslikes AS uphl ON (c.photo_id = uphl.photo_id) INNER JOIN "+
-			"LEFT JOIN users AS u ON (u.u_id = c.u_id) LEFT JOIN photos AS ph ON (u.photo_id = ph.photo_id) WHERE c.comment_id = $1 AND upl.u_id = $2;", comment.CommentID, userID)
+			"users AS u ON (u.u_id = c.u_id) LEFT JOIN photos AS ph ON (u.photo_id = ph.photo_id) WHERE c.comment_id = $1 AND ucl.u_id = $2;", comment.CommentID, userID)
 		var commentLikes *int
 		var photoLikes *int
 		add_row := Data.feedDB.QueryRow("select ph.url from photos AS ph INNER JOIN users AS u ON (u.photo_id = ph.photo_id) INNER JOIN comments AS c ON (c.post_id = $1 AND c.u_id = u.u_id);", postID)
@@ -291,7 +291,7 @@ func (Data FeedRepositoryRealisation) GetPostAndComments(userID int, postID stri
 		} else {
 			comment.Photo.WasLike = false
 		}
-		post.Comments = append(post.Comments, comment)
+		post.Comments = append([]models.Comment{comment}, post.Comments...)
 	}
 
 	post_rows := Data.feedDB.QueryRow("select  p.post_id, p.txt_data, p.attachments, p.posts_likes_count, p.creation_date, ph.photo_id, ph.url, ph.photos_likes_count, u.name, u.surname, u.login " +

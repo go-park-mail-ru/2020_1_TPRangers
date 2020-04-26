@@ -59,3 +59,21 @@ func (Like LikeRepositoryRealisation) DislikePost(postId, userId int) error {
 
 	return err
 }
+
+func (Like LikeRepositoryRealisation) LikeComment(commentID int, userID int) error {
+	Like.likeDB.Exec("UPDATE Comments SET comment_likes_count = comment_likes_count + 1 WHERE comment_id =$1", commentID)
+	like_id := int64(0)
+	row := Like.likeDB.QueryRow("INSERT INTO UsersCommentsLikes (u_id,comment_id) VALUES ($1,$2) RETURNING commentlike_id", userID, commentID)
+
+	err := row.Scan(&like_id)
+	return err
+}
+
+func (Like LikeRepositoryRealisation) DislikeComment(commentID int, userID int) error {
+	Like.likeDB.Exec("UPDATE Comments SET comment_likes_count = comment_likes_count - 1 WHERE comment_id = $1", commentID)
+	like_id := int64(0)
+	row := Like.likeDB.QueryRow("DELETE FROM UsersCommentsLikes WHERE u_id = $1 AND comment_id = $2 RETURNING commentlike_id", userID, commentID)
+
+	err := row.Scan(&like_id)
+	return err
+}
