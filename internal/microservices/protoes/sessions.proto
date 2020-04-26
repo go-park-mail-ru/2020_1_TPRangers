@@ -30,11 +30,6 @@ message Register{
 
 
 
-
-
-
-
-
 service SessionChecker {
   rpc LoginUser(Auth) returns (SessionData) {}
   rpc CreateNewUser(Register) returns (SessionData) {}
