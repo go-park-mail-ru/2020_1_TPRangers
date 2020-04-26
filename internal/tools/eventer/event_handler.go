@@ -60,10 +60,13 @@ func (EV Eventer) GetNewMessages(conn net.Conn) {
 	encoder := json.NewEncoder(resp)
 	answer := models.JSONEvent{}
 
-	defer resp.Flush()
+	defer func() {
+		resp.Flush()
+	}()
 
 	messages, err := EV.messageDB.ReceiveNewMessages(EV.userId)
 
+	fmt.Println("[DEBUG]", len(messages))
 	if err != nil {
 		answer.Event = "can't get new messages"
 		encoder.Encode(&answer)
@@ -74,8 +77,10 @@ func (EV Eventer) GetNewMessages(conn net.Conn) {
 	answer.Event = "new message"
 
 	for iter, _ := range messages {
+		fmt.Println("[MESSAGE DEBUG]", messages[iter])
 		answer.Message = messages[iter]
 		encoder.Encode(&answer)
+		resp.Flush()
 	}
 
 }

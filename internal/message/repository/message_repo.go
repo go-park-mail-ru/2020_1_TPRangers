@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"github.com/gomodule/redigo/redis"
 	"github.com/nitishm/go-rejson"
 	"main/internal/models"
@@ -111,6 +112,7 @@ func (MR MessageRepositoryRealisation) ReceiveNewMessages(userId int) ([]models.
 			}
 		}
 
+		fmt.Println("Error", err)
 		if err != nil {
 			return nil, err
 		}
