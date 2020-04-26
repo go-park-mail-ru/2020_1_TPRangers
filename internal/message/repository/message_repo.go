@@ -55,7 +55,7 @@ func (MR MessageRepositoryRealisation) AddNewMessage(author int, message models.
 		return err
 	}
 
-	recRows, err := MR.messageDB.Query("SELECT u_id FROM ChatsUsers WHERE "+groupType+"_id = $1", chat)
+	recRows, err := MR.messageDB.Query("SELECT u_id FROM ChatsUsers WHERE "+groupType+"_id = $1 AND u_id != $2", chat, author)
 	defer func() {
 		if recRows != nil {
 			recRows.Close()
@@ -82,15 +82,16 @@ func (MR MessageRepositoryRealisation) ReceiveNewMessages(userId int) ([]models.
 	msgsArray := make([]models.Message, 0)
 
 	msgsRow, err := MR.messageDB.Query("SELECT M.msg_id, M.gch_id, M.pch_id ,M.u_id ,M.send_time ,M.txt , U.name,P.url FROM Messages M " +
-		"INNER JOIN NewMessages NM ON(NM.msg_id=M.msg_id) INNER JOIN GroupChats GC ON(M.gch_id=GC.ch_id) INNER JOIN Users U ON(U.u_id=M.u_id) " +
-		"INNER JOIN Photos P ON CASE " +
-		"WHEN P.photo_id=GC.photo_id THEN 1 " +
-		"WHEN U.photo_id=P.photo_id THEN 1 " +
+		"INNER JOIN NewMessages NM ON(NM.msg_id=M.msg_id) LEFT JOIN GroupChats GC ON(M.gch_id=GC.ch_id) INNER JOIN Users U ON(U.u_id=M.u_id) " +
+		"LEFT JOIN Photos P ON CASE " +
+		"WHEN P.photo_id=GC.photo_id AND M.pch_id = 0 THEN 1 " +
+		"WHEN U.photo_id=P.photo_id AND M.gch_id = 0 THEN 1 " +
 		"ELSE 0 " +
 		"END = 1 "+
 		"WHERE NM.receiver_id = $1 AND M.del_stat = true", userId)
 
 	if err != nil {
+		fmt.Println(err)
 		return nil, err
 	}
 
@@ -112,7 +113,6 @@ func (MR MessageRepositoryRealisation) ReceiveNewMessages(userId int) ([]models.
 			}
 		}
 
-		fmt.Println("Error", err)
 		if err != nil {
 			return nil, err
 		}

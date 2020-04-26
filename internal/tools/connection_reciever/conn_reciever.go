@@ -48,7 +48,6 @@ func (CR ConnReceiver) StartRecieving() {
 		})
 
 		go func() {
-			fmt.Println("We are in")
 			for {
 
 				if val := atomic.SwapInt32(&CR.closedStatus,0) ; val == 1 {
@@ -56,7 +55,6 @@ func (CR ConnReceiver) StartRecieving() {
 					return
 				}
 				CR.workPool.Schedule(func() {
-					fmt.Println("Get new messages")
 					CR.handler.GetNewMessages(CR.connection)
 				})
 
