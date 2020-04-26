@@ -23,7 +23,7 @@ func (Data UserRepositoryRealisation) SearchUsers(userID int, valueOfSearch stri
 		arrayOfvalue := strings.Split(valueOfSearch, " ")
 		nameOrSurname := arrayOfvalue[0]
 		SurnameOrName := arrayOfvalue[1]
-		rows, err := Data.userDB.Query("SELECT u.name, u.surname, u.login, ph.url FROM users AS u INNER JOIN photos AS ph ON (u.photo_id = ph.photo_id)  WHERE (u.name = $1 AND u.surname = $2) OR (u.name = $3 AND u.surname = $4);", nameOrSurname, SurnameOrName, SurnameOrName, nameOrSurname)
+		rows, err := Data.userDB.Query("SELECT u.name, u.surname, u.login, ph.url FROM users AS u INNER JOIN photos AS ph ON (u.photo_id = ph.photo_id)  WHERE (u.name LIKE $1 AND u.surname LIKE $2) OR (u.name LIKE $2 AND u.surname LIKE $1);", nameOrSurname + "%", SurnameOrName + "%")
 		if err != nil {
 			return nil, errors.FailReadFromDB
 		}
@@ -37,7 +37,7 @@ func (Data UserRepositoryRealisation) SearchUsers(userID int, valueOfSearch stri
 		}
 
 	} else {
-		rows, err := Data.userDB.Query("SELECT u.name, u.surname, u.login, ph.url FROM users AS u INNER JOIN photos AS ph ON (u.photo_id = ph.photo_id)  WHERE (u.name = $1) OR (u.surname = $2);", valueOfSearch, valueOfSearch)
+		rows, err := Data.userDB.Query("SELECT u.name, u.surname, u.login, ph.url FROM users AS u INNER JOIN photos AS ph ON (u.photo_id = ph.photo_id)  WHERE (u.name LIKE $1) OR (u.surname LIKE $1);", valueOfSearch + "%")
 		if err != nil {
 			return nil, errors.FailReadFromDB
 		}
