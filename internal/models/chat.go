@@ -8,7 +8,8 @@ type Chat struct {
 	PrivateName            string `json:"privateName,omitempty"`
 	PrivateSurname         string `json:"privateSurname,omitempty"`
 	PrivateUrl             string `json:"privateUrl,omitempty"`
+	StatusOnline           bool   `json:"statusOnline"`
 	LastMessageAuthorPhoto string `json:"lastMessageAuthorPhoto, omitempty"`
-	LastMessageTime        string `json:"lastMessageTine, omitempty"`
+	LastMessageTime        string `json:"lastMessageTime, omitempty"`
 	LastMessageTxt         string `json:"lastMessageTxt, omitempty"`
 }
