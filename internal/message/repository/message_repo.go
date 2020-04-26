@@ -55,7 +55,7 @@ func (MR MessageRepositoryRealisation) AddNewMessage(author int, message models.
 		return err
 	}
 
-	recRows, err := MR.messageDB.Query("SELECT u_id FROM ChatsUsers WHERE "+groupType+"_id = $1 AND u_id != $2", chat, author)
+	recRows, err := MR.messageDB.Query("SELECT u_id FROM ChatsUsers WHERE "+groupType+"_id = $1", chat)
 	defer func() {
 		if recRows != nil {
 			recRows.Close()
