@@ -1,25 +1,26 @@
 package middleware
 
 import (
+	"context"
 	"github.com/labstack/echo"
 	uuid "github.com/satori/go.uuid"
 	"go.uber.org/zap"
-	"main/internal/cookies"
 	"main/internal/csrf"
 	"main/internal/models"
 	"main/internal/tools/errors"
 	"net/http"
 	"time"
+	sessions "main/internal/microservices/authorization/delivery"
 )
 
 type MiddlewareHandler struct {
-	logger   *zap.SugaredLogger
-	sessions cookies.CookieRepository
-	httpOrigin  string
+	logger     *zap.SugaredLogger
+	sessChecker  sessions.SessionCheckerClient
+	httpOrigin string
 }
 
-func NewMiddlewareHandler(logger *zap.SugaredLogger, cookiesRepository cookies.CookieRepository , origin string) MiddlewareHandler {
-	return MiddlewareHandler{logger: logger, sessions: cookiesRepository , httpOrigin: origin}
+func NewMiddlewareHandler(logger *zap.SugaredLogger, checker sessions.SessionCheckerClient, origin string) MiddlewareHandler {
+	return MiddlewareHandler{logger: logger, sessChecker: checker, httpOrigin: origin}
 }
 
 func (mh MiddlewareHandler) SetMiddleware(server *echo.Echo) {
@@ -104,10 +105,14 @@ func (mh MiddlewareHandler) CheckAuthentication() echo.MiddlewareFunc {
 
 			cookie, err := rwContext.Cookie("session_id")
 
-			userId := -1
+			userId := &sessions.UserId{
+				UserId:               0,
+			}
 
 			if err == nil {
-				userId, err = mh.sessions.GetUserIdByCookie(cookie.Value)
+				userId , err = mh.sessChecker.CheckSession(context.Background(), &sessions.SessionData{
+					Cookies:              cookie.Value,
+				})
 			}
 
 			if err != nil {
@@ -115,7 +120,7 @@ func (mh MiddlewareHandler) CheckAuthentication() echo.MiddlewareFunc {
 				rwContext.SetCookie(cookie)
 			}
 
-			rwContext.Set("user_id", userId)
+			rwContext.Set("user_id", userId.UserId)
 
 			return next(rwContext)
 
@@ -124,7 +129,7 @@ func (mh MiddlewareHandler) CheckAuthentication() echo.MiddlewareFunc {
 }
 
 func (mh MiddlewareHandler) CSRF() echo.MiddlewareFunc {
-	return func(next echo.HandlerFunc) echo.HandlerFunc{
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(rwContext echo.Context) error {
 			if rwContext.Request().RequestURI == "/api/v1/settings" || rwContext.Request().Method == "PUT" {
 				cookie, err := rwContext.Cookie("session_id")
@@ -153,5 +158,3 @@ func (mh MiddlewareHandler) CSRF() echo.MiddlewareFunc {
 		}
 	}
 }
-
-

@@ -2,7 +2,6 @@ package delivery
 
 import (
 	"github.com/labstack/echo"
-	uuid "github.com/satori/go.uuid"
 	"go.uber.org/zap"
 	"main/internal/csrf"
 	"main/internal/models"
@@ -210,11 +209,9 @@ func (userD UserDeliveryRealisation) Login(rwContext echo.Context) error {
 		return rwContext.NoContent(http.StatusConflict)
 	}
 
-	info := uuid.NewV4()
 	exprTime := 12 * time.Hour
-	cookieValue := info.String()
 
-	err = userD.userLogic.Login(*userAuthData, cookieValue, exprTime)
+	cookieValue, err := userD.userLogic.Login(*userAuthData)
 
 	if err != nil {
 		userD.logger.Debug(
@@ -292,11 +289,9 @@ func (userD UserDeliveryRealisation) Register(rwContext echo.Context) error {
 		return rwContext.NoContent(http.StatusInternalServerError)
 	}
 
-	info := uuid.NewV4()
 	exprTime := 12 * time.Hour
-	cookieValue := info.String()
 
-	err = userD.userLogic.Register(*userAuthData, cookieValue, exprTime)
+	cookieValue, err := userD.userLogic.Register(*userAuthData)
 
 	errResStatus := 0
 
@@ -332,14 +327,13 @@ func (userD UserDeliveryRealisation) Register(rwContext echo.Context) error {
 	return rwContext.NoContent(http.StatusOK)
 }
 
-
 func (userD UserDeliveryRealisation) GetCsrf(rwContext echo.Context) error {
 
 	cookie, err := rwContext.Cookie("session_id")
 	if err != nil {
 		return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: errors.CookieExpired.Error()})
 	}
-	token, _ := csrf.Tokens.Create(cookie.Value,  900 + time.Now().Unix()) // 900 с = 15 минут
+	token, _ := csrf.Tokens.Create(cookie.Value, 900+time.Now().Unix())
 	csrf := models.Csrf{}
 	csrf.Token = token
 	return rwContext.JSON(http.StatusOK, models.JsonStruct{Body: csrf})
@@ -376,7 +370,6 @@ func (userD UserDeliveryRealisation) SearchUsers(rwContext echo.Context) error {
 	)
 	return rwContext.JSON(http.StatusOK, jsonAnswer)
 }
-
 
 func NewUserDelivery(log *zap.SugaredLogger, userRealisation users.UserUseCase) UserDeliveryRealisation {
 	return UserDeliveryRealisation{userLogic: userRealisation, logger: log}

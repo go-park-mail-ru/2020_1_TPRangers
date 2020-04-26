@@ -1,6 +1,6 @@
 package usecase
 
-import(
+import (
 	uuid "github.com/satori/go.uuid"
 	stocken "main/internal/socket_token"
 )
@@ -13,11 +13,10 @@ func NewTokenUseCaseRealisation(tokenDB stocken.TokenRepository) TokenUseCaseRea
 	return TokenUseCaseRealisation{tokenDB: tokenDB}
 }
 
-func (TU TokenUseCaseRealisation) CreateNewToken(userId int) (string , error) {
+func (TU TokenUseCaseRealisation) CreateNewToken(userId int) (string, error) {
 
 	uniqueToken := uuid.NewV4()
 	tokenValue := uniqueToken.String()
-	return tokenValue , TU.tokenDB.AddNewToken(tokenValue, userId)
-
+	return tokenValue, TU.tokenDB.AddNewToken(tokenValue, userId)
 
 }

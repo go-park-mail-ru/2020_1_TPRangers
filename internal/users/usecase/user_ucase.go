@@ -2,17 +2,16 @@ package usecase
 
 import (
 	"bytes"
+	"context"
 	"crypto/rand"
 	"crypto/sha1"
-	uuid "github.com/satori/go.uuid"
 	"golang.org/x/crypto/pbkdf2"
-	Sess "main/internal/cookies"
 	FeedRep "main/internal/feeds"
 	FriendRep "main/internal/friends"
+	sessions "main/internal/microservices/authorization/delivery"
 	"main/internal/models"
 	"main/internal/tools/errors"
 	"main/internal/users"
-	"time"
 )
 
 func CryptPassword(pass string, salt []byte) []byte {
@@ -26,17 +25,17 @@ func CheckPassword(plainPass string, hashPass []byte) bool {
 	return bytes.Equal(hashPass, checkPass)
 }
 
-func (userR UserUseCaseRealisation) SearchUsers(userID int, searchOfValue string) ([]models.Person, error){
+func (userR UserUseCaseRealisation) SearchUsers(userID int, searchOfValue string) ([]models.Person, error) {
 	sendData, err := userR.userDB.SearchUsers(userID, searchOfValue)
 
 	return sendData, err
 }
 
 type UserUseCaseRealisation struct {
-	userDB    users.UserRepository
-	friendDB  FriendRep.FriendRepository
-	feedDB    FeedRep.FeedRepository
-	sessionDB Sess.CookieRepository
+	userDB   users.UserRepository
+	friendDB FriendRep.FriendRepository
+	feedDB   FeedRep.FeedRepository
+	sess     sessions.SessionCheckerClient
 }
 
 func (userR UserUseCaseRealisation) GetOtherUserProfileNotLogged(userLogin string) (models.OtherUserProfileData, error) {
@@ -173,82 +172,44 @@ func (userR UserUseCaseRealisation) CheckFriendship(mainUserId int, friendLogin 
 	return friendShipStatus, nil
 }
 
-func (userR UserUseCaseRealisation) Login(userData models.Auth, cookieValue string, exprTime time.Duration) error {
-	login := userData.Login
+func (userR UserUseCaseRealisation) Login(userData models.Auth) (string, error) {
 
+	cookie, err := userR.sess.LoginUser(context.Background(), &sessions.Auth{
+		Login:    userData.Login,
+		Password: userData.Password,
+	})
 
-
-	password := userData.Password
-	dbPassword, existErr := userR.userDB.GetPassword(login)
-
-	if existErr != nil {
-		return  errors.WrongLogin
+	if cookie == nil {
+		return "" , err
 	}
 
-	if !CheckPassword(password, dbPassword) {
-		return  errors.WrongPassword
-	}
-
-	id, existErr := userR.userDB.GetIdByEmail(login)
-
-	if existErr != nil {
-		return  errors.WrongLogin
-	}
-
-	err := userR.sessionDB.AddCookie(id, cookieValue, exprTime)
-	if err != nil {
-		return  errors.FailSendToDB
-	}
-
-	return  nil
-
+	return cookie.Cookies, nil
 
 }
 
-func (userR UserUseCaseRealisation) Register(userData models.Register, cookieValue string, exprTime time.Duration) error {
+func (userR UserUseCaseRealisation) Register(userData models.Register) (string , error) {
 
-	email := userData.Email
+	cookie , err := userR.sess.CreateNewUser(context.Background(),&sessions.Register{
+		Email:                userData.Email,
+		Password:             userData.Password,
+		Name:                 userData.Name,
+		Surname:              userData.Surname,
+		Phone:                userData.Phone,
+		Date:                 userData.Date,
+	})
 
-	if flag, _ := userR.userDB.IsUserExist(email); flag == true {
-		return errors.AlreadyExist
+	if cookie == nil {
+		return "" , err
 	}
 
-	uniqueUserLogin := uuid.NewV4()
-
-	defaultPhotoId, _ := userR.userDB.GetDefaultProfilePhotoId()
-
-	salt := make([]byte, 8)
-	rand.Read(salt)
-	crypPass := CryptPassword(userData.Password, salt)
-
-	data := models.User{
-		Login:           uniqueUserLogin.String(),
-		Telephone:       userData.Phone,
-		Email:           email,
-		Name:            userData.Name,
-		CryptedPassword: crypPass,
-		Surname:         userData.Surname,
-		Date:            userData.Date,
-		Photo:           defaultPhotoId,
-	}
-
-	userR.userDB.AddNewUser(data)
-
-	id, err := userR.userDB.GetIdByEmail(email)
-
-	if err != nil {
-		return errors.FailReadFromDB
-	}
-
-	err = userR.sessionDB.AddCookie(id, cookieValue, exprTime)
-
-	return err
-
+	return cookie.Cookies, nil
 }
 
 func (userR UserUseCaseRealisation) Logout(cookie string) error {
 
-	err := userR.sessionDB.DeleteCookie(cookie)
+	 _ , err :=userR.sess.DeleteSession(context.Background() , &sessions.SessionData{
+		Cookies:              cookie,
+	})
 
 	return err
 }
@@ -257,11 +218,11 @@ func (userR UserUseCaseRealisation) GetUserLoginByCookie(userId int) (string, er
 	return userR.userDB.GetUserLoginById(userId)
 }
 
-func NewUserUseCaseRealisation(userDB users.UserRepository, friendDb FriendRep.FriendRepository, feedDB FeedRep.FeedRepository, sesDB Sess.CookieRepository) UserUseCaseRealisation {
+func NewUserUseCaseRealisation(userDB users.UserRepository, friendDb FriendRep.FriendRepository, feedDB FeedRep.FeedRepository, sessChecker sessions.SessionCheckerClient) UserUseCaseRealisation {
 	return UserUseCaseRealisation{
-		userDB:    userDB,
-		feedDB:    feedDB,
-		sessionDB: sesDB,
-		friendDB:  friendDb,
+		userDB:   userDB,
+		feedDB:   feedDB,
+		sess:     sessChecker,
+		friendDB: friendDb,
 	}
 }

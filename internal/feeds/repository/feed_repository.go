@@ -233,8 +233,7 @@ func (Data FeedRepositoryRealisation) CreateComment(uId int, newComment models.C
 		}
 	}
 
-
-	commentRow, err := Data.feedDB.Query("INSERT INTO comments (u_id, post_id, txt_data, photo_id, comment_likes_count,creation_date, attachments) VALUES($1 , $2 , $3 , $4 , $5, $6, $7) RETURNING post_id",uId, newComment.PostID, newComment.Text, photo_id, 0, time.Now(), newComment.Attachments)
+	commentRow, err := Data.feedDB.Query("INSERT INTO comments (u_id, post_id, txt_data, photo_id, comment_likes_count,creation_date, attachments) VALUES($1 , $2 , $3 , $4 , $5, $6, $7) RETURNING post_id", uId, newComment.PostID, newComment.Text, photo_id, 0, time.Now(), newComment.Attachments)
 	defer commentRow.Close()
 
 	if err != nil {
@@ -260,7 +259,7 @@ func (Data FeedRepositoryRealisation) DeleteComment(uID int, commentID string) e
 }
 
 func (Data FeedRepositoryRealisation) GetPostAndComments(userID int, postID string) (models.Post, error) {
-	rows, err := Data.feedDB.Query("select c.comment_id, c.txt_data, c.attachments, c.comment_likes_count, c.creation_date, ph.photo_id, ph.url, ph.photos_likes_count, u.name, u.surname, u.login " +
+	rows, err := Data.feedDB.Query("select c.comment_id, c.txt_data, c.attachments, c.comment_likes_count, c.creation_date, ph.photo_id, ph.url, ph.photos_likes_count, u.name, u.surname, u.login "+
 		"from comments AS c INNER JOIN users AS u ON (c.u_id = u.u_id) LEFT JOIN photos AS ph ON c.photo_id = ph.photo_id WHERE c.post_id = $1;", postID)
 	if err != nil {
 		return models.Post{}, errors.FailReadFromDB
@@ -294,8 +293,8 @@ func (Data FeedRepositoryRealisation) GetPostAndComments(userID int, postID stri
 		post.Comments = append(post.Comments, comment)
 	}
 
-	post_rows := Data.feedDB.QueryRow("select  p.post_id, p.txt_data, p.attachments, p.posts_likes_count, p.creation_date, ph.photo_id, ph.url, ph.photos_likes_count, u.name, u.surname, u.login " +
-			"from posts AS p INNER JOIN postsauthor AS pa ON (p.post_id = pa.post_id) INNER JOIN users AS u ON (pa.u_id = u.u_id) LEFT JOIN photos AS ph ON p.photo_id = ph.photo_id WHERE p.post_id = $1", postID)
+	post_rows := Data.feedDB.QueryRow("select  p.post_id, p.txt_data, p.attachments, p.posts_likes_count, p.creation_date, ph.photo_id, ph.url, ph.photos_likes_count, u.name, u.surname, u.login "+
+		"from posts AS p INNER JOIN postsauthor AS pa ON (p.post_id = pa.post_id) INNER JOIN users AS u ON (pa.u_id = u.u_id) LEFT JOIN photos AS ph ON p.photo_id = ph.photo_id WHERE p.post_id = $1", postID)
 	if err != nil {
 		return models.Post{}, errors.FailReadFromDB
 	}

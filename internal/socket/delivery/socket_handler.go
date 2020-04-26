@@ -30,10 +30,9 @@ func (SD SocketDelivery) UpgradeToSocket(rwContext echo.Context) error {
 
 	fmt.Println(len(token))
 
-	userId , err := SD.socketLogic.CheckToken(token)
+	userId, err := SD.socketLogic.CheckToken(token)
 
 	fmt.Println(userId)
-
 
 	if userId == -1 || err != nil {
 		SD.logger.Debug(
@@ -43,14 +42,13 @@ func (SD SocketDelivery) UpgradeToSocket(rwContext echo.Context) error {
 		return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: errors.InvalidToken.Error()})
 	}
 
-
 	conn, _, _, err := ws.UpgradeHTTP(rwContext.Request(), rwContext.Response())
 
 	if err != nil {
 		SD.logger.Debug(
 			zap.String("ID", uId),
-			zap.Int("STAT",2),
-			zap.String("ERROR" , err.Error()),
+			zap.Int("STAT", 2),
+			zap.String("ERROR", err.Error()),
 			zap.Int("ANSWER STATUS", http.StatusNotModified),
 		)
 
@@ -62,8 +60,8 @@ func (SD SocketDelivery) UpgradeToSocket(rwContext echo.Context) error {
 	if err != nil {
 		SD.logger.Debug(
 			zap.String("ID", uId),
-			zap.Int("STAT",3),
-			zap.String("ERROR" , err.Error()),
+			zap.Int("STAT", 3),
+			zap.String("ERROR", err.Error()),
 			zap.Int("ANSWER STATUS", http.StatusConflict),
 		)
 

@@ -25,10 +25,10 @@ func (EV Eventer) WriteNewMessage(conn net.Conn) {
 
 	req := wsutil.NewReader(conn, ws.StateServerSide)
 	decoder := json.NewDecoder(req)
-	hdr , err := req.NextFrame()
+	hdr, err := req.NextFrame()
 	resp := wsutil.NewWriter(conn, ws.StateServerSide, ws.OpText)
 
-	if err != nil || hdr.OpCode == ws.OpClose{
+	if err != nil || hdr.OpCode == ws.OpClose {
 		fmt.Println("connection closed")
 		conn.Close()
 		return
@@ -51,7 +51,6 @@ func (EV Eventer) WriteNewMessage(conn net.Conn) {
 		fmt.Println("ADD NEW MESSAGES ERROR : ", err)
 		return
 	}
-
 
 }
 

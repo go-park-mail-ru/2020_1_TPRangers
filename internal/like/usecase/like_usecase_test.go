@@ -3,8 +3,8 @@ package usecase
 import (
 	"errors"
 	"github.com/golang/mock/gomock"
-	mock "main/mocks"
 	err "main/internal/tools/errors"
+	mock "main/mocks"
 	"math/rand"
 	"testing"
 )

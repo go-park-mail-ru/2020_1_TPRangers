@@ -25,13 +25,14 @@ func NewHMACHashToken(secret string) (*HashToken, error) {
 	return &HashToken{Secret: []byte(secret)}, nil
 }
 
-func (tk *HashToken) Create( cookie string, tokenExpTime int64) (string, error) {
+func (tk *HashToken) Create(cookie string, tokenExpTime int64) (string, error) {
 	h := hmac.New(sha256.New, []byte(tk.Secret))
 	data := fmt.Sprintf("%s:%d", cookie, tokenExpTime)
 	h.Write([]byte(data))
 	token := hex.EncodeToString(h.Sum(nil)) + ":" + strconv.FormatInt(tokenExpTime, 10)
 	return token, nil
 }
+
 //isOK?
 func (tk *HashToken) Check(cookie string, inputToken string) (bool, error) {
 	tokenData := strings.Split(inputToken, ":")
@@ -49,7 +50,7 @@ func (tk *HashToken) Check(cookie string, inputToken string) (bool, error) {
 	}
 
 	h := hmac.New(sha256.New, []byte(tk.Secret))
-	data := fmt.Sprintf("%s:%d",  cookie, tokenExp)
+	data := fmt.Sprintf("%s:%d", cookie, tokenExp)
 	h.Write([]byte(data))
 	expectedMAC := h.Sum(nil)
 	messageMAC, err := hex.DecodeString(tokenData[0])

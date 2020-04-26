@@ -63,8 +63,7 @@ func (CR ChatRepositoryRealisation) CreateNewChat(chatPhoto, chatName string, us
 		if err != nil {
 			return err
 		}
-	} else
-	{
+	} else {
 
 		photoId := 0
 		photoRow := CR.chatDB.QueryRow("INSERT INTO Photos (url) VALUES($1) RETURNING photo_id", chatPhoto)
@@ -181,7 +180,7 @@ func (CR ChatRepositoryRealisation) GetGroupChatMessages(chatId int64, userId in
 	msgQuery, err := CR.chatDB.Query("SELECT M.u_id , M.txt, M.send_time,U.name,U.surname,U.login,P.url FROM Messages M INNER JOIN Users U ON(U.u_id=M.u_id) INNER JOIN Photos P ON(P.photo_id=U.photo_id) WHERE M.gch_id = $1 ORDER BY M.send_time DESC", chatId)
 
 	if err != nil {
-		fmt.Println(err , "here")
+		fmt.Println(err, "here")
 		return models.ChatInfo{}, nil, err
 	}
 
@@ -291,7 +290,7 @@ func (CR ChatRepositoryRealisation) GetAllChats(userId int) ([]models.Chat, erro
 			chat.PrivateUrl = *prLogin
 		}
 
-		chats = append(chats, * chat)
+		chats = append(chats, *chat)
 	}
 
 	return chats, nil

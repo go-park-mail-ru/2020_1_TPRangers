@@ -127,7 +127,7 @@ func (feedD FeedDeliveryRealisation) CreateComment(rwContext echo.Context) error
 		return rwContext.JSON(http.StatusConflict, models.JsonStruct{Err: err.Error()})
 	}
 
-	err = feedD.feedLogic.CreateComment(userId,  *newComment)
+	err = feedD.feedLogic.CreateComment(userId, *newComment)
 
 	if err != nil {
 		feedD.logger.Info(

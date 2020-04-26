@@ -65,7 +65,6 @@ func (albumD AlbumDeliveryRealisation) CreateAlbum(rwContext echo.Context) error
 
 	err := rwContext.Bind(albumData)
 
-
 	if err != nil {
 		albumD.logger.Debug(
 			zap.String("ID", rId),

@@ -10,5 +10,5 @@ type Message struct {
 	AuthorPhoto   string `json:"authorPhoto, omitempty"`
 	Text          string `json:"text, omitempty"`
 	Time          string `json:"time, omitempty"`
-	IsMe		  bool 	  `json:"isMe"`
+	IsMe          bool   `json:"isMe"`
 }

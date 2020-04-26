@@ -55,7 +55,7 @@ func (Data PhotoRepositoryRealisation) GetPhotosFromAlbum(albumID int) (models.P
 		if rows != nil {
 			rows.Close()
 		}
-	} ()
+	}()
 	if err != nil {
 		fmt.Println(err)
 		return models.Photos{}, errors.FailReadFromDB
