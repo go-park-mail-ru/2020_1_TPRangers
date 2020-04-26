@@ -10,4 +10,9 @@ type AuthorizationUseCaseRealisation struct {
 	sessionDB cookies.CookieRepository
 }
 
-
+func NewAuthorizationUseCaseRealisation(userDB users.UserRepository, sessionDB cookies.CookieRepository) AuthorizationUseCaseRealisation {
+	return AuthorizationUseCaseRealisation{
+		userDB:    userDB,
+		sessionDB: sessionDB,
+	}
+}
