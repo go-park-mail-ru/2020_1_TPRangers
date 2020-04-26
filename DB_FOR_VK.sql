@@ -160,8 +160,8 @@ CREATE UNIQUE INDEX chatuser_idx ON ChatsUsers (u_id, gch_id, pch_id);
 CREATE TABLE Messages
 (
     msg_id    BIGSERIAL PRIMARY KEY,
-    pch_id    BIGINT NOT NULL REFERENCES PrivateChats (ch_id),
-    gch_id    BIGINT NOT NULL REFERENCES GroupChats (ch_id),
+    pch_id    BIGINT,
+    gch_id    BIGINT,
     u_id      INT    NOT NULL REFERENCES Users,
     del_stat  BOOLEAN DEFAULT TRUE,
     send_time TIMESTAMP,

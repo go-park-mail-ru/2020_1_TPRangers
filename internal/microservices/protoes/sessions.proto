@@ -2,3 +2,42 @@ syntax = "proto3";
 
 package session;
 
+message SessionData{
+  string Cookies = 1;
+  string Csrf = 2;
+  string Err = 3;
+}
+
+message UserId{
+  int32 userId = 1;
+  string Err = 2;
+}
+
+message Auth{
+  string Login = 1;
+  string Password = 2;
+}
+
+message Register{
+  string Email = 1;
+  string Password = 2;
+  string Name = 3;
+  string Surname = 4;
+  string  Phone = 5;
+  string Date = 6;
+}
+
+
+
+
+
+
+
+
+
+service SessionChecker {
+  rpc LoginUser(Auth) returns (SessionData) {}
+  rpc CreateNewUser(Register) returns (SessionData) {}
+  rpc CheckSession(SessionData) returns (UserId)  {}
+  rpc DeleteSession(SessionData) returns (UserId) {}
+}
