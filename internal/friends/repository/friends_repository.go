@@ -23,7 +23,7 @@ func (Data FriendRepositoryRealisation) SearchFriends(userID int, valueOfSearch 
 		arrayOfvalue := strings.Split(valueOfSearch, " ")
 		nameOrSurname := arrayOfvalue[0]
 		SurnameOrName := arrayOfvalue[1]
-		rows, err := Data.friendDB.Query("SELECT u.name, u.surname, u.login, ph.url FROM users AS u INNER JOIN photos AS ph ON (u.photo_id = ph.photo_id) INNER JOIN friends AS f ON (f.u_id = $1 AND f.f_id = u.u_id) WHERE u.u_id != $1 AND ((u.name LIKE $2 AND u.surname LIKE $3) OR (u.name LIKE $3 AND u.surname LIKE $2));", userID,nameOrSurname + "%", SurnameOrName + "%")
+		rows, err := Data.friendDB.Query("SELECT u.name, u.surname, u.login, ph.url FROM users AS u INNER JOIN photos AS ph ON (u.photo_id = ph.photo_id) INNER JOIN friends AS f ON (f.u_id = $1 AND f.f_id = u.u_id) WHERE u.u_id != $1 AND ((lower(u.name) LIKE LOWER($2) AND lower(u.surname) LIKE LOWER($3)) OR (lower(u.name) LIKE LOWER($3) AND lower(u.surname) LIKE LOWER($2)));", userID,nameOrSurname + "%", SurnameOrName + "%")
 		if err != nil {
 			return nil, errors.FailReadFromDB
 		}
@@ -37,7 +37,7 @@ func (Data FriendRepositoryRealisation) SearchFriends(userID int, valueOfSearch 
 		}
 
 	} else {
-		rows, err := Data.friendDB.Query("SELECT u.name, u.surname, u.login, ph.url FROM users AS u INNER JOIN photos AS ph ON (u.photo_id = ph.photo_id) INNER JOIN friends AS f ON (f.u_id = $1 AND f.f_id = u.u_id) WHERE u.u_id != $1 AND ((u.name LIKE $2) OR (u.surname LIKE $2));",userID, valueOfSearch + "%")
+		rows, err := Data.friendDB.Query("SELECT u.name, u.surname, u.login, ph.url FROM users AS u INNER JOIN photos AS ph ON (u.photo_id = ph.photo_id) INNER JOIN friends AS f ON (f.u_id = $1 AND f.f_id = u.u_id) WHERE u.u_id != $1 AND ((lower(u.name) LIKE LOWER($2)) OR (lower(u.surname) LIKE LOWER($2)));",userID, valueOfSearch + "%")
 		if err != nil {
 			return nil, errors.FailReadFromDB
 		}
