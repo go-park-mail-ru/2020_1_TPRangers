@@ -25,6 +25,8 @@ func NewSocketDelivery(logger *zap.SugaredLogger, sLogic socket.SocketUseCase) S
 
 func (SD SocketDelivery) UpgradeToSocket(rwContext echo.Context) error {
 
+	fmt.Println(rwContext.Request())
+
 	uId := rwContext.Get("REQUEST_ID").(string)
 	token := rwContext.Param("token")
 

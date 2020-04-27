@@ -2,15 +2,16 @@ package middleware
 
 import (
 	"context"
+	"fmt"
 	"github.com/labstack/echo"
 	uuid "github.com/satori/go.uuid"
 	"go.uber.org/zap"
 	"main/internal/csrf"
+	sessions "main/internal/microservices/authorization/delivery"
 	"main/internal/models"
 	"main/internal/tools/errors"
 	"net/http"
 	"time"
-	sessions "main/internal/microservices/authorization/delivery"
 )
 
 type MiddlewareHandler struct {
@@ -33,6 +34,7 @@ func (mh MiddlewareHandler) SetMiddleware(server *echo.Echo) {
 
 	server.Use(authFunc)
 	server.Use(logFunc)
+
 	server.Use(csrfFunc)
 }
 
@@ -60,6 +62,7 @@ func (mh MiddlewareHandler) PanicMiddleWare(next echo.HandlerFunc) echo.HandlerF
 
 		defer func() error {
 			if err := recover(); err != nil {
+				fmt.Println(err)
 				return c.JSON(http.StatusInternalServerError, models.JsonStruct{Err: "server panic ! "})
 			}
 			return nil
@@ -86,6 +89,8 @@ func (mh MiddlewareHandler) AccessLog() echo.MiddlewareFunc {
 			)
 
 			err := next(rwContext)
+
+			fmt.Println(err)
 
 			mh.logger.Info(
 				zap.String("ID", uniqueID.String()),
@@ -120,8 +125,7 @@ func (mh MiddlewareHandler) CheckAuthentication() echo.MiddlewareFunc {
 				rwContext.SetCookie(cookie)
 			}
 
-			rwContext.Set("user_id", userId.UserId)
-
+			rwContext.Set("user_id", int(userId.UserId))
 			return next(rwContext)
 
 		}

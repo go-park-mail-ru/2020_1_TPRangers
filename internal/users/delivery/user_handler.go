@@ -1,6 +1,7 @@
 package delivery
 
 import (
+	"fmt"
 	"github.com/labstack/echo"
 	"go.uber.org/zap"
 	"main/internal/csrf"
@@ -22,6 +23,8 @@ func (userD UserDeliveryRealisation) GetUser(rwContext echo.Context) error {
 	login := rwContext.Param("id")
 
 	userId := rwContext.Get("user_id").(int)
+
+	fmt.Println("GET USE DATA : ", uId , login , userId)
 
 	var userData models.OtherUserProfileData
 	var err error

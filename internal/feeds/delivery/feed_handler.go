@@ -1,6 +1,7 @@
 package delivery
 
 import (
+	"fmt"
 	"github.com/labstack/echo"
 	"go.uber.org/zap"
 	"main/internal/feeds"
@@ -20,6 +21,8 @@ func (feedD FeedDeliveryRealisation) Feed(rwContext echo.Context) error {
 	uId := rwContext.Get("REQUEST_ID").(string)
 
 	userId := rwContext.Get("user_id").(int)
+
+	fmt.Println(uId,userId)
 
 	if userId == -1 {
 
