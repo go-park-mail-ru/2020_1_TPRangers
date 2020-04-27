@@ -1,7 +1,6 @@
 package delivery
 
 import (
-	"fmt"
 	"github.com/gobwas/ws"
 	"github.com/labstack/echo"
 	"go.uber.org/zap"
@@ -25,16 +24,10 @@ func NewSocketDelivery(logger *zap.SugaredLogger, sLogic socket.SocketUseCase) S
 
 func (SD SocketDelivery) UpgradeToSocket(rwContext echo.Context) error {
 
-	fmt.Println(rwContext.Request())
-
 	uId := rwContext.Get("REQUEST_ID").(string)
 	token := rwContext.Param("token")
 
-	fmt.Println(len(token))
-
 	userId, err := SD.socketLogic.CheckToken(token)
-
-	fmt.Println(userId)
 
 	if userId == -1 || err != nil {
 		SD.logger.Debug(

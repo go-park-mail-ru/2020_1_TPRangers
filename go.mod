@@ -21,6 +21,7 @@ require (
 	github.com/labstack/gommon v0.3.0 // indirect
 	github.com/lib/pq v1.3.0
 	github.com/mailru/easygo v0.0.0-20190618140210-3c14a0dc985f
+	github.com/mailru/easyjson v0.7.1
 	github.com/nitishm/go-rejson v2.0.0+incompatible
 	github.com/onsi/ginkgo v1.10.1 // indirect
 	github.com/onsi/gomega v1.7.0 // indirect
