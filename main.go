@@ -17,7 +17,6 @@ import (
 	usecaseFeed "main/internal/feeds/usecase"
 	"main/internal/middleware"
 	deliveryPhoto "main/internal/photos/delivery"
-	repositoryPhoto "main/internal/photos/repository"
 	deliveryUser "main/internal/users/delivery"
 	repositoryUser "main/internal/users/repository"
 	usecaseUser "main/internal/users/usecase"
@@ -29,11 +28,12 @@ import (
 	repositoryFriends "main/internal/friends/repository"
 	usecaseFriends "main/internal/friends/usecase"
 	deliveryLikes "main/internal/like/delivery"
-	repositoryLikes "main/internal/like/repository"
 	usecaseLikes "main/internal/like/usecase"
 	usecasePhoto "main/internal/photos/usecase"
 
 	authorMicro "main/internal/microservices/authorization/delivery"
+	likeMicro "main/internal/microservices/likes/delivery"
+	photoMicro "main/internal/microservices/photos/delivery"
 )
 
 type RequestHandlers struct {
@@ -64,21 +64,19 @@ func InitializeDataBases(server *echo.Echo) *sql.DB {
 	return db
 }
 
-func NewRequestHandler(db *sql.DB, session authorMicro.SessionCheckerClient, logger *zap.SugaredLogger) *RequestHandlers {
+func NewRequestHandler(db *sql.DB, session authorMicro.SessionCheckerClient, likes likeMicro.LikeCheckerClient, photos photoMicro.PhotoCheckerClient, logger *zap.SugaredLogger) *RequestHandlers {
 
 	feedDB := repositoryFeed.NewFeedRepositoryRealisation(db)
 	userDB := repositoryUser.NewUserRepositoryRealisation(db)
 	chatDB := repositoryChat.NewChatRepositoryRealisation(db)
-	photoDB := repositoryPhoto.NewPhotoRepositoryRealisation(db)
-	likesDB := repositoryLikes.NewLikeRepositoryRealisation(db)
 	albumDB := repositoryAlbum.NewAlbumRepositoryRealisation(db)
 	friendsDB := repositoryFriends.NewFriendRepositoryRealisation(db)
 
-	photoUseCase := usecasePhoto.NewPhotoUseCaseRealisation(photoDB)
+	photoUseCase := usecasePhoto.NewPhotoUseCaseRealisation(photos)
 	albumUseCase := usecaseAlbum.NewAlbumUseCaseRealisation(albumDB)
 	feedUseCase := usecaseFeed.NewFeedUseCaseRealisation(feedDB)
 	userUseCase := usecaseUser.NewUserUseCaseRealisation(userDB, friendsDB, feedDB, session)
-	likesUse := usecaseLikes.NewLikeUseRealisation(likesDB)
+	likesUse := usecaseLikes.NewLikeUseRealisation(likes)
 	friendsUse := usecaseFriends.NewFriendUseCaseRealisation(friendsDB)
 	chatUse := usecaseChat.NewChatUseCaseRealisation(chatDB, friendsDB)
 
@@ -102,21 +100,51 @@ func NewRequestHandler(db *sql.DB, session authorMicro.SessionCheckerClient, log
 	return api
 }
 
-func LoadMicroservices(server *echo.Echo) (authorMicro.SessionCheckerClient, *grpc.ClientConn) {
+func LoadMicroservices(server *echo.Echo) (authorMicro.SessionCheckerClient, likeMicro.LikeCheckerClient, photoMicro.PhotoCheckerClient, []*grpc.ClientConn) {
+
+	connections := make([]*grpc.ClientConn, 0)
 
 	authPORT := os.Getenv("AUTHORIZ_PORT")
 
-	grpcConn, err := grpc.Dial(
+	authConn, err := grpc.Dial(
 		"127.0.0.1"+authPORT,
 		grpc.WithInsecure(),
 	)
+	connections = append(connections, authConn)
+
 	if err != nil {
 		server.Logger.Fatal("cant connect to grpc")
 	}
 
-	authManager := authorMicro.NewSessionCheckerClient(grpcConn)
+	authManager := authorMicro.NewSessionCheckerClient(authConn)
 
-	return authManager, grpcConn
+	likePORT := os.Getenv("LIKE_PORT")
+	likeConn, err := grpc.Dial(
+		"127.0.0.1"+likePORT,
+		grpc.WithInsecure(),
+	)
+	connections = append(connections, likeConn)
+
+	if err != nil {
+		server.Logger.Fatal("cant connect to grpc")
+	}
+
+	likeManager := likeMicro.NewLikeCheckerClient(likeConn)
+
+	photoPORT := os.Getenv("PHOTO_PORT")
+	photoConn, err := grpc.Dial(
+		"127.0.0.1"+photoPORT,
+		grpc.WithInsecure(),
+	)
+	connections = append(connections, photoConn)
+
+	if err != nil {
+		server.Logger.Fatal("cant connect to grpc")
+	}
+
+	photoManager := photoMicro.NewPhotoCheckerClient(photoConn)
+
+	return authManager, likeManager, photoManager, connections
 
 }
 
@@ -139,18 +167,19 @@ func main() {
 
 	origin := os.Getenv("ORIGIN_POLICY")
 
-	auth, authConn := LoadMicroservices(server)
-
+	auth, like, photo, authConn := LoadMicroservices(server)
 	defer func() {
-		if authConn != nil {
-			authConn.Close()
+		if len(authConn) > 0 {
+			for i, _ := range authConn {
+				authConn[i].Close()
+			}
 		}
 	}()
 
 	midHandler := middleware.NewMiddlewareHandler(logger, auth, origin)
 	midHandler.SetMiddleware(server)
 
-	api := NewRequestHandler(db, auth, logger)
+	api := NewRequestHandler(db, auth, like, photo, logger)
 
 	api.userHandler.InitHandlers(server)
 	api.feedHandler.InitHandlers(server)

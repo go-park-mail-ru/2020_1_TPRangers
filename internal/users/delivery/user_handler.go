@@ -24,7 +24,7 @@ func (userD UserDeliveryRealisation) GetUser(rwContext echo.Context) error {
 
 	userId := rwContext.Get("user_id").(int)
 
-	fmt.Println("GET USE DATA : ", uId , login , userId)
+	fmt.Println("GET USE DATA : ", uId, login, userId)
 
 	var userData models.OtherUserProfileData
 	var err error
@@ -128,13 +128,6 @@ func (userD UserDeliveryRealisation) GetSettings(rwContext echo.Context) error {
 func (userD UserDeliveryRealisation) UploadSettings(rwContext echo.Context) error {
 
 	uId := rwContext.Get("REQUEST_ID").(string)
-
-	//cookie, err := rwContext.Cookie("session_id")
-
-	//token := rwContext.Request().Header.Get("X-CSRF-Token")
-	//
-	//res, err := csrf.Tokens.Check( cookie.Value,  token)
-	//fmt.Print(res)
 
 	userId := rwContext.Get("user_id").(int)
 

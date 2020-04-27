@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 	"google.golang.org/grpc"
 	"log"
 	repositoryCookie "main/internal/cookies/repository"
@@ -52,6 +53,6 @@ func main() {
 
 	session.RegisterSessionCheckerServer(server, usecase.NewAuthorizationUseCaseRealisation(users, sessions))
 
-	fmt.Println("starting server at :3080")
+	fmt.Println("starting server at " + port)
 	server.Serve(lis)
 }

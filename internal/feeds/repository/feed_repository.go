@@ -188,7 +188,11 @@ func (Data FeedRepositoryRealisation) CreatePost(uId int, ownerLogin string, new
 	}
 
 	postRow, err := Data.feedDB.Query("INSERT INTO Posts (txt_data,photo_id,posts_likes_count,creation_date, attachments) VALUES($1 , $2 , $3 , $4 , $5) RETURNING post_id", newPost.Text, photo_id, 0, time.Now(), newPost.Attachments)
-	defer postRow.Close()
+	defer func () {
+		if postRow != nil {
+			postRow.Close()
+		}
+	} ()
 	if err != nil {
 		fmt.Println(err, "ERROR ON ADDING NEW POST TO DATABASE")
 		return errors.FailSendToDB
@@ -200,7 +204,11 @@ func (Data FeedRepositoryRealisation) CreatePost(uId int, ownerLogin string, new
 	err = postRow.Scan(&postId)
 
 	ownerRow, err := Data.feedDB.Query("SELECT u_id FROM Users WHERE login = $1", ownerLogin)
-	defer ownerRow.Close()
+	defer func () {
+		if ownerRow != nil {
+			ownerRow.Close()
+		}
+	} ()
 	if err != nil {
 		fmt.Println(err, "ERROR ON OWNER NEW POST TO DATABASE")
 		return errors.FailSendToDB

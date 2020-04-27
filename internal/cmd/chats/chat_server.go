@@ -2,9 +2,9 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo"
+	_ "github.com/lib/pq"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"google.golang.org/grpc"
@@ -140,7 +140,6 @@ func main() {
 	api.socketTokenHandler.InitHandlers(server)
 
 	port := os.Getenv("CHAT_PORT")
-	fmt.Println(port)
 
 	server.Logger.Fatal(server.Start(port))
 }

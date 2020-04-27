@@ -22,7 +22,7 @@ func (feedD FeedDeliveryRealisation) Feed(rwContext echo.Context) error {
 
 	userId := rwContext.Get("user_id").(int)
 
-	fmt.Println(uId,userId)
+	fmt.Println(uId, userId)
 
 	if userId == -1 {
 

@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package photos;
+
+message AlbumId{
+  int32 id =1;
+}
+
+message Photos{
+    string AlbumName =1;
+    repeated string Urls =2;
+}
+
+message PhotoInAlbum{
+  string Url =1;
+  string AlbumID=2;
+}
+
+message Dummy{}
+
+
+service PhotoChecker{
+  rpc GetPhotosFromAlbum(AlbumId) returns (Photos);
+  rpc UploadPhotoToAlbum(PhotoInAlbum) returns (Dummy) ;
+}

@@ -15,9 +15,9 @@ import (
 )
 
 type MiddlewareHandler struct {
-	logger     *zap.SugaredLogger
-	sessChecker  sessions.SessionCheckerClient
-	httpOrigin string
+	logger      *zap.SugaredLogger
+	sessChecker sessions.SessionCheckerClient
+	httpOrigin  string
 }
 
 func NewMiddlewareHandler(logger *zap.SugaredLogger, checker sessions.SessionCheckerClient, origin string) MiddlewareHandler {
@@ -30,12 +30,12 @@ func (mh MiddlewareHandler) SetMiddleware(server *echo.Echo) {
 
 	logFunc := mh.AccessLog()
 	authFunc := mh.CheckAuthentication()
-	csrfFunc := mh.CSRF()
+	//csrfFunc := mh.CSRF()
 
 	server.Use(authFunc)
 	server.Use(logFunc)
 
-	server.Use(csrfFunc)
+	//server.Use(csrfFunc)
 }
 
 func (mh MiddlewareHandler) SetCorsMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
@@ -90,8 +90,6 @@ func (mh MiddlewareHandler) AccessLog() echo.MiddlewareFunc {
 
 			err := next(rwContext)
 
-			fmt.Println(err)
-
 			mh.logger.Info(
 				zap.String("ID", uniqueID.String()),
 				zap.Duration("TIME FOR ANSWER", time.Since(start)),
@@ -111,12 +109,12 @@ func (mh MiddlewareHandler) CheckAuthentication() echo.MiddlewareFunc {
 			cookie, err := rwContext.Cookie("session_id")
 
 			userId := &sessions.UserId{
-				UserId:               0,
+				UserId: 0,
 			}
 
 			if err == nil {
-				userId , err = mh.sessChecker.CheckSession(context.Background(), &sessions.SessionData{
-					Cookies:              cookie.Value,
+				userId, err = mh.sessChecker.CheckSession(context.Background(), &sessions.SessionData{
+					Cookies: cookie.Value,
 				})
 			}
 
@@ -126,6 +124,7 @@ func (mh MiddlewareHandler) CheckAuthentication() echo.MiddlewareFunc {
 			}
 
 			rwContext.Set("user_id", int(userId.UserId))
+			fmt.Println(userId)
 			return next(rwContext)
 
 		}

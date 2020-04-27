@@ -1,6 +1,7 @@
 package delivery
 
 import (
+	"fmt"
 	"github.com/labstack/echo"
 	"go.uber.org/zap"
 	"main/internal/models"
@@ -85,6 +86,8 @@ func (photoD PhotoDeliveryRealisation) UploadPhotoToAlbum(rwContext echo.Context
 	}
 
 	err = photoD.photoLogic.UploadPhotoToAlbum(*photoData)
+
+	fmt.Println(err)
 
 	if err != nil {
 		photoD.logger.Info(

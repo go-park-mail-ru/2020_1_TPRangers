@@ -180,26 +180,26 @@ func (userR UserUseCaseRealisation) Login(userData models.Auth) (string, error) 
 	})
 
 	if cookie == nil {
-		return "" , err
+		return "", err
 	}
 
 	return cookie.Cookies, nil
 
 }
 
-func (userR UserUseCaseRealisation) Register(userData models.Register) (string , error) {
+func (userR UserUseCaseRealisation) Register(userData models.Register) (string, error) {
 
-	cookie , err := userR.sess.CreateNewUser(context.Background(),&sessions.Register{
-		Email:                userData.Email,
-		Password:             userData.Password,
-		Name:                 userData.Name,
-		Surname:              userData.Surname,
-		Phone:                userData.Phone,
-		Date:                 userData.Date,
+	cookie, err := userR.sess.CreateNewUser(context.Background(), &sessions.Register{
+		Email:    userData.Email,
+		Password: userData.Password,
+		Name:     userData.Name,
+		Surname:  userData.Surname,
+		Phone:    userData.Phone,
+		Date:     userData.Date,
 	})
 
 	if cookie == nil {
-		return "" , err
+		return "", err
 	}
 
 	return cookie.Cookies, nil
@@ -207,8 +207,8 @@ func (userR UserUseCaseRealisation) Register(userData models.Register) (string ,
 
 func (userR UserUseCaseRealisation) Logout(cookie string) error {
 
-	 _ , err :=userR.sess.DeleteSession(context.Background() , &sessions.SessionData{
-		Cookies:              cookie,
+	_, err := userR.sess.DeleteSession(context.Background(), &sessions.SessionData{
+		Cookies: cookie,
 	})
 
 	return err
