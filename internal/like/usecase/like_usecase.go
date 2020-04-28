@@ -44,3 +44,11 @@ func (Like LikesUseRealisation) DislikePost(postId int, userId int) error {
 	})
 	return err
 }
+
+func (Like LikesUseRealisation) LikeComment(postId int, userId int) error {
+	return Like.likeRepo.LikeComment(postId, userId)
+}
+
+func (Like LikesUseRealisation) DislikeComment(postId int, userId int) error {
+	return Like.likeRepo.DislikeComment(postId, userId)
+}

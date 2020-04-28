@@ -12,6 +12,7 @@ var (
 	NotExist           = errors.New("Такого пользователя не существует")
 	WrongPassword      = errors.New("Неправильный пароль")
 	WrongLogin         = errors.New("Неправильные данные")
+	FailReverse        = errors.New("Данные должны быть slice")
 	FailConnect        = errors.New("Ошибка подключения к базе данных")
 	FailSendToDB       = errors.New("Ошибка записи в базе данных")
 	FailReadFromDB     = errors.New("Ошибка чтения из базы данных")

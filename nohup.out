@@ -1,0 +1,43 @@
+
+   ____    __
+  / __/___/ /  ___
+ / _// __/ _ \/ _ \
+/___/\__/_//_/\___/ v3.3.10-dev
+High performance, minimalist Go web framework
+https://echo.labstack.com
+____________________________________O/_______
+                                    O\
+⇨ http server started on [::]:3001
+2020-04-06T00:43:11.451Z	[34mINFO[0m	middleware/middleware.go:61	{ID 15 0 fff18564-deea-44cc-a760-75d5607ffaac <nil>} {URL 15 0 /api/v1/news <nil>} {METHOD 15 0 GET <nil>}
+2020-04-06T00:43:11.452Z	[34mINFO[0m	delivery/feed_handler.go:27	{ID 15 0 fff18564-deea-44cc-a760-75d5607ffaac <nil>} {ERROR 15 0 http: named cookie not present <nil>} {ANSWER STATUS 11 401  <nil>}
+2020-04-06T00:43:11.452Z	[34mINFO[0m	middleware/middleware.go:69	{ID 15 0 fff18564-deea-44cc-a760-75d5607ffaac <nil>} {TIME FOR ANSWER 8 527791  <nil>}
+2020-04-06T00:43:11.452Z	[34mINFO[0m	middleware/middleware.go:61	{ID 15 0 00dabe69-58f5-4303-8f71-4d62ff4f1074 <nil>} {URL 15 0 /api/v1/profile <nil>} {METHOD 15 0 GET <nil>}
+2020-04-06T00:43:11.452Z	[35mDEBUG[0m	delivery/user_handler.go:135	{ID 15 0 00dabe69-58f5-4303-8f71-4d62ff4f1074 <nil>} {COOKIE 15 0 http: named cookie not present <nil>}
+2020-04-06T00:43:11.452Z	[34mINFO[0m	middleware/middleware.go:69	{ID 15 0 00dabe69-58f5-4303-8f71-4d62ff4f1074 <nil>} {TIME FOR ANSWER 8 101149  <nil>}
+2020-04-06T00:43:11.478Z	[34mINFO[0m	middleware/middleware.go:61	{ID 15 0 ef4b3582-347d-4f45-9b13-1d58007860da <nil>} {URL 15 0 /api/v1/profile <nil>} {METHOD 15 0 GET <nil>}
+2020-04-06T00:43:11.478Z	[35mDEBUG[0m	delivery/user_handler.go:135	{ID 15 0 ef4b3582-347d-4f45-9b13-1d58007860da <nil>} {COOKIE 15 0 http: named cookie not present <nil>}
+2020-04-06T00:43:11.478Z	[34mINFO[0m	middleware/middleware.go:69	{ID 15 0 ef4b3582-347d-4f45-9b13-1d58007860da <nil>} {TIME FOR ANSWER 8 130380  <nil>}
+2020-04-06T00:43:33.745Z	[34mINFO[0m	middleware/middleware.go:61	{ID 15 0 f319d120-3637-446c-bbdb-7fb8a1353fb7 <nil>} {URL 15 0 /api/v1/profile <nil>} {METHOD 15 0 GET <nil>}
+2020-04-06T00:43:33.745Z	[35mDEBUG[0m	delivery/user_handler.go:135	{ID 15 0 f319d120-3637-446c-bbdb-7fb8a1353fb7 <nil>} {COOKIE 15 0 http: named cookie not present <nil>}
+2020-04-06T00:43:33.745Z	[34mINFO[0m	middleware/middleware.go:69	{ID 15 0 f319d120-3637-446c-bbdb-7fb8a1353fb7 <nil>} {TIME FOR ANSWER 8 391043  <nil>}
+2020-04-06T00:43:47.841Z	[34mINFO[0m	middleware/middleware.go:61	{ID 15 0 0934296f-f155-4a4e-98ba-88e857461a05 <nil>} {URL 15 0 /api/v1/registration <nil>} {METHOD 15 0 POST <nil>}
+2020-04-06T00:43:47.863Z	[34mINFO[0m	delivery/user_handler.go:394	{ID 15 0 0934296f-f155-4a4e-98ba-88e857461a05 <nil>} {ERROR 15 0 Ошибка чтения из базы данных <nil>} {ANSWER STATUS 11 500  <nil>}
+2020-04-06T00:43:47.864Z	[34mINFO[0m	middleware/middleware.go:69	{ID 15 0 0934296f-f155-4a4e-98ba-88e857461a05 <nil>} {TIME FOR ANSWER 8 22230182  <nil>}
+2020-04-06T00:43:47.926Z	[34mINFO[0m	middleware/middleware.go:61	{ID 15 0 4bf6a646-2e44-49a8-9e0a-5de2e528b531 <nil>} {URL 15 0 /api/v1/news <nil>} {METHOD 15 0 GET <nil>}
+2020-04-06T00:43:47.926Z	[34mINFO[0m	delivery/feed_handler.go:27	{ID 15 0 4bf6a646-2e44-49a8-9e0a-5de2e528b531 <nil>} {ERROR 15 0 http: named cookie not present <nil>} {ANSWER STATUS 11 401  <nil>}
+2020-04-06T00:43:47.926Z	[34mINFO[0m	middleware/middleware.go:69	{ID 15 0 4bf6a646-2e44-49a8-9e0a-5de2e528b531 <nil>} {TIME FOR ANSWER 8 133754  <nil>}
+2020-04-06T00:43:59.576Z	[34mINFO[0m	middleware/middleware.go:61	{ID 15 0 38e05e21-9eb4-4382-9a06-e4455bd9acb7 <nil>} {URL 15 0 /api/v1/news <nil>} {METHOD 15 0 GET <nil>}
+2020-04-06T00:43:59.576Z	[34mINFO[0m	delivery/feed_handler.go:27	{ID 15 0 38e05e21-9eb4-4382-9a06-e4455bd9acb7 <nil>} {ERROR 15 0 http: named cookie not present <nil>} {ANSWER STATUS 11 401  <nil>}
+2020-04-06T00:43:59.576Z	[34mINFO[0m	middleware/middleware.go:69	{ID 15 0 38e05e21-9eb4-4382-9a06-e4455bd9acb7 <nil>} {TIME FOR ANSWER 8 130842  <nil>}
+2020-04-06T00:43:59.576Z	[34mINFO[0m	middleware/middleware.go:61	{ID 15 0 cbe18444-4ead-498c-b8ff-ca2b0a6a0a1d <nil>} {URL 15 0 /api/v1/profile <nil>} {METHOD 15 0 GET <nil>}
+2020-04-06T00:43:59.577Z	[35mDEBUG[0m	delivery/user_handler.go:135	{ID 15 0 cbe18444-4ead-498c-b8ff-ca2b0a6a0a1d <nil>} {COOKIE 15 0 http: named cookie not present <nil>}
+2020-04-06T00:43:59.577Z	[34mINFO[0m	middleware/middleware.go:69	{ID 15 0 cbe18444-4ead-498c-b8ff-ca2b0a6a0a1d <nil>} {TIME FOR ANSWER 8 75693  <nil>}
+2020-04-06T00:43:59.641Z	[34mINFO[0m	middleware/middleware.go:61	{ID 15 0 0d47e91d-973b-48d1-94b4-c80b12ebdd02 <nil>} {URL 15 0 /api/v1/profile <nil>} {METHOD 15 0 GET <nil>}
+2020-04-06T00:43:59.641Z	[35mDEBUG[0m	delivery/user_handler.go:135	{ID 15 0 0d47e91d-973b-48d1-94b4-c80b12ebdd02 <nil>} {COOKIE 15 0 http: named cookie not present <nil>}
+2020-04-06T00:43:59.641Z	[34mINFO[0m	middleware/middleware.go:69	{ID 15 0 0d47e91d-973b-48d1-94b4-c80b12ebdd02 <nil>} {TIME FOR ANSWER 8 126808  <nil>}
+2020-04-06T00:44:00.498Z	[34mINFO[0m	middleware/middleware.go:61	{ID 15 0 e75b4782-ca5b-450d-84c8-b57409b7e157 <nil>} {URL 15 0 /api/v1/profile <nil>} {METHOD 15 0 GET <nil>}
+2020-04-06T00:44:00.498Z	[35mDEBUG[0m	delivery/user_handler.go:135	{ID 15 0 e75b4782-ca5b-450d-84c8-b57409b7e157 <nil>} {COOKIE 15 0 http: named cookie not present <nil>}
+2020-04-06T00:44:00.498Z	[34mINFO[0m	middleware/middleware.go:69	{ID 15 0 e75b4782-ca5b-450d-84c8-b57409b7e157 <nil>} {TIME FOR ANSWER 8 439536  <nil>}
+2020-04-06T00:44:00.508Z	[34mINFO[0m	middleware/middleware.go:61	{ID 15 0 668ef0ac-22cd-4570-8ac4-d48dc39351d0 <nil>} {URL 15 0 /api/v1/profile <nil>} {METHOD 15 0 GET <nil>}
+2020-04-06T00:44:00.508Z	[35mDEBUG[0m	delivery/user_handler.go:135	{ID 15 0 668ef0ac-22cd-4570-8ac4-d48dc39351d0 <nil>} {COOKIE 15 0 http: named cookie not present <nil>}
+2020-04-06T00:44:00.508Z	[34mINFO[0m	middleware/middleware.go:69	{ID 15 0 668ef0ac-22cd-4570-8ac4-d48dc39351d0 <nil>} {TIME FOR ANSWER 8 178701  <nil>}

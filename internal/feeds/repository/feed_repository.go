@@ -267,8 +267,10 @@ func (Data FeedRepositoryRealisation) DeleteComment(uID int, commentID string) e
 }
 
 func (Data FeedRepositoryRealisation) GetPostAndComments(userID int, postID string) (models.Post, error) {
-	rows, err := Data.feedDB.Query("select c.comment_id, c.txt_data, c.attachments, c.comment_likes_count, c.creation_date, ph.photo_id, ph.url, ph.photos_likes_count, u.name, u.surname, u.login "+
-		"from comments AS c INNER JOIN users AS u ON (c.u_id = u.u_id) LEFT JOIN photos AS ph ON c.photo_id = ph.photo_id WHERE c.post_id = $1;", postID)
+
+	rows, err := Data.feedDB.Query("select c.comment_id, c.txt_data, c.attachments, c.comment_likes_count, c.creation_date, ph.photo_id, ph.url, ph.photos_likes_count, u.name, u.surname, u.login " +
+		"from comments AS c INNER JOIN users AS u ON (c.u_id = u.u_id) LEFT JOIN photos AS ph ON c.photo_id = ph.photo_id WHERE c.post_id = $1 ORDER BY c.creation_date ASC;", postID)
+
 	if err != nil {
 		return models.Post{}, errors.FailReadFromDB
 	}
@@ -282,10 +284,10 @@ func (Data FeedRepositoryRealisation) GetPostAndComments(userID int, postID stri
 		}
 		additional_row := Data.feedDB.QueryRow("select ucl.commentlike_id, uphl.photolike_id from userscommentslikes AS ucl RIGHT JOIN comments AS c "+
 			"ON (c.comment_id = ucl.comment_id) LEFT JOIN usersphotoslikes AS uphl ON (c.photo_id = uphl.photo_id) INNER JOIN "+
-			"LEFT JOIN users AS u ON (u.u_id = c.u_id) LEFT JOIN photos AS ph ON (u.photo_id = ph.photo_id) WHERE c.comment_id = $1 AND upl.u_id = $2;", comment.CommentID, userID)
+			"users AS u ON (u.u_id = c.u_id) LEFT JOIN photos AS ph ON (u.photo_id = ph.photo_id) WHERE c.comment_id = $1 AND ucl.u_id = $2 ORDER BY c.creation_date ASC;", comment.CommentID, userID)
 		var commentLikes *int
 		var photoLikes *int
-		add_row := Data.feedDB.QueryRow("select ph.url from photos AS ph INNER JOIN users AS u ON (u.photo_id = ph.photo_id) INNER JOIN comments AS c ON (c.post_id = $1 AND c.u_id = u.u_id);", postID)
+		add_row := Data.feedDB.QueryRow("select ph.url from photos AS ph INNER JOIN users AS u ON (u.photo_id = ph.photo_id) INNER JOIN comments AS c ON (c.comment_id = $1 AND c.u_id = u.u_id) ORDER BY c.creation_date ASC;", comment.CommentID)
 		add_row.Scan(&comment.AuthorPhoto)
 		additional_row.Scan(&commentLikes, &photoLikes)
 		if commentLikes != nil {

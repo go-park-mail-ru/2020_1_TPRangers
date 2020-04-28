@@ -55,7 +55,7 @@ func (MR MessageRepositoryRealisation) AddNewMessage(author int, message models.
 		return err
 	}
 
-	recRows, err := MR.messageDB.Query("SELECT u_id FROM ChatsUsers WHERE "+groupType+"_id = $1 AND u_id != $2", chat, author)
+	recRows, err := MR.messageDB.Query("SELECT u_id FROM ChatsUsers WHERE "+groupType+"_id = $1", chat)
 	defer func() {
 		if recRows != nil {
 			recRows.Close()
@@ -105,11 +105,12 @@ func (MR MessageRepositoryRealisation) ReceiveNewMessages(userId int) ([]models.
 		var isGroup *int64
 		err = msgsRow.Scan(&msgId, &isGroup, &isPrivate, &userid, &msg.Time, &msg.Text, &msg.ChatName, &msg.ChatPhoto)
 
-		if *isGroup != 0 {
-			msg.ChatId = "c" + strconv.FormatInt(*isGroup, 10)
+
+		if *isGroup != int64(0) {
+			msg.ChatId = "c" + strconv.FormatInt(*isGroup,10)
 		} else {
-			if *isPrivate != 0 {
-				msg.ChatId = strconv.FormatInt(*isPrivate, 10)
+			if *isPrivate != int64(0) {
+				msg.ChatId = strconv.FormatInt(*isPrivate,10)
 			}
 		}
 
