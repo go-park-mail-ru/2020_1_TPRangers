@@ -278,7 +278,7 @@ func (Data FeedRepositoryRealisation) GetPostAndComments(userID int, postID stri
 			"users AS u ON (u.u_id = c.u_id) LEFT JOIN photos AS ph ON (u.photo_id = ph.photo_id) WHERE c.comment_id = $1 AND ucl.u_id = $2 ORDER BY c.creation_date ASC;", comment.CommentID, userID)
 		var commentLikes *int
 		var photoLikes *int
-		add_row := Data.feedDB.QueryRow("select ph.url from photos AS ph INNER JOIN users AS u ON (u.photo_id = ph.photo_id) INNER JOIN comments AS c ON (c.post_id = $1 AND c.u_id = u.u_id) ORDER BY c.creation_date ASC;", postID)
+		add_row := Data.feedDB.QueryRow("select ph.url from photos AS ph INNER JOIN users AS u ON (u.photo_id = ph.photo_id) INNER JOIN comments AS c ON (c.comment_id = $1 AND c.u_id = u.u_id) ORDER BY c.creation_date ASC;", comment.CommentID)
 		add_row.Scan(&comment.AuthorPhoto)
 		additional_row.Scan(&commentLikes, &photoLikes)
 		if commentLikes != nil {
