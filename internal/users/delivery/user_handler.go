@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/labstack/echo"
 	"go.uber.org/zap"
+	"io/ioutil"
 	"main/internal/csrf"
 	"main/internal/models"
 	"main/internal/tools/errors"
@@ -142,9 +143,22 @@ func (userD UserDeliveryRealisation) UploadSettings(rwContext echo.Context) erro
 		return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: errors.CookieExpired.Error()})
 	}
 
+	b , err := ioutil.ReadAll(rwContext.Request().Body)
+	defer rwContext.Request().Body.Close()
+
+	if err != nil {
+		userD.logger.Debug(
+			zap.String("ID", uId),
+			zap.String("ERROR", err.Error()),
+			zap.Int("ANSWER STATUS", http.StatusConflict),
+		)
+
+		return rwContext.NoContent(http.StatusConflict)
+	}
+
 	newUserSettings := new(models.Settings)
 
-	err := rwContext.Bind(newUserSettings)
+	err = newUserSettings.UnmarshalJSON(b)
 
 	if err != nil {
 
@@ -193,7 +207,20 @@ func (userD UserDeliveryRealisation) Login(rwContext echo.Context) error {
 
 	userAuthData := new(models.Auth)
 
-	err := rwContext.Bind(userAuthData)
+	b , err := ioutil.ReadAll(rwContext.Request().Body)
+	defer rwContext.Request().Body.Close()
+
+	if err != nil {
+		userD.logger.Debug(
+			zap.String("ID", uId),
+			zap.String("ERROR", err.Error()),
+			zap.Int("ANSWER STATUS", http.StatusConflict),
+		)
+
+		return rwContext.NoContent(http.StatusConflict)
+	}
+
+	err = userAuthData.UnmarshalJSON(b)
 
 	if err != nil {
 		userD.logger.Debug(
@@ -215,6 +242,8 @@ func (userD UserDeliveryRealisation) Login(rwContext echo.Context) error {
 			zap.String("ERROR", err.Error()),
 			zap.Int("ANSWER STATUS", http.StatusUnauthorized),
 		)
+
+
 		return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: err.Error()})
 	}
 
@@ -273,7 +302,19 @@ func (userD UserDeliveryRealisation) Register(rwContext echo.Context) error {
 
 	userAuthData := new(models.Register)
 
-	err := rwContext.Bind(userAuthData)
+	b , err := ioutil.ReadAll(rwContext.Request().Body)
+	defer rwContext.Request().Body.Close()
+
+	if err != nil {
+		userD.logger.Debug(
+			zap.String("ID", uId),
+			zap.String("ERROR", err.Error()),
+			zap.Int("ANSWER STATUS", http.StatusInternalServerError),
+		)
+		return rwContext.NoContent(http.StatusInternalServerError)
+	}
+
+	err = userAuthData.UnmarshalJSON(b)
 
 	if err != nil {
 		userD.logger.Debug(

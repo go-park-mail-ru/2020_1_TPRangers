@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/labstack/echo"
 	"go.uber.org/zap"
+	"io/ioutil"
 	"main/internal/feeds"
 	"main/internal/feeds/usecase"
 	"main/internal/models"
@@ -74,9 +75,22 @@ func (feedD FeedDeliveryRealisation) CreatePost(rwContext echo.Context) error {
 		return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: errors.CookieExpired.Error()})
 	}
 
+	b , err := ioutil.ReadAll(rwContext.Request().Body)
+	defer rwContext.Request().Body.Close()
+
+	if err != nil {
+		feedD.logger.Debug(
+			zap.String("ID", uId),
+			zap.String("ERROR", err.Error()),
+			zap.Int("ANSWER STATUS", http.StatusConflict),
+		)
+
+		return rwContext.NoContent(http.StatusConflict)
+	}
+
 	newPost := new(models.Post)
 
-	err := rwContext.Bind(&newPost)
+	err = newPost.UnmarshalJSON(b)
 
 	if err != nil {
 
@@ -119,7 +133,21 @@ func (feedD FeedDeliveryRealisation) CreateComment(rwContext echo.Context) error
 		return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: errors.CookieExpired.Error()})
 	}
 	newComment := new(models.Comment)
-	err := rwContext.Bind(&newComment)
+
+	b , err := ioutil.ReadAll(rwContext.Request().Body)
+	defer rwContext.Request().Body.Close()
+
+	if err != nil {
+		feedD.logger.Debug(
+			zap.String("ID", uId),
+			zap.String("ERROR", err.Error()),
+			zap.Int("ANSWER STATUS", http.StatusConflict),
+		)
+
+		return rwContext.NoContent(http.StatusConflict)
+	}
+
+	err = newComment.UnmarshalJSON(b)
 
 	if err != nil {
 		feedD.logger.Info(

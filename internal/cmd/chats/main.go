@@ -5,6 +5,8 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo"
 	_ "github.com/lib/pq"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"google.golang.org/grpc"
@@ -103,6 +105,18 @@ func LoadMicroservices(server *echo.Echo) (authorMicro.SessionCheckerClient, *gr
 
 }
 
+func RegisterMetrics(server *echo.Echo) *prometheus.CounterVec {
+	tracker := prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "url_tracker",
+	}, []string{"status", "path", "method", "time"})
+
+	prometheus.MustRegister(tracker)
+
+	server.GET("/metrics", echo.WrapHandler(promhttp.Handler()))
+
+	return tracker
+}
+
 func main() {
 
 	server := echo.New()
@@ -130,7 +144,10 @@ func main() {
 		}
 	}()
 
-	midHandler := middleware.NewMiddlewareHandler(logger, auth, origin)
+	tracker := RegisterMetrics(server)
+
+
+	midHandler := middleware.NewMiddlewareHandler(logger, auth, tracker,origin)
 	midHandler.SetMiddleware(server)
 
 	api := NewRequestHandler(db, messages, tokens, logger)
