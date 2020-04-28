@@ -18,7 +18,7 @@ func (userR FriendUseCaseRealisation) GetAllFriends(login string) ([]models.Frie
 
 }
 
-func (userR FriendUseCaseRealisation) SearchFriends(userID int, searchOfValue string) ([]models.Person, error){
+func (userR FriendUseCaseRealisation) SearchFriends(userID int, searchOfValue string) ([]models.Person, error) {
 	sendData, err := userR.friendDB.SearchFriends(userID, searchOfValue)
 
 	return sendData, err

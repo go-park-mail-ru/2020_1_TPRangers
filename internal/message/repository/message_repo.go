@@ -32,14 +32,14 @@ func (MR MessageRepositoryRealisation) AddNewMessage(author int, message models.
 	err := errors.New("")
 
 	if message.ChatId[:1] != "c" {
-		chat , err = strconv.ParseInt(message.ChatId, 10, 64)
+		chat, err = strconv.ParseInt(message.ChatId, 10, 64)
 
 		if err != nil {
 			return nil
 		}
 		groupType = "pch"
 	} else {
-		chat , err = strconv.ParseInt(message.ChatId[1:], 10, 64)
+		chat, err = strconv.ParseInt(message.ChatId[1:], 10, 64)
 
 		if err != nil {
 			return nil
@@ -70,7 +70,7 @@ func (MR MessageRepositoryRealisation) AddNewMessage(author int, message models.
 		reciever := 0
 
 		err = recRows.Scan(&reciever)
-		_ , err = MR.messageDB.Exec("INSERT INTO NewMessages (msg_id,receiver_id) VALUES($1,$2)", msgId, reciever)
+		_, err = MR.messageDB.Exec("INSERT INTO NewMessages (msg_id,receiver_id) VALUES($1,$2)", msgId, reciever)
 
 	}
 
@@ -81,12 +81,12 @@ func (MR MessageRepositoryRealisation) ReceiveNewMessages(userId int) ([]models.
 
 	msgsArray := make([]models.Message, 0)
 
-	msgsRow, err := MR.messageDB.Query("SELECT M.msg_id, M.gch_id, M.pch_id ,M.u_id ,M.send_time ,M.txt , U.name,P.url FROM Messages M " +
-		"INNER JOIN NewMessages NM ON(NM.msg_id=M.msg_id) LEFT JOIN GroupChats GC ON(M.gch_id=GC.ch_id) INNER JOIN Users U ON(U.u_id=M.u_id) " +
-		"LEFT JOIN Photos P ON CASE " +
-		"WHEN P.photo_id=GC.photo_id AND M.pch_id = 0 THEN 1 " +
-		"WHEN U.photo_id=P.photo_id AND M.gch_id = 0 THEN 1 " +
-		"ELSE 0 " +
+	msgsRow, err := MR.messageDB.Query("SELECT M.msg_id, M.gch_id, M.pch_id ,M.u_id ,M.send_time ,M.txt , U.name,P.url FROM Messages M "+
+		"INNER JOIN NewMessages NM ON(NM.msg_id=M.msg_id) LEFT JOIN GroupChats GC ON(M.gch_id=GC.ch_id) INNER JOIN Users U ON(U.u_id=M.u_id) "+
+		"LEFT JOIN Photos P ON CASE "+
+		"WHEN P.photo_id=GC.photo_id AND M.pch_id = 0 THEN 1 "+
+		"WHEN U.photo_id=P.photo_id AND M.gch_id = 0 THEN 1 "+
+		"ELSE 0 "+
 		"END = 1 "+
 		"WHERE NM.receiver_id = $1 AND M.del_stat = true", userId)
 
@@ -103,7 +103,8 @@ func (MR MessageRepositoryRealisation) ReceiveNewMessages(userId int) ([]models.
 
 		var isPrivate *int64
 		var isGroup *int64
-		err = msgsRow.Scan(&msgId, &isGroup, &isPrivate ,&userid, &msg.Time, &msg.Text, &msg.ChatName, &msg.ChatPhoto)
+		err = msgsRow.Scan(&msgId, &isGroup, &isPrivate, &userid, &msg.Time, &msg.Text, &msg.ChatName, &msg.ChatPhoto)
+
 
 		if *isGroup != int64(0) {
 			msg.ChatId = "c" + strconv.FormatInt(*isGroup,10)

@@ -1,31 +1,48 @@
 package usecase
 
 import (
-	"main/internal/like"
+	"context"
+	lks "main/internal/microservices/likes/delivery"
 )
 
 type LikesUseRealisation struct {
-	likeRepo like.RepositoryLike
+	likeMicro lks.LikeCheckerClient
 }
 
-func NewLikeUseRealisation(lRepo like.RepositoryLike) LikesUseRealisation {
-	return LikesUseRealisation{likeRepo: lRepo}
+func NewLikeUseRealisation(lRepo lks.LikeCheckerClient) LikesUseRealisation {
+	return LikesUseRealisation{likeMicro: lRepo}
 }
 
 func (Like LikesUseRealisation) LikePhoto(photoId int, userId int) error {
-	return Like.likeRepo.LikePhoto(photoId, userId)
+	_, err := Like.likeMicro.LikePhoto(context.Background(), &lks.Like{
+		UserId: int32(userId),
+		DataId: int32(photoId),
+	})
+	return err
 }
 
 func (Like LikesUseRealisation) DislikePhoto(photoId int, userId int) error {
-	return Like.likeRepo.DislikePhoto(photoId, userId)
+	_, err := Like.likeMicro.DislikePhoto(context.Background(), &lks.Like{
+		UserId: int32(userId),
+		DataId: int32(photoId),
+	})
+	return err
 }
 
 func (Like LikesUseRealisation) LikePost(postId int, userId int) error {
-	return Like.likeRepo.LikePost(postId, userId)
+	_, err := Like.likeMicro.LikePost(context.Background(), &lks.Like{
+		UserId: int32(userId),
+		DataId: int32(postId),
+	})
+	return err
 }
 
 func (Like LikesUseRealisation) DislikePost(postId int, userId int) error {
-	return Like.likeRepo.DislikePost(postId, userId)
+	_, err := Like.likeMicro.DislikePost(context.Background(), &lks.Like{
+		UserId: int32(userId),
+		DataId: int32(postId),
+	})
+	return err
 }
 
 func (Like LikesUseRealisation) LikeComment(postId int, userId int) error {

@@ -12,7 +12,8 @@ DROP TABLE IF EXISTS PhotosFromAlbums;
 DROP TABLE IF EXISTS PostsAuthor;
 DROP TABLE IF EXISTS Comments;
 DROP TABLE IF EXISTS UsersCommentsLikes;
-DROP TABLE IF EXISTS Chats CASCADE;
+DROP TABLE IF EXISTS PrivateChats CASCADE;
+DROP TABLE IF EXISTS GroupChats CASCADE;
 DROP TABLE IF EXISTS ChatsUsers;
 DROP TABLE IF EXISTS Messages;
 DROP TABLE IF EXISTS NewMessages;
@@ -160,8 +161,8 @@ CREATE UNIQUE INDEX chatuser_idx ON ChatsUsers (u_id, gch_id, pch_id);
 CREATE TABLE Messages
 (
     msg_id    BIGSERIAL PRIMARY KEY,
-    pch_id    BIGINT default 0,
-    gch_id    BIGINT default 0,
+    pch_id    BIGINT DEFAULT 0,
+    gch_id    BIGINT DEFAULT 0,
     u_id      INT    NOT NULL REFERENCES Users,
     del_stat  BOOLEAN DEFAULT TRUE,
     send_time TIMESTAMP,

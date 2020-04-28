@@ -1,8 +1,10 @@
 package delivery
 
 import (
+	"fmt"
 	"github.com/labstack/echo"
 	"go.uber.org/zap"
+	"io/ioutil"
 	"main/internal/feeds"
 	"main/internal/feeds/usecase"
 	"main/internal/models"
@@ -20,6 +22,8 @@ func (feedD FeedDeliveryRealisation) Feed(rwContext echo.Context) error {
 	uId := rwContext.Get("REQUEST_ID").(string)
 
 	userId := rwContext.Get("user_id").(int)
+
+	fmt.Println(uId, userId)
 
 	if userId == -1 {
 
@@ -71,9 +75,22 @@ func (feedD FeedDeliveryRealisation) CreatePost(rwContext echo.Context) error {
 		return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: errors.CookieExpired.Error()})
 	}
 
+	b , err := ioutil.ReadAll(rwContext.Request().Body)
+	defer rwContext.Request().Body.Close()
+
+	if err != nil {
+		feedD.logger.Debug(
+			zap.String("ID", uId),
+			zap.String("ERROR", err.Error()),
+			zap.Int("ANSWER STATUS", http.StatusConflict),
+		)
+
+		return rwContext.NoContent(http.StatusConflict)
+	}
+
 	newPost := new(models.Post)
 
-	err := rwContext.Bind(&newPost)
+	err = newPost.UnmarshalJSON(b)
 
 	if err != nil {
 
@@ -116,7 +133,21 @@ func (feedD FeedDeliveryRealisation) CreateComment(rwContext echo.Context) error
 		return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: errors.CookieExpired.Error()})
 	}
 	newComment := new(models.Comment)
-	err := rwContext.Bind(&newComment)
+
+	b , err := ioutil.ReadAll(rwContext.Request().Body)
+	defer rwContext.Request().Body.Close()
+
+	if err != nil {
+		feedD.logger.Debug(
+			zap.String("ID", uId),
+			zap.String("ERROR", err.Error()),
+			zap.Int("ANSWER STATUS", http.StatusConflict),
+		)
+
+		return rwContext.NoContent(http.StatusConflict)
+	}
+
+	err = newComment.UnmarshalJSON(b)
 
 	if err != nil {
 		feedD.logger.Info(
@@ -127,7 +158,7 @@ func (feedD FeedDeliveryRealisation) CreateComment(rwContext echo.Context) error
 		return rwContext.JSON(http.StatusConflict, models.JsonStruct{Err: err.Error()})
 	}
 
-	err = feedD.feedLogic.CreateComment(userId,  *newComment)
+	err = feedD.feedLogic.CreateComment(userId, *newComment)
 
 	if err != nil {
 		feedD.logger.Info(

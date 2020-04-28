@@ -1,26 +1,35 @@
 package usecase
 
 import (
+	"context"
+	"fmt"
+	phs "main/internal/microservices/photos/delivery"
 	"main/internal/models"
-	"main/internal/photos"
-	photoRep "main/internal/photos/repository"
 	"main/internal/tools/errors"
 )
 
 type PhotoUseCaseRealisation struct {
-	photoDB photos.PhotoRepository
+	photoMicro phs.PhotoCheckerClient
 }
 
 func (photoR PhotoUseCaseRealisation) GetPhotosFromAlbum(albumID int) (models.Photos, error) {
 
-	photos, _ := photoR.photoDB.GetPhotosFromAlbum(albumID)
+	photos, _ := photoR.photoMicro.GetPhotosFromAlbum(context.Background(), &phs.AlbumId{Id: int32(albumID)})
 
-	return photos, nil
+	return models.Photos{
+		AlbumName: photos.AlbumName,
+		Urls:      photos.Urls,
+	}, nil
 }
 
 func (photoR PhotoUseCaseRealisation) UploadPhotoToAlbum(photoData models.PhotoInAlbum) error {
 
-	err := photoR.photoDB.UploadPhotoToAlbum(photoData)
+	_, err := photoR.photoMicro.UploadPhotoToAlbum(context.Background(), &phs.PhotoInAlbum{
+		Url:     photoData.Url,
+		AlbumID: photoData.AlbumID,
+	})
+
+	fmt.Println(err)
 
 	if err != nil {
 		return errors.FailReadFromDB
@@ -29,8 +38,8 @@ func (photoR PhotoUseCaseRealisation) UploadPhotoToAlbum(photoData models.PhotoI
 	return nil
 }
 
-func NewPhotoUseCaseRealisation(photoDB photoRep.PhotoRepositoryRealisation) PhotoUseCaseRealisation {
+func NewPhotoUseCaseRealisation(photoMic phs.PhotoCheckerClient) PhotoUseCaseRealisation {
 	return PhotoUseCaseRealisation{
-		photoDB: photoDB,
+		photoMicro: photoMic,
 	}
 }

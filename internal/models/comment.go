@@ -1,8 +1,7 @@
 package models
 
-
 type Comment struct {
-	CommentID	  string `json:"comment_id,omitempty"`
+	CommentID     string `json:"comment_id,omitempty"`
 	PostID        string `json:"post_id,omitempty"`
 	Text          string `json:"text,omitempty"`
 	Photo         Photo  `json:"photo"`
@@ -15,4 +14,3 @@ type Comment struct {
 	AuthorUrl     string `json:"authorUrl,omitempty"`
 	AuthorPhoto   string `json:"authorPhoto,omitempty"`
 }
-

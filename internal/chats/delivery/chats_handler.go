@@ -1,9 +1,9 @@
 package delivery
 
 import (
-	"fmt"
 	"github.com/labstack/echo"
 	"go.uber.org/zap"
+	"io/ioutil"
 	"main/internal/chats"
 	"main/internal/models"
 	"main/internal/tools/errors"
@@ -35,11 +35,32 @@ func (CD ChatsDelivery) CreateChat(rwContext echo.Context) error {
 
 	newChat := new(models.NewChatUsers)
 
-	err_Bind := rwContext.Bind(newChat)
-	fmt.Println(err_Bind)
-	fmt.Println(*newChat)
+	b, err := ioutil.ReadAll(rwContext.Request().Body)
+	defer rwContext.Request().Body.Close()
 
-	err := CD.chatsLogic.CreateChat(*newChat, userId)
+	if err != nil {
+		CD.logger.Debug(
+			zap.String("ID", uId),
+			zap.String("ERROR", err.Error()),
+			zap.Int("ANSWER STATUS", http.StatusConflict),
+		)
+
+		return rwContext.NoContent(http.StatusConflict)
+	}
+
+	err = newChat.UnmarshalJSON(b)
+
+	if err != nil {
+		CD.logger.Debug(
+			zap.String("ID", uId),
+			zap.String("ERROR", err.Error()),
+			zap.Int("ANSWER STATUS", http.StatusConflict),
+		)
+
+		return rwContext.NoContent(http.StatusConflict)
+	}
+
+	err = CD.chatsLogic.CreateChat(*newChat, userId)
 
 	if err != nil {
 		CD.logger.Debug(

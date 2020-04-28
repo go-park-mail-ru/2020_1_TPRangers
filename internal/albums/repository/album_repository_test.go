@@ -26,8 +26,8 @@ func TestAlbumRepositoryRealisation_CreateAlbum(t *testing.T) {
 		albumData.Name = "kek"
 		mock.ExpectBegin()
 
-		if errs[iter] == nil{
-			mock.ExpectExec(`INSERT INTO albums \(name, u_id\) VALUES \(\$1, \$2\);`).WithArgs(albumData.Name, uId).WillReturnResult(sqlmock.NewResult(1,1))
+		if errs[iter] == nil {
+			mock.ExpectExec(`INSERT INTO albums \(name, u_id\) VALUES \(\$1, \$2\);`).WithArgs(albumData.Name, uId).WillReturnResult(sqlmock.NewResult(1, 1))
 		} else {
 			mock.ExpectExec(`INSERT INTO albums \(name, u_id\) VALUES \(\$1, \$2\);`).WithArgs(albumData.Name, uId).WillReturnError(errs[iter])
 		}
@@ -63,8 +63,8 @@ func TestAlbumRepositoryRealisation_GetAlbums(t *testing.T) {
 
 	lRepo := NewAlbumRepositoryRealisation(db)
 
-	errs := []error{nil, errors.FailSendToDB , nil}
-	expectBehavior := []error{nil, errors.FailReadFromDB , errors.FailReadToVar}
+	errs := []error{nil, errors.FailSendToDB, nil}
+	expectBehavior := []error{nil, errors.FailReadFromDB, errors.FailReadToVar}
 	for iter := 0; iter < testCounter; iter++ {
 
 		Id := rand.Int()
@@ -88,7 +88,7 @@ func TestAlbumRepositoryRealisation_GetAlbums(t *testing.T) {
 		_, err = lRepo.GetAlbums(Id)
 
 		if err != expectBehavior[iter] {
-			fmt.Print(iter , err , expectBehavior[iter])
+			fmt.Print(iter, err, expectBehavior[iter])
 			return
 		}
 		err = nil

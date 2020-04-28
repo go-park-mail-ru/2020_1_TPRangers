@@ -1,9 +1,10 @@
 package delivery
 
 import (
+	"fmt"
 	"github.com/labstack/echo"
-	uuid "github.com/satori/go.uuid"
 	"go.uber.org/zap"
+	"io/ioutil"
 	"main/internal/csrf"
 	"main/internal/models"
 	"main/internal/tools/errors"
@@ -23,6 +24,8 @@ func (userD UserDeliveryRealisation) GetUser(rwContext echo.Context) error {
 	login := rwContext.Param("id")
 
 	userId := rwContext.Get("user_id").(int)
+
+	fmt.Println("GET USE DATA : ", uId, login, userId)
 
 	var userData models.OtherUserProfileData
 	var err error
@@ -127,13 +130,6 @@ func (userD UserDeliveryRealisation) UploadSettings(rwContext echo.Context) erro
 
 	uId := rwContext.Get("REQUEST_ID").(string)
 
-	//cookie, err := rwContext.Cookie("session_id")
-
-	//token := rwContext.Request().Header.Get("X-CSRF-Token")
-	//
-	//res, err := csrf.Tokens.Check( cookie.Value,  token)
-	//fmt.Print(res)
-
 	userId := rwContext.Get("user_id").(int)
 
 	if userId == -1 {
@@ -147,9 +143,22 @@ func (userD UserDeliveryRealisation) UploadSettings(rwContext echo.Context) erro
 		return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: errors.CookieExpired.Error()})
 	}
 
+	b , err := ioutil.ReadAll(rwContext.Request().Body)
+	defer rwContext.Request().Body.Close()
+
+	if err != nil {
+		userD.logger.Debug(
+			zap.String("ID", uId),
+			zap.String("ERROR", err.Error()),
+			zap.Int("ANSWER STATUS", http.StatusConflict),
+		)
+
+		return rwContext.NoContent(http.StatusConflict)
+	}
+
 	newUserSettings := new(models.Settings)
 
-	err := rwContext.Bind(newUserSettings)
+	err = newUserSettings.UnmarshalJSON(b)
 
 	if err != nil {
 
@@ -198,7 +207,8 @@ func (userD UserDeliveryRealisation) Login(rwContext echo.Context) error {
 
 	userAuthData := new(models.Auth)
 
-	err := rwContext.Bind(userAuthData)
+	b , err := ioutil.ReadAll(rwContext.Request().Body)
+	defer rwContext.Request().Body.Close()
 
 	if err != nil {
 		userD.logger.Debug(
@@ -210,11 +220,21 @@ func (userD UserDeliveryRealisation) Login(rwContext echo.Context) error {
 		return rwContext.NoContent(http.StatusConflict)
 	}
 
-	info := uuid.NewV4()
-	exprTime := 12 * time.Hour
-	cookieValue := info.String()
+	err = userAuthData.UnmarshalJSON(b)
 
-	err = userD.userLogic.Login(*userAuthData, cookieValue, exprTime)
+	if err != nil {
+		userD.logger.Debug(
+			zap.String("ID", uId),
+			zap.String("ERROR", err.Error()),
+			zap.Int("ANSWER STATUS", http.StatusConflict),
+		)
+
+		return rwContext.NoContent(http.StatusConflict)
+	}
+
+	exprTime := 12 * time.Hour
+
+	cookieValue, err := userD.userLogic.Login(*userAuthData)
 
 	if err != nil {
 		userD.logger.Debug(
@@ -222,6 +242,8 @@ func (userD UserDeliveryRealisation) Login(rwContext echo.Context) error {
 			zap.String("ERROR", err.Error()),
 			zap.Int("ANSWER STATUS", http.StatusUnauthorized),
 		)
+
+
 		return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: err.Error()})
 	}
 
@@ -280,7 +302,19 @@ func (userD UserDeliveryRealisation) Register(rwContext echo.Context) error {
 
 	userAuthData := new(models.Register)
 
-	err := rwContext.Bind(userAuthData)
+	b , err := ioutil.ReadAll(rwContext.Request().Body)
+	defer rwContext.Request().Body.Close()
+
+	if err != nil {
+		userD.logger.Debug(
+			zap.String("ID", uId),
+			zap.String("ERROR", err.Error()),
+			zap.Int("ANSWER STATUS", http.StatusInternalServerError),
+		)
+		return rwContext.NoContent(http.StatusInternalServerError)
+	}
+
+	err = userAuthData.UnmarshalJSON(b)
 
 	if err != nil {
 		userD.logger.Debug(
@@ -292,11 +326,9 @@ func (userD UserDeliveryRealisation) Register(rwContext echo.Context) error {
 		return rwContext.NoContent(http.StatusInternalServerError)
 	}
 
-	info := uuid.NewV4()
 	exprTime := 12 * time.Hour
-	cookieValue := info.String()
 
-	err = userD.userLogic.Register(*userAuthData, cookieValue, exprTime)
+	cookieValue, err := userD.userLogic.Register(*userAuthData)
 
 	errResStatus := 0
 
@@ -332,14 +364,13 @@ func (userD UserDeliveryRealisation) Register(rwContext echo.Context) error {
 	return rwContext.NoContent(http.StatusOK)
 }
 
-
 func (userD UserDeliveryRealisation) GetCsrf(rwContext echo.Context) error {
 
 	cookie, err := rwContext.Cookie("session_id")
 	if err != nil {
 		return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: errors.CookieExpired.Error()})
 	}
-	token, _ := csrf.Tokens.Create(cookie.Value,  900 + time.Now().Unix()) // 900 с = 15 минут
+	token, _ := csrf.Tokens.Create(cookie.Value, 900+time.Now().Unix())
 	csrf := models.Csrf{}
 	csrf.Token = token
 	return rwContext.JSON(http.StatusOK, models.JsonStruct{Body: csrf})
@@ -376,7 +407,6 @@ func (userD UserDeliveryRealisation) SearchUsers(rwContext echo.Context) error {
 	)
 	return rwContext.JSON(http.StatusOK, jsonAnswer)
 }
-
 
 func NewUserDelivery(log *zap.SugaredLogger, userRealisation users.UserUseCase) UserDeliveryRealisation {
 	return UserDeliveryRealisation{userLogic: userRealisation, logger: log}

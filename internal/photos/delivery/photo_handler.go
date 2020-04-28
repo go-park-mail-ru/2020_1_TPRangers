@@ -1,8 +1,10 @@
 package delivery
 
 import (
+	"fmt"
 	"github.com/labstack/echo"
 	"go.uber.org/zap"
+	"io/ioutil"
 	"main/internal/models"
 	"main/internal/photos"
 	"main/internal/photos/usecase"
@@ -70,9 +72,23 @@ func (photoD PhotoDeliveryRealisation) UploadPhotoToAlbum(rwContext echo.Context
 		)
 		return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: errors.CookieExpired.Error()})
 	}
+
+	b , err := ioutil.ReadAll(rwContext.Request().Body)
+	defer rwContext.Request().Body.Close()
+
+	if err != nil {
+		photoD.logger.Debug(
+			zap.String("ID", rId),
+			zap.String("ERROR", err.Error()),
+			zap.Int("ANSWER STATUS", http.StatusConflict),
+		)
+
+		return rwContext.NoContent(http.StatusConflict)
+	}
+
 	photoData := new(models.PhotoInAlbum)
 
-	err := rwContext.Bind(photoData)
+	err = photoData.UnmarshalJSON(b)
 
 	if err != nil {
 		photoD.logger.Debug(
@@ -85,6 +101,8 @@ func (photoD PhotoDeliveryRealisation) UploadPhotoToAlbum(rwContext echo.Context
 	}
 
 	err = photoD.photoLogic.UploadPhotoToAlbum(*photoData)
+
+	fmt.Println(err)
 
 	if err != nil {
 		photoD.logger.Info(

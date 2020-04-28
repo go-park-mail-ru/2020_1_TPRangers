@@ -11,17 +11,17 @@ import (
 )
 
 type ConnReceiver struct {
-	workPool   tools.GoPoolInterface
-	netPool    netpoll.Poller
-	connection net.Conn
-	handler    tools.EventerInterface
+	workPool     tools.GoPoolInterface
+	netPool      netpoll.Poller
+	connection   net.Conn
+	handler      tools.EventerInterface
 	closedStatus int32
 }
 
 func NewConnReciever(conn net.Conn, handler tools.EventerInterface) (ConnReceiver, error) {
 	poller, err := netpoll.New(nil)
 
-	return ConnReceiver{netPool: poller, workPool: gpool.New(128), connection: conn, handler: handler , closedStatus: 0}, err
+	return ConnReceiver{netPool: poller, workPool: gpool.New(128), connection: conn, handler: handler, closedStatus: 0}, err
 }
 
 func (CR ConnReceiver) StartRecieving() {
@@ -34,7 +34,7 @@ func (CR ConnReceiver) StartRecieving() {
 
 			if ev&netpoll.EventReadHup != 0 {
 				CR.connection.Close()
-				atomic.SwapInt32(&CR.closedStatus,1)
+				atomic.SwapInt32(&CR.closedStatus, 1)
 				return
 			}
 
@@ -44,13 +44,12 @@ func (CR ConnReceiver) StartRecieving() {
 				})
 			}
 
-
 		})
 
 		go func() {
 			for {
 
-				if val := atomic.SwapInt32(&CR.closedStatus,0) ; val == 1 {
+				if val := atomic.SwapInt32(&CR.closedStatus, 0); val == 1 {
 					fmt.Println("Status closed")
 					return
 				}

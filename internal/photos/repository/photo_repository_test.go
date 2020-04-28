@@ -11,7 +11,6 @@ import (
 	"testing"
 )
 
-
 func TestPhotoRepositoryRealisation_UploadPhotoToAlbum(t *testing.T) {
 
 	db, mock, _ := sqlmock.New()
@@ -20,11 +19,11 @@ func TestPhotoRepositoryRealisation_UploadPhotoToAlbum(t *testing.T) {
 	lRepo := NewPhotoRepositoryRealisation(db)
 
 	customErr := errors2.New("smth wrong")
-	errs := []error{errors.AlbumDoesntExist, errors.FailSendToDB , errors.FailReadToVar , customErr , nil}
-	expectBehavior := []error{errors.AlbumDoesntExist, errors.FailSendToDB , errors.FailReadToVar , errors.FailSendToDB , nil}
+	errs := []error{errors.AlbumDoesntExist, errors.FailSendToDB, errors.FailReadToVar, customErr, nil}
+	expectBehavior := []error{errors.AlbumDoesntExist, errors.FailSendToDB, errors.FailReadToVar, errors.FailSendToDB, nil}
 	for iter := 0; iter < testCounter; iter++ {
 
-		photoInAlb:= models.PhotoInAlbum{}
+		photoInAlb := models.PhotoInAlbum{}
 		photoInAlb.AlbumID = "1"
 		photoInAlb.Url = "kek"
 		photoId := rand.Int()
@@ -33,15 +32,15 @@ func TestPhotoRepositoryRealisation_UploadPhotoToAlbum(t *testing.T) {
 			mock.ExpectQuery(`select name from albums where album_id \= \$1;`).WithArgs(1).WillReturnRows(sqlmock.NewRows([]string{"name"}).AddRow("new name"))
 
 			if expectBehavior[iter] != errors.FailSendToDB {
-				mock.ExpectExec(` INSERT INTO photos \(url, photos_likes_count\) VALUES \(\$1, \$2\); `).WithArgs(photoInAlb.Url,0).WillReturnResult(sqlmock.NewResult(1,1))
+				mock.ExpectExec(` INSERT INTO photos \(url, photos_likes_count\) VALUES \(\$1, \$2\); `).WithArgs(photoInAlb.Url, 0).WillReturnResult(sqlmock.NewResult(1, 1))
 
 				if expectBehavior[iter] != errors.FailReadToVar {
 					mock.ExpectQuery(` select photo_id from photos where url \= \$1 `).WithArgs(photoInAlb.Url).WillReturnRows(sqlmock.NewRows([]string{"photo_id"}).AddRow(photoId))
 
 					if errs[iter] != customErr {
-						mock.ExpectExec(` INSERT INTO photosfromalbums \(photo_id, photo_url, album_id\) VALUES \(\$1, \$2, \$3\); `).WithArgs(photoId , photoInAlb.Url ,1).WillReturnResult(sqlmock.NewResult(1,1))
+						mock.ExpectExec(` INSERT INTO photosfromalbums \(photo_id, photo_url, album_id\) VALUES \(\$1, \$2, \$3\); `).WithArgs(photoId, photoInAlb.Url, 1).WillReturnResult(sqlmock.NewResult(1, 1))
 					} else {
-						mock.ExpectExec(` INSERT INTO photosfromalbums \(photo_id, photo_url, album_id\) VALUES \(\$1, \$2, \$3\); `).WithArgs(photoId , photoInAlb.Url ,1).WillReturnError(customErr)
+						mock.ExpectExec(` INSERT INTO photosfromalbums \(photo_id, photo_url, album_id\) VALUES \(\$1, \$2, \$3\); `).WithArgs(photoId, photoInAlb.Url, 1).WillReturnError(customErr)
 					}
 
 				} else {
@@ -49,9 +48,8 @@ func TestPhotoRepositoryRealisation_UploadPhotoToAlbum(t *testing.T) {
 				}
 
 			} else {
-				mock.ExpectExec(` INSERT INTO photos \(url, photos_likes_count\) VALUES \(\$1, \$2\); `).WithArgs(photoInAlb.Url,0).WillReturnError(errs[iter])
+				mock.ExpectExec(` INSERT INTO photos \(url, photos_likes_count\) VALUES \(\$1, \$2\); `).WithArgs(photoInAlb.Url, 0).WillReturnError(errs[iter])
 			}
-
 
 		} else {
 			mock.ExpectQuery(`select name from albums where album_id \= \$1;`).WithArgs(1).WillReturnError(errs[iter])
@@ -61,7 +59,7 @@ func TestPhotoRepositoryRealisation_UploadPhotoToAlbum(t *testing.T) {
 		err = lRepo.UploadPhotoToAlbum(photoInAlb)
 
 		if err != expectBehavior[iter] {
-			fmt.Print(iter , err , expectBehavior[iter])
+			fmt.Print(iter, err, expectBehavior[iter])
 			return
 		}
 		err = nil
@@ -89,7 +87,7 @@ func TestPhotoRepositoryRealisation_GetPhotosFromAlbum(t *testing.T) {
 		Id := rand.Int()
 
 		mock.ExpectBegin()
-		if errs[iter] == nil{
+		if errs[iter] == nil {
 			mock.ExpectQuery(`select photo_url from photosfromalbums where album_id \= \$1;`).WithArgs(Id).WillReturnRows(sqlmock.NewRows([]string{"photo_url"}).AddRow(ph_url))
 
 			mock.ExpectQuery(` select name from albums where album_id \= \$1 `).WithArgs(Id).WillReturnRows(sqlmock.NewRows([]string{"name"}).AddRow("213"))
@@ -100,8 +98,8 @@ func TestPhotoRepositoryRealisation_GetPhotosFromAlbum(t *testing.T) {
 		mock.ExpectCommit()
 		tx, err := db.Begin()
 
-		if _ , err = lRepo.GetPhotosFromAlbum(Id);err != expectBehavior[iter] {
-			t.Error(iter , err , expectBehavior[iter])
+		if _, err = lRepo.GetPhotosFromAlbum(Id); err != expectBehavior[iter] {
+			t.Error(iter, err, expectBehavior[iter])
 			return
 		}
 		err = nil
@@ -113,4 +111,3 @@ func TestPhotoRepositoryRealisation_GetPhotosFromAlbum(t *testing.T) {
 		}
 	}
 }
-

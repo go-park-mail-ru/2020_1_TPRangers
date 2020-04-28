@@ -17,7 +17,7 @@ func TestFriendDeliveryRealisation_Logout(t *testing.T) {
 
 	usersId := []int{-1, 1, 2}
 	likeBehaviour := []error{nil, nil, errors.New("smth happend")}
-	expectedBehaviour := []int{http.StatusOK, http.StatusOK,  http.StatusOK}
+	expectedBehaviour := []int{http.StatusOK, http.StatusOK, http.StatusOK}
 
 	for iter, _ := range usersId {
 

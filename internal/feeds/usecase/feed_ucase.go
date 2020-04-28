@@ -29,12 +29,12 @@ func (feedR FeedUseCaseRealisation) CreatePost(userID int, ownerLogin string, ne
 
 func (feedR FeedUseCaseRealisation) CreateComment(userID int, newComment models.Comment) error {
 
-	return feedR.feedDB.CreateComment(userID,  newComment)
+	return feedR.feedDB.CreateComment(userID, newComment)
 }
 
 func (feedR FeedUseCaseRealisation) DeleteComment(userID int, commentID string) error {
 
-	return feedR.feedDB.DeleteComment(userID,  commentID)
+	return feedR.feedDB.DeleteComment(userID, commentID)
 }
 
 func ReverseSlice(data interface{}) error {
@@ -55,7 +55,7 @@ func ReverseSlice(data interface{}) error {
 
 func (feedR FeedUseCaseRealisation) GetPostAndComments(userID int, postID string) (models.Post, error) {
 
-	return feedR.feedDB.GetPostAndComments(userID,  postID)
+	return feedR.feedDB.GetPostAndComments(userID, postID)
 }
 
 func NewFeedUseCaseRealisation(feedDB feeds.FeedRepository) FeedUseCaseRealisation {
