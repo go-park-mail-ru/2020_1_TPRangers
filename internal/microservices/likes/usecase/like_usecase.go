@@ -49,3 +49,21 @@ func (Like LikesUseChecker) DislikePost(ctx context.Context, disPost *lproto.Lik
 
 	return &lproto.Dummy{}, Like.likeRepo.DislikePost(int(disPost.DataId), int(disPost.UserId))
 }
+
+func (Like LikesUseChecker) LikeComment(ctx context.Context, lComm *lproto.Like) (*lproto.Dummy, error) {
+
+	if lComm == nil {
+		return &lproto.Dummy{}, nil
+	}
+
+	return &lproto.Dummy{}, Like.likeRepo.LikeComment(int(lComm.DataId), int(lComm.UserId))
+}
+
+func (Like LikesUseChecker) DislikeComment(ctx context.Context, disComm *lproto.Like) (*lproto.Dummy, error) {
+
+	if disComm == nil {
+		return &lproto.Dummy{}, nil
+	}
+
+	return &lproto.Dummy{}, Like.likeRepo.DislikeComment(int(disComm.DataId), int(disComm.UserId))
+}

@@ -110,17 +110,18 @@ func init() {
 func init() { proto.RegisterFile("likes.proto", fileDescriptor_cff81f36f81c8d8e) }
 
 var fileDescriptor_cff81f36f81c8d8e = []byte{
-	// 159 bytes of a gzipped FileDescriptorProto
+	// 176 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0xce, 0xc9, 0xcc, 0x4e,
 	0x2d, 0xd6, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x62, 0x05, 0x73, 0x94, 0xcc, 0xb8, 0x58, 0x7c,
 	0x32, 0xb3, 0x53, 0x85, 0xc4, 0xb8, 0xd8, 0x4a, 0x8b, 0x53, 0x8b, 0x3c, 0x53, 0x24, 0x18, 0x15,
 	0x18, 0x35, 0x58, 0x83, 0xa0, 0x3c, 0x90, 0x78, 0x4a, 0x62, 0x49, 0xa2, 0x67, 0x8a, 0x04, 0x13,
-	0x44, 0x1c, 0xc2, 0x53, 0x62, 0xe7, 0x62, 0x75, 0x29, 0xcd, 0xcd, 0xad, 0x34, 0xda, 0xc8, 0xc8,
-	0xc5, 0x0d, 0x32, 0xc1, 0x39, 0x23, 0x35, 0x39, 0x3b, 0xb5, 0x48, 0x48, 0x8d, 0x8b, 0x13, 0xc4,
-	0x0d, 0xc8, 0x00, 0x59, 0xc2, 0xad, 0x07, 0xb1, 0x12, 0x24, 0x22, 0xc5, 0x03, 0xe5, 0x80, 0xf5,
-	0x09, 0x69, 0x72, 0xf1, 0xb8, 0x64, 0x16, 0xe7, 0x10, 0xa3, 0x54, 0x95, 0x8b, 0x03, 0x6c, 0x64,
-	0x7e, 0x71, 0x09, 0x3e, 0x65, 0x1a, 0x5c, 0xdc, 0x30, 0x13, 0xf1, 0xab, 0x4c, 0x62, 0x03, 0x07,
-	0x81, 0x31, 0x20, 0x00, 0x00, 0xff, 0xff, 0x01, 0x72, 0x5a, 0xa2, 0x11, 0x01, 0x00, 0x00,
+	0x44, 0x1c, 0xc2, 0x53, 0x62, 0xe7, 0x62, 0x75, 0x29, 0xcd, 0xcd, 0xad, 0x34, 0xea, 0x60, 0xe2,
+	0xe2, 0x06, 0x99, 0xe0, 0x9c, 0x91, 0x9a, 0x9c, 0x9d, 0x5a, 0x24, 0xa4, 0xc6, 0xc5, 0x09, 0xe2,
+	0x06, 0x64, 0x80, 0x2c, 0xe1, 0xd6, 0x83, 0x58, 0x09, 0x12, 0x91, 0xe2, 0x81, 0x72, 0xc0, 0xfa,
+	0x84, 0x34, 0xb9, 0x78, 0x5c, 0x32, 0x8b, 0x73, 0x88, 0x51, 0xaa, 0xca, 0xc5, 0x01, 0x36, 0x32,
+	0xbf, 0xb8, 0x04, 0x9f, 0x32, 0x0d, 0x2e, 0x6e, 0x98, 0x89, 0x84, 0x55, 0x82, 0x9d, 0x9c, 0x9f,
+	0x9b, 0x9b, 0x9a, 0x87, 0x57, 0xa5, 0x36, 0x17, 0x1f, 0xd4, 0x4c, 0xc2, 0x8a, 0x93, 0xd8, 0xc0,
+	0x21, 0x6b, 0x0c, 0x08, 0x00, 0x00, 0xff, 0xff, 0xb6, 0x5f, 0xee, 0x29, 0x68, 0x01, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -139,6 +140,8 @@ type LikeCheckerClient interface {
 	DislikePhoto(ctx context.Context, in *Like, opts ...grpc.CallOption) (*Dummy, error)
 	LikePost(ctx context.Context, in *Like, opts ...grpc.CallOption) (*Dummy, error)
 	DislikePost(ctx context.Context, in *Like, opts ...grpc.CallOption) (*Dummy, error)
+	LikeComment(ctx context.Context, in *Like, opts ...grpc.CallOption) (*Dummy, error)
+	DislikeComment(ctx context.Context, in *Like, opts ...grpc.CallOption) (*Dummy, error)
 }
 
 type likeCheckerClient struct {
@@ -185,12 +188,32 @@ func (c *likeCheckerClient) DislikePost(ctx context.Context, in *Like, opts ...g
 	return out, nil
 }
 
+func (c *likeCheckerClient) LikeComment(ctx context.Context, in *Like, opts ...grpc.CallOption) (*Dummy, error) {
+	out := new(Dummy)
+	err := c.cc.Invoke(ctx, "/likes.LikeChecker/LikeComment", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *likeCheckerClient) DislikeComment(ctx context.Context, in *Like, opts ...grpc.CallOption) (*Dummy, error) {
+	out := new(Dummy)
+	err := c.cc.Invoke(ctx, "/likes.LikeChecker/DislikeComment", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // LikeCheckerServer is the server API for LikeChecker service.
 type LikeCheckerServer interface {
 	LikePhoto(context.Context, *Like) (*Dummy, error)
 	DislikePhoto(context.Context, *Like) (*Dummy, error)
 	LikePost(context.Context, *Like) (*Dummy, error)
 	DislikePost(context.Context, *Like) (*Dummy, error)
+	LikeComment(context.Context, *Like) (*Dummy, error)
+	DislikeComment(context.Context, *Like) (*Dummy, error)
 }
 
 // UnimplementedLikeCheckerServer can be embedded to have forward compatible implementations.
@@ -208,6 +231,12 @@ func (*UnimplementedLikeCheckerServer) LikePost(ctx context.Context, req *Like) 
 }
 func (*UnimplementedLikeCheckerServer) DislikePost(ctx context.Context, req *Like) (*Dummy, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DislikePost not implemented")
+}
+func (*UnimplementedLikeCheckerServer) LikeComment(ctx context.Context, req *Like) (*Dummy, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method LikeComment not implemented")
+}
+func (*UnimplementedLikeCheckerServer) DislikeComment(ctx context.Context, req *Like) (*Dummy, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DislikeComment not implemented")
 }
 
 func RegisterLikeCheckerServer(s *grpc.Server, srv LikeCheckerServer) {
@@ -286,6 +315,42 @@ func _LikeChecker_DislikePost_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _LikeChecker_LikeComment_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Like)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LikeCheckerServer).LikeComment(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/likes.LikeChecker/LikeComment",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LikeCheckerServer).LikeComment(ctx, req.(*Like))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _LikeChecker_DislikeComment_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Like)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LikeCheckerServer).DislikeComment(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/likes.LikeChecker/DislikeComment",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LikeCheckerServer).DislikeComment(ctx, req.(*Like))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _LikeChecker_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "likes.LikeChecker",
 	HandlerType: (*LikeCheckerServer)(nil),
@@ -305,6 +370,14 @@ var _LikeChecker_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DislikePost",
 			Handler:    _LikeChecker_DislikePost_Handler,
+		},
+		{
+			MethodName: "LikeComment",
+			Handler:    _LikeChecker_LikeComment_Handler,
+		},
+		{
+			MethodName: "DislikeComment",
+			Handler:    _LikeChecker_DislikeComment_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

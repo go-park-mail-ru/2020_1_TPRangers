@@ -45,10 +45,18 @@ func (Like LikesUseRealisation) DislikePost(postId int, userId int) error {
 	return err
 }
 
-func (Like LikesUseRealisation) LikeComment(postId int, userId int) error {
-	return Like.likeRepo.LikeComment(postId, userId)
+func (Like LikesUseRealisation) LikeComment(commentId int, userId int) error {
+	_, err := Like.likeMicro.LikeComment(context.Background(), &lks.Like{
+		UserId: int32(userId),
+		DataId: int32(commentId),
+	})
+	return err
 }
 
-func (Like LikesUseRealisation) DislikeComment(postId int, userId int) error {
-	return Like.likeRepo.DislikeComment(postId, userId)
+func (Like LikesUseRealisation) DislikeComment(commentId int, userId int) error {
+	_, err := Like.likeMicro.DislikeComment(context.Background(), &lks.Like{
+		UserId: int32(userId),
+		DataId: int32(commentId),
+	})
+	return err
 }

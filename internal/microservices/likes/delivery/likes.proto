@@ -15,4 +15,6 @@ service LikeChecker {
   rpc DislikePhoto(Like) returns (Dummy);
   rpc LikePost(Like) returns (Dummy);
   rpc DislikePost(Like) returns (Dummy);
+  rpc LikeComment(Like) returns (Dummy);
+  rpc DislikeComment(Like) returns (Dummy);
 }
