@@ -3,6 +3,7 @@ package delivery
 import (
 	"github.com/labstack/echo"
 	"go.uber.org/zap"
+	"io/ioutil"
 	"main/internal/albums"
 	"main/internal/models"
 	"main/internal/tools/errors"
@@ -63,8 +64,20 @@ func (albumD AlbumDeliveryRealisation) CreateAlbum(rwContext echo.Context) error
 	}
 	albumData := new(models.AlbumReq)
 
-	err := rwContext.Bind(albumData)
+	b , err := ioutil.ReadAll(rwContext.Request().Body)
+	defer rwContext.Request().Body.Close()
 
+	if err != nil {
+		albumD.logger.Debug(
+			zap.String("ID", rId),
+			zap.String("ERROR", err.Error()),
+			zap.Int("ANSWER STATUS", http.StatusConflict),
+		)
+
+		return rwContext.NoContent(http.StatusConflict)
+	}
+
+	err = albumData.UnmarshalJSON(b)
 
 	if err != nil {
 		albumD.logger.Debug(

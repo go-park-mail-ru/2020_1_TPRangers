@@ -7,8 +7,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	mock_albums "main/mocks"
 	"main/internal/models"
+	mock_albums "main/mocks"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -32,7 +32,7 @@ func TestFriendDeliveryRealisation_GetAlbums(t *testing.T) {
 	for iter, _ := range usersId {
 
 		if expectedBehaviour[iter] != http.StatusUnauthorized {
-			albums := make([]models.Album , 2 ,2 )
+			albums := make([]models.Album, 2, 2)
 			aUseCase.EXPECT().GetAlbums(usersId[iter]).Return(albums, albumBehaviour[iter])
 		}
 
@@ -62,19 +62,19 @@ func TestFriendDeliveryRealisation_CreateAlbum(t *testing.T) {
 	albumD := NewAlbumDelivery(logger, aUseCase)
 
 	usersId := []int{-1, 1, 2}
-	albumBehaviour := []error{nil, nil, errors.New("smth happend") , nil , nil }
-	expectedBehaviour := []int{http.StatusUnauthorized, http.StatusOK, http.StatusConflict , http.StatusInternalServerError}
+	albumBehaviour := []error{nil, nil, errors.New("smth happend"), nil, nil}
+	expectedBehaviour := []int{http.StatusUnauthorized, http.StatusOK, http.StatusConflict, http.StatusInternalServerError}
 
 	for iter, _ := range usersId {
 
 		album := models.AlbumReq{Name: "123"}
 		if expectedBehaviour[iter] != http.StatusUnauthorized {
-			aUseCase.EXPECT().CreateAlbum(usersId[iter] , album).Return(albumBehaviour[iter])
+			aUseCase.EXPECT().CreateAlbum(usersId[iter], album).Return(albumBehaviour[iter])
 		}
 
 		e := echo.New()
 		req := httptest.NewRequest(echo.POST, "/", strings.NewReader(`{"name" : "123"}`))
-		req.Header.Set(echo.HeaderContentType , echo.MIMEApplicationJSON)
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 		rec := httptest.NewRecorder()
 		c := e.NewContext(req, rec)
 		c.SetPath("api/v1/album")
@@ -91,7 +91,7 @@ func TestFriendDeliveryRealisation_CreateAlbum(t *testing.T) {
 
 	e := echo.New()
 	req := httptest.NewRequest(echo.POST, "/", nil)
-	req.Header.Set(echo.HeaderContentType , echo.MIMEApplicationJSON)
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 	c.SetPath("api/v1/album")

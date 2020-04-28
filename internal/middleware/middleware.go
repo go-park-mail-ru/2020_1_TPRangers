@@ -1,43 +1,50 @@
 package middleware
 
 import (
+	"context"
+	"fmt"
 	"github.com/labstack/echo"
+	"github.com/prometheus/client_golang/prometheus"
 	uuid "github.com/satori/go.uuid"
 	"go.uber.org/zap"
-	"main/internal/cookies"
 	"main/internal/csrf"
+	sessions "main/internal/microservices/authorization/delivery"
 	"main/internal/models"
 	"main/internal/tools/errors"
 	"net/http"
+	"strconv"
 	"time"
 )
 
 type MiddlewareHandler struct {
-	logger   *zap.SugaredLogger
-	sessions cookies.CookieRepository
+	logger      *zap.SugaredLogger
+	sessChecker sessions.SessionCheckerClient
+	httpOrigin  string
+	tracker     *prometheus.CounterVec
 }
 
-func NewMiddlewareHandler(logger *zap.SugaredLogger, cookiesRepository cookies.CookieRepository) MiddlewareHandler {
-	return MiddlewareHandler{logger: logger, sessions: cookiesRepository}
+func NewMiddlewareHandler(logger *zap.SugaredLogger, checker sessions.SessionCheckerClient, metric *prometheus.CounterVec, origin string) MiddlewareHandler {
+	return MiddlewareHandler{logger: logger, sessChecker: checker, httpOrigin: origin, tracker: metric}
 }
 
 func (mh MiddlewareHandler) SetMiddleware(server *echo.Echo) {
-	server.Use(mh.PanicMiddleWare)
 	server.Use(mh.SetCorsMiddleware)
 
 	logFunc := mh.AccessLog()
+	server.Use(mh.PanicMiddleWare)
 	authFunc := mh.CheckAuthentication()
-	csrfFunc := mh.CSRF()
+	//csrfFunc := mh.CSRF()
 
 	server.Use(authFunc)
 	server.Use(logFunc)
-	server.Use(csrfFunc)
+
+	//server.Use(csrfFunc)
 }
 
 func (mh MiddlewareHandler) SetCorsMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 
-		c.Response().Header().Set("Access-Control-Allow-Origin", "https://social-hub.ru")
+		c.Response().Header().Set("Access-Control-Allow-Origin", mh.httpOrigin)
 		c.Response().Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS, PUT, DELETE, POST")
 		c.Response().Header().Set("Access-Control-Allow-Headers", "Origin, X-Login, Set-Cookie, Content-Type, Content-Length, Accept-Encoding, X-Csrf-Token, csrf-token, Authorization")
 		c.Response().Header().Set("Access-Control-Allow-Credentials", "true")
@@ -58,6 +65,14 @@ func (mh MiddlewareHandler) PanicMiddleWare(next echo.HandlerFunc) echo.HandlerF
 
 		defer func() error {
 			if err := recover(); err != nil {
+				rId := c.Get("REQUEST_ID").(string)
+				mh.logger.Info(
+					zap.String("ID", rId),
+					zap.String("ERROR" , err.(error).Error()),
+					zap.Int("ANSWER STATUS", http.StatusInternalServerError),
+				)
+				//fmt.Println(err)
+				mh.tracker.WithLabelValues(strconv.Itoa(http.StatusInternalServerError), c.Request().URL.Path, c.Request().Method, "0")
 				return c.JSON(http.StatusInternalServerError, models.JsonStruct{Err: "server panic ! "})
 			}
 			return nil
@@ -85,10 +100,15 @@ func (mh MiddlewareHandler) AccessLog() echo.MiddlewareFunc {
 
 			err := next(rwContext)
 
+			respTime := time.Since(start)
 			mh.logger.Info(
 				zap.String("ID", uniqueID.String()),
-				zap.Duration("TIME FOR ANSWER", time.Since(start)),
+				zap.Duration("TIME FOR ANSWER", respTime),
 			)
+
+			if rwContext.Request().URL.Path != "/metrics" {
+				mh.tracker.WithLabelValues(strconv.Itoa(rwContext.Response().Status), rwContext.Request().URL.Path, rwContext.Request().Method, respTime.String())
+			}
 
 			return err
 
@@ -103,10 +123,14 @@ func (mh MiddlewareHandler) CheckAuthentication() echo.MiddlewareFunc {
 
 			cookie, err := rwContext.Cookie("session_id")
 
-			userId := -1
+			userId := &sessions.UserId{
+				UserId: 0,
+			}
 
 			if err == nil {
-				userId, err = mh.sessions.GetUserIdByCookie(cookie.Value)
+				userId, err = mh.sessChecker.CheckSession(context.Background(), &sessions.SessionData{
+					Cookies: cookie.Value,
+				})
 			}
 
 			if err != nil {
@@ -114,8 +138,8 @@ func (mh MiddlewareHandler) CheckAuthentication() echo.MiddlewareFunc {
 				rwContext.SetCookie(cookie)
 			}
 
-			rwContext.Set("user_id", userId)
-
+			rwContext.Set("user_id", int(userId.UserId))
+			fmt.Println(userId)
 			return next(rwContext)
 
 		}
@@ -123,7 +147,7 @@ func (mh MiddlewareHandler) CheckAuthentication() echo.MiddlewareFunc {
 }
 
 func (mh MiddlewareHandler) CSRF() echo.MiddlewareFunc {
-	return func(next echo.HandlerFunc) echo.HandlerFunc{
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(rwContext echo.Context) error {
 			if rwContext.Request().RequestURI == "/api/v1/settings" || rwContext.Request().Method == "PUT" {
 				cookie, err := rwContext.Cookie("session_id")
@@ -152,5 +176,3 @@ func (mh MiddlewareHandler) CSRF() echo.MiddlewareFunc {
 		}
 	}
 }
-
-

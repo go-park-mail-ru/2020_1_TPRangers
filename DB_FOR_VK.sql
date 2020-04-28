@@ -10,6 +10,15 @@ DROP TABLE IF EXISTS UsersPhotosLikes;
 DROP TABLE IF EXISTS AlbumsPhotos;
 DROP TABLE IF EXISTS PhotosFromAlbums;
 DROP TABLE IF EXISTS PostsAuthor;
+DROP TABLE IF EXISTS Comments;
+DROP TABLE IF EXISTS UsersCommentsLikes;
+DROP TABLE IF EXISTS PrivateChats CASCADE;
+DROP TABLE IF EXISTS GroupChats CASCADE;
+DROP TABLE IF EXISTS ChatsUsers;
+DROP TABLE IF EXISTS Messages;
+DROP TABLE IF EXISTS NewMessages;
+
+
 
 CREATE EXTENSION IF NOT EXISTS CITEXT;
 CREATE EXTENSION IF NOT EXISTS BYTEA;
@@ -30,7 +39,7 @@ CREATE TABLE Users
     name      TEXT,
     surname   TEXT,
     password  BYTEA,
-    photo_id  INT DEFAULT 0 REFERENCES Photos,
+    photo_id  INT DEFAULT 1 REFERENCES Photos,
     birthdate VARCHAR(20)
 );
 
@@ -54,8 +63,20 @@ CREATE TABLE Posts
 
 CREATE TABLE PostsAuthor
 (
+    post_id INT NOT NULL REFERENCES Posts ON DELETE CASCADE,
+    u_id    INT NOT NULL REFERENCES Users
+);
+
+CREATE TABLE Comments
+(
+    comment_id SERIAL PRIMARY KEY,
+    u_id       INT NOT NULL REFERENCES Users,
     post_id    INT NOT NULL REFERENCES Posts ON DELETE CASCADE,
-    u_id       INT NOT NULL REFERENCES Users
+    txt_data          TEXT,
+    photo_id          INT,
+    comment_likes_count INT,
+    creation_date     TIMESTAMP,
+    attachments       TEXT
 );
 
 CREATE TABLE Feeds
@@ -66,9 +87,9 @@ CREATE TABLE Feeds
 
 CREATE TABLE UsersPosts
 (
-    u_id    INT NOT NULL REFERENCES Users,
+    u_id       INT NOT NULL REFERENCES Users,
     post_owner INT NOT NULL REFERENCES Users,
-    post_id INT NOT NULL REFERENCES Posts
+    post_id    INT NOT NULL REFERENCES Posts
 );
 
 CREATE TABLE Albums
@@ -92,6 +113,13 @@ CREATE TABLE UsersPostsLikes
     post_id     INT NOT NULL REFERENCES Posts
 );
 
+CREATE TABLE UsersCommentsLikes
+(
+    commentlike_id BIGSERIAL PRIMARY KEY,
+    u_id        INT NOT NULL REFERENCES Users,
+    comment_id     INT NOT NULL
+);
+
 CREATE UNIQUE INDEX userpostlike_idx ON UsersPostsLikes (u_id, post_id);
 
 CREATE TABLE UsersPhotosLikes
@@ -103,9 +131,56 @@ CREATE TABLE UsersPhotosLikes
 
 CREATE UNIQUE INDEX userphotolike_idx ON UsersPhotosLikes (u_id, photo_id);
 
+CREATE TABLE PrivateChats
+(
+    ch_id BIGSERIAL PRIMARY KEY,
+    fu_id INT REFERENCES Users,
+    su_id INT REFERENCES Users
+);
+
+CREATE UNIQUE INDEX privatechat_idx ON PrivateChats (fu_id, su_id);
+
+CREATE TABLE GroupChats
+(
+    ch_id    BIGSERIAL PRIMARY KEY,
+    u_id     INT NOT NULL REFERENCES Users,
+    photo_id INT  DEFAULT 2 REFERENCES Photos,
+    name     TEXT DEFAULT ''
+);
+
+CREATE TABLE ChatsUsers
+(
+    cu_id  BIGSERIAL PRIMARY KEY,
+    u_id   INT NOT NULL REFERENCES Users,
+    gch_id BIGINT DEFAULT 0,
+    pch_id BIGINT DEFAULT 0
+);
+
+CREATE UNIQUE INDEX chatuser_idx ON ChatsUsers (u_id, gch_id, pch_id);
+
+CREATE TABLE Messages
+(
+    msg_id    BIGSERIAL PRIMARY KEY,
+    pch_id    BIGINT DEFAULT 0,
+    gch_id    BIGINT DEFAULT 0,
+    u_id      INT    NOT NULL REFERENCES Users,
+    del_stat  BOOLEAN DEFAULT TRUE,
+    send_time TIMESTAMP,
+    txt       TEXT
+);
+
+CREATE TABLE NewMessages
+(
+    msg_id      BIGINT REFERENCES Messages,
+    receiver_id INT REFERENCES Users
+);
+
 
 INSERT INTO photos (url, photos_likes_count)
 VALUES ('https://social-hub.ru/uploads/img/default.png', 0);
+
+INSERT INTO photos (url, photos_likes_count)
+VALUES ('https://social-hub.ru/uploads/img/default_chat.png', 0);
 
 
 

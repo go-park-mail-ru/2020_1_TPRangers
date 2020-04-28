@@ -3,14 +3,14 @@ package delivery
 import (
 	"github.com/golang/mock/gomock"
 	"github.com/labstack/echo"
-	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	mock_users "main/mocks"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	mock_users "main/mocks"
+	"errors"
 )
 
 func TestFriendDeliveryRealisation_Logout(t *testing.T) {
@@ -26,7 +26,7 @@ func TestFriendDeliveryRealisation_Logout(t *testing.T) {
 
 	usersId := []int{-1, 1, 2}
 	likeBehaviour := []error{nil, nil, errors.New("smth happend")}
-	expectedBehaviour := []int{http.StatusOK, http.StatusOK,  http.StatusOK}
+	expectedBehaviour := []int{http.StatusOK, http.StatusOK, http.StatusOK}
 
 	for iter, _ := range usersId {
 

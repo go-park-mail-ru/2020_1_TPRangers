@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package likes;
+
+message Like{
+  int32 userId = 1;
+  int32 dataId = 2;
+}
+
+message Dummy{
+}
+
+service LikeChecker {
+  rpc LikePhoto(Like) returns (Dummy);
+  rpc DislikePhoto(Like) returns (Dummy);
+  rpc LikePost(Like) returns (Dummy);
+  rpc DislikePost(Like) returns (Dummy);
+  rpc LikeComment(Like) returns (Dummy);
+  rpc DislikeComment(Like) returns (Dummy);
+}
