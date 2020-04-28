@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/labstack/echo"
+	"github.com/prometheus/client_golang/prometheus"
 	uuid "github.com/satori/go.uuid"
 	"go.uber.org/zap"
 	"main/internal/csrf"
@@ -11,6 +12,7 @@ import (
 	"main/internal/models"
 	"main/internal/tools/errors"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -18,17 +20,18 @@ type MiddlewareHandler struct {
 	logger      *zap.SugaredLogger
 	sessChecker sessions.SessionCheckerClient
 	httpOrigin  string
+	tracker     *prometheus.CounterVec
 }
 
-func NewMiddlewareHandler(logger *zap.SugaredLogger, checker sessions.SessionCheckerClient, origin string) MiddlewareHandler {
-	return MiddlewareHandler{logger: logger, sessChecker: checker, httpOrigin: origin}
+func NewMiddlewareHandler(logger *zap.SugaredLogger, checker sessions.SessionCheckerClient, metric *prometheus.CounterVec, origin string) MiddlewareHandler {
+	return MiddlewareHandler{logger: logger, sessChecker: checker, httpOrigin: origin, tracker: metric}
 }
 
 func (mh MiddlewareHandler) SetMiddleware(server *echo.Echo) {
-	server.Use(mh.PanicMiddleWare)
 	server.Use(mh.SetCorsMiddleware)
 
 	logFunc := mh.AccessLog()
+	server.Use(mh.PanicMiddleWare)
 	authFunc := mh.CheckAuthentication()
 	//csrfFunc := mh.CSRF()
 
@@ -62,7 +65,14 @@ func (mh MiddlewareHandler) PanicMiddleWare(next echo.HandlerFunc) echo.HandlerF
 
 		defer func() error {
 			if err := recover(); err != nil {
-				fmt.Println(err)
+				rId := c.Get("REQUEST_ID").(string)
+				mh.logger.Info(
+					zap.String("ID", rId),
+					zap.String("ERROR" , err.(error).Error()),
+					zap.Int("ANSWER STATUS", http.StatusInternalServerError),
+				)
+				//fmt.Println(err)
+				mh.tracker.WithLabelValues(strconv.Itoa(http.StatusInternalServerError), c.Request().URL.Path, c.Request().Method, "0")
 				return c.JSON(http.StatusInternalServerError, models.JsonStruct{Err: "server panic ! "})
 			}
 			return nil
@@ -90,10 +100,15 @@ func (mh MiddlewareHandler) AccessLog() echo.MiddlewareFunc {
 
 			err := next(rwContext)
 
+			respTime := time.Since(start)
 			mh.logger.Info(
 				zap.String("ID", uniqueID.String()),
-				zap.Duration("TIME FOR ANSWER", time.Since(start)),
+				zap.Duration("TIME FOR ANSWER", respTime),
 			)
+
+			if rwContext.Request().URL.Path != "/metrics" {
+				mh.tracker.WithLabelValues(strconv.Itoa(rwContext.Response().Status), rwContext.Request().URL.Path, rwContext.Request().Method, respTime.String())
+			}
 
 			return err
 

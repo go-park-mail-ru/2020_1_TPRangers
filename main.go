@@ -34,6 +34,9 @@ import (
 	authorMicro "main/internal/microservices/authorization/delivery"
 	likeMicro "main/internal/microservices/likes/delivery"
 	photoMicro "main/internal/microservices/photos/delivery"
+
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 type RequestHandlers struct {
@@ -148,6 +151,18 @@ func LoadMicroservices(server *echo.Echo) (authorMicro.SessionCheckerClient, lik
 
 }
 
+func RegisterMetrics(server *echo.Echo) *prometheus.CounterVec {
+	tracker := prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "url_tracker",
+	}, []string{"status", "path", "method", "time"})
+
+	prometheus.MustRegister(tracker)
+
+	server.GET("/metrics", echo.WrapHandler(promhttp.Handler()))
+
+	return tracker
+}
+
 func main() {
 
 	server := echo.New()
@@ -176,7 +191,9 @@ func main() {
 		}
 	}()
 
-	midHandler := middleware.NewMiddlewareHandler(logger, auth, origin)
+	tracker := RegisterMetrics(server)
+
+	midHandler := middleware.NewMiddlewareHandler(logger, auth, tracker, origin)
 	midHandler.SetMiddleware(server)
 
 	api := NewRequestHandler(db, auth, like, photo, logger)
