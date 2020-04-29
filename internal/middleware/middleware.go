@@ -71,8 +71,7 @@ func (mh MiddlewareHandler) PanicMiddleWare(next echo.HandlerFunc) echo.HandlerF
 					zap.String("ERROR" , err.(error).Error()),
 					zap.Int("ANSWER STATUS", http.StatusInternalServerError),
 				)
-				//fmt.Println(err)
-				mh.tracker.WithLabelValues(strconv.Itoa(http.StatusInternalServerError), c.Request().URL.Path, c.Request().Method, "0")
+				mh.tracker.WithLabelValues(strconv.Itoa(http.StatusInternalServerError), c.Request().URL.Path, c.Request().Method, "0").Inc()
 				return c.JSON(http.StatusInternalServerError, models.JsonStruct{Err: "server panic ! "})
 			}
 			return nil
@@ -107,7 +106,7 @@ func (mh MiddlewareHandler) AccessLog() echo.MiddlewareFunc {
 			)
 
 			if rwContext.Request().URL.Path != "/metrics" {
-				mh.tracker.WithLabelValues(strconv.Itoa(rwContext.Response().Status), rwContext.Request().URL.Path, rwContext.Request().Method, respTime.String())
+				mh.tracker.WithLabelValues(strconv.Itoa(rwContext.Response().Status), rwContext.Request().URL.Path, rwContext.Request().Method, respTime.String()).Inc()
 			}
 
 			return err
