@@ -6,6 +6,7 @@ require (
 	github.com/DATA-DOG/go-sqlmock v1.4.1
 	github.com/alicebob/gopher-json v0.0.0-20180125190556-5a6b3ba71ee6 // indirect
 	github.com/alicebob/miniredis v2.5.0+incompatible
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/elliotchance/redismock v1.5.3
 	github.com/go-redis/redis v6.15.7+incompatible
 	github.com/gobwas/httphead v0.0.0-20180130184737-2c6c146eadee // indirect
