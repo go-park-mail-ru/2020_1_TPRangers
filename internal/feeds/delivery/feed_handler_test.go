@@ -161,7 +161,6 @@ func TestFriendDeliveryRealisation_CreateComment(t *testing.T) {
 //
 //	}
 //}
-
 func TestFriendDeliveryRealisation_GetPostAndComments(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	aUseCase := mock_feeds.NewMockFeedUseCase(ctrl)
