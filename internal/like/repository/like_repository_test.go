@@ -179,3 +179,89 @@ func TestLikeRepositoryRealisation_DislikePost(t *testing.T) {
 	}
 
 }
+
+func TestLikeRepositoryRealisation_DislikeComment(t *testing.T) {
+
+	db, mock, _ := sqlmock.New()
+	testCounter := 3
+	lRepo := NewLikeRepositoryRealisation(db)
+
+	errs := []error{nil, sql.ErrNoRows, nil}
+
+	for iter := 0; iter < testCounter; iter++ {
+
+		postId := rand.Int()
+		uId := rand.Int()
+		likeId := rand.Int()
+		mock.ExpectBegin()
+
+		if errs[iter] == nil {
+			mock.ExpectQuery(` DELETE FROM UsersCommentsLikes WHERE u_id \= \$1 AND comment_id \= \$2 RETURNING commentlike_id `).WithArgs(uId, postId).WillReturnRows(sqlmock.NewRows([]string{"postlike_id"}).AddRow(likeId))
+		} else {
+			mock.ExpectQuery(` DELETE FROM UsersCommentsLikes WHERE u_id \= \$1 AND comment_id \= \$2 RETURNING commentlike_id `).WithArgs(uId, postId).WithArgs(uId, postId).WillReturnError(errs[iter])
+		}
+		mock.ExpectCommit()
+
+		tx, err := db.Begin()
+
+		err = lRepo.DislikeComment(postId, uId)
+
+		if err != errs[iter] {
+			t.Error(err)
+			return
+		}
+		err = nil
+
+		switch err {
+		case nil:
+			err = tx.Commit()
+		default:
+			tx.Rollback()
+		}
+
+	}
+
+}
+
+func TestLikeRepositoryRealisation_LikeComment(t *testing.T) {
+
+	db, mock, _ := sqlmock.New()
+	testCounter := 3
+	lRepo := NewLikeRepositoryRealisation(db)
+
+	errs := []error{nil, sql.ErrNoRows, nil}
+
+	for iter := 0; iter < testCounter; iter++ {
+
+		postId := rand.Int()
+		uId := rand.Int()
+		likeId := rand.Int()
+		mock.ExpectBegin()
+
+		if errs[iter] == nil {
+			mock.ExpectQuery(` INSERT INTO UsersCommentsLikes \(u_id,comment_id\) VALUES \(\$1,\$2\) RETURNING commentlike_id `).WithArgs(uId, postId).WillReturnRows(sqlmock.NewRows([]string{"postlike_id"}).AddRow(likeId))
+		} else {
+			mock.ExpectQuery(` INSERT INTO UsersCommentsLikes \(u_id,comment_id\) VALUES \(\$1,\$2\) RETURNING commentlike_id`).WithArgs(uId, postId).WithArgs(uId, postId).WillReturnError(errs[iter])
+		}
+		mock.ExpectCommit()
+
+		tx, err := db.Begin()
+
+		err = lRepo.LikeComment(postId, uId)
+
+		if err != errs[iter] {
+			t.Error(err)
+			return
+		}
+		err = nil
+
+		switch err {
+		case nil:
+			err = tx.Commit()
+		default:
+			tx.Rollback()
+		}
+
+	}
+
+}
