@@ -1,7 +1,6 @@
 package delivery
 
 import (
-	"crypto/rand"
 	"github.com/golang/mock/gomock"
 	"github.com/labstack/echo"
 	"github.com/pkg/errors"
@@ -10,7 +9,6 @@ import (
 	"go.uber.org/zap/zapcore"
 	"main/internal/models"
 	mock_photos "main/mocks"
-	"math/big"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -61,22 +59,15 @@ func TestPhotosDeliveryRealisation_GetPhotosFromAlbum(t *testing.T) {
 	logger := prLogger.Sugar()
 	defer prLogger.Sync()
 	friendD := NewPhotoDelivery(logger, lUseCase)
+	login := 1234
 
-	urls := []string{"first", "next", "third"}
-	answer := models.Photos{
-		AlbumName: "kek",
-		Urls: urls,
-	}
-
-
-	usersId := []int{-1}
+	usersId := []int{-1, 1 ,2}
 	friendBehaviour := []error{nil, nil, errors.New("smth happend")}
-	expectedBehaviour := []int{http.StatusUnauthorized, http.StatusOK, http.StatusNotFound}
+	expectedBehaviour := []int{http.StatusUnauthorized, http.StatusNotFound, http.StatusNotFound}
 
 	for iter, _ := range usersId {
 
-		login, _ := rand.Int(rand.Reader, big.NewInt(80))
-
+		answer := models.Photos{}
 		lUseCase.EXPECT().GetPhotosFromAlbum(login).Return(answer, friendBehaviour[iter])
 
 		e := echo.New()
@@ -84,10 +75,10 @@ func TestPhotosDeliveryRealisation_GetPhotosFromAlbum(t *testing.T) {
 		rec := httptest.NewRecorder()
 		c := e.NewContext(req, rec)
 		c.SetPath("api/v1/albums/:id")
+		c.SetParamNames("id")
+		c.SetParamValues("1234")
 		c.Set("REQUEST_ID", "123")
 		c.Set("user_id", usersId[iter])
-		c.SetParamNames("id")
-		c.SetParamValues(login.String())
 
 		if assert.NoError(t, friendD.GetPhotosFromAlbum(c)) {
 			assert.Equal(t, expectedBehaviour[iter], rec.Code)
@@ -95,3 +86,5 @@ func TestPhotosDeliveryRealisation_GetPhotosFromAlbum(t *testing.T) {
 
 	}
 }
+
+
