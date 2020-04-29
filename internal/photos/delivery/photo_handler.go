@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"main/internal/models"
 	"main/internal/photos"
-	"main/internal/photos/usecase"
 	"main/internal/tools/errors"
 	"net/http"
 	"strconv"
@@ -122,8 +121,7 @@ func (photoD PhotoDeliveryRealisation) UploadPhotoToAlbum(rwContext echo.Context
 	return rwContext.NoContent(http.StatusOK)
 
 }
-
-func NewPhotoDelivery(log *zap.SugaredLogger, photoRealisation usecase.PhotoUseCaseRealisation) PhotoDeliveryRealisation {
+func NewPhotoDelivery(log *zap.SugaredLogger, photoRealisation photos.PhotoUseCase) PhotoDeliveryRealisation {
 	return PhotoDeliveryRealisation{photoLogic: photoRealisation, logger: log}
 }
 
