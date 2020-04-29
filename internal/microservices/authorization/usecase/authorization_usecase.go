@@ -121,6 +121,10 @@ func (AU AuthorizationUseCaseRealisation) CheckSession(ctx context.Context, auth
 
 	userId, err := AU.sessionDB.GetUserIdByCookie(auth.Cookies)
 
+	if userId == 0 || err != nil {
+		userId = -1
+	}
+
 	userSession := &session.UserId{
 		UserId: int32(userId),
 	}
@@ -133,7 +137,7 @@ func (AU AuthorizationUseCaseRealisation) DeleteSession(ctx context.Context, aut
 	err := AU.sessionDB.DeleteCookie(auth.Cookies)
 
 	return &session.UserId{
-		UserId: 0,
+		UserId: -1,
 	}, err
 
 }

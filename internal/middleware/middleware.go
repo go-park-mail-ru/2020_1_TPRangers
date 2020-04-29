@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"context"
-	"fmt"
 	"github.com/labstack/echo"
 	"github.com/prometheus/client_golang/prometheus"
 	uuid "github.com/satori/go.uuid"
@@ -71,7 +70,6 @@ func (mh MiddlewareHandler) PanicMiddleWare(next echo.HandlerFunc) echo.HandlerF
 					zap.String("ERROR" , err.(error).Error()),
 					zap.Int("ANSWER STATUS", http.StatusInternalServerError),
 				)
-				//fmt.Println(err)
 				mh.tracker.WithLabelValues(strconv.Itoa(http.StatusInternalServerError), c.Request().URL.Path, c.Request().Method, "0")
 				return c.JSON(http.StatusInternalServerError, models.JsonStruct{Err: "server panic ! "})
 			}
@@ -124,7 +122,7 @@ func (mh MiddlewareHandler) CheckAuthentication() echo.MiddlewareFunc {
 			cookie, err := rwContext.Cookie("session_id")
 
 			userId := &sessions.UserId{
-				UserId: 0,
+				UserId: -1,
 			}
 
 			if err == nil {
@@ -139,7 +137,6 @@ func (mh MiddlewareHandler) CheckAuthentication() echo.MiddlewareFunc {
 			}
 
 			rwContext.Set("user_id", int(userId.UserId))
-			fmt.Println(userId)
 			return next(rwContext)
 
 		}
