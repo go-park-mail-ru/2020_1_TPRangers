@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"context"
-	"fmt"
 	"github.com/labstack/echo"
 	"github.com/prometheus/client_golang/prometheus"
 	uuid "github.com/satori/go.uuid"
@@ -33,12 +32,12 @@ func (mh MiddlewareHandler) SetMiddleware(server *echo.Echo) {
 	logFunc := mh.AccessLog()
 	server.Use(mh.PanicMiddleWare)
 	authFunc := mh.CheckAuthentication()
-	//csrfFunc := mh.CSRF()
+	csrfFunc := mh.CSRF()
 
 	server.Use(authFunc)
 	server.Use(logFunc)
 
-	//server.Use(csrfFunc)
+	server.Use(csrfFunc)
 }
 
 func (mh MiddlewareHandler) SetCorsMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
@@ -123,7 +122,7 @@ func (mh MiddlewareHandler) CheckAuthentication() echo.MiddlewareFunc {
 			cookie, err := rwContext.Cookie("session_id")
 
 			userId := &sessions.UserId{
-				UserId: 0,
+				UserId: -1,
 			}
 
 			if err == nil {
@@ -138,7 +137,6 @@ func (mh MiddlewareHandler) CheckAuthentication() echo.MiddlewareFunc {
 			}
 
 			rwContext.Set("user_id", int(userId.UserId))
-			fmt.Println(userId)
 			return next(rwContext)
 
 		}
