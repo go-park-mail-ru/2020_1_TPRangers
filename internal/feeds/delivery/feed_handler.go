@@ -6,7 +6,6 @@ import (
 	"go.uber.org/zap"
 	"io/ioutil"
 	"main/internal/feeds"
-	"main/internal/feeds/usecase"
 	"main/internal/models"
 	"main/internal/tools/errors"
 	"net/http"
@@ -240,7 +239,7 @@ func (feedD FeedDeliveryRealisation) GetPostAndComments(rwContext echo.Context) 
 	return rwContext.JSON(http.StatusOK, jsonAnswer)
 }
 
-func NewFeedDelivery(log *zap.SugaredLogger, feedRealisation usecase.FeedUseCaseRealisation) FeedDeliveryRealisation {
+func NewFeedDelivery(log *zap.SugaredLogger, feedRealisation feeds.FeedUseCase) FeedDeliveryRealisation {
 	return FeedDeliveryRealisation{feedLogic: feedRealisation, logger: log}
 }
 

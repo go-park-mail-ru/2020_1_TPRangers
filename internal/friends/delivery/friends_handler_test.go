@@ -18,12 +18,13 @@ import (
 func TestFriendDeliveryRealisation_AddFriend(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	lUseCase := mock_friends.NewMockFriendUseCase(ctrl)
+	chat := mock_friends.NewMockChatUseCase(ctrl)
 	config := zap.NewDevelopmentConfig()
 	config.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
 	prLogger, _ := config.Build()
 	logger := prLogger.Sugar()
 	defer prLogger.Sync()
-	friendD := NewFriendDelivery(logger, lUseCase)
+	friendD := NewFriendDelivery(logger, lUseCase, chat)
 
 	usersId := []int{-1, 1, 2}
 	likeBehaviour := []error{nil, nil, errors.New("smth happend")}
@@ -56,12 +57,13 @@ func TestFriendDeliveryRealisation_AddFriend(t *testing.T) {
 func TestFriendDeliveryRealisation_DeleteFriend(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	lUseCase := mock_friends.NewMockFriendUseCase(ctrl)
+	chat := mock_friends.NewMockChatUseCase(ctrl)
 	config := zap.NewDevelopmentConfig()
 	config.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
 	prLogger, _ := config.Build()
 	logger := prLogger.Sugar()
 	defer prLogger.Sync()
-	friendD := NewFriendDelivery(logger, lUseCase)
+	friendD := NewFriendDelivery(logger, lUseCase, chat)
 
 	usersId := []int{-1, 1, 2}
 	likeBehaviour := []error{nil, nil, errors.New("smth happend")}
@@ -94,12 +96,13 @@ func TestFriendDeliveryRealisation_DeleteFriend(t *testing.T) {
 func TestFriendDeliveryRealisation_GetMainUserFriends(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	lUseCase := mock_friends.NewMockFriendUseCase(ctrl)
+	chat := mock_friends.NewMockChatUseCase(ctrl)
 	config := zap.NewDevelopmentConfig()
 	config.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
 	prLogger, _ := config.Build()
 	logger := prLogger.Sugar()
 	defer prLogger.Sync()
-	friendD := NewFriendDelivery(logger, lUseCase)
+	friendD := NewFriendDelivery(logger, lUseCase, chat)
 
 	answer := []models.FriendLandingInfo{
 		{
@@ -146,12 +149,13 @@ func TestFriendDeliveryRealisation_GetMainUserFriends(t *testing.T) {
 func TestFriendDeliveryRealisation_FriendList(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	lUseCase := mock_friends.NewMockFriendUseCase(ctrl)
+	chat := mock_friends.NewMockChatUseCase(ctrl)
 	config := zap.NewDevelopmentConfig()
 	config.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
 	prLogger, _ := config.Build()
 	logger := prLogger.Sugar()
 	defer prLogger.Sync()
-	friendD := NewFriendDelivery(logger, lUseCase)
+	friendD := NewFriendDelivery(logger, lUseCase, chat)
 
 	answer := []models.FriendLandingInfo{
 		{
