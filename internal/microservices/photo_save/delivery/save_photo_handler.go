@@ -2,14 +2,14 @@ package delivery
 
 import (
 	"github.com/labstack/echo"
-	"main/internal/microservices/photo_server"
+	"main/internal/microservices/photo_save"
 	"main/internal/models"
 	"net/http"
 	"os"
 )
 
 type PhotoSaveDeliveryRealisation struct {
-	PhotoSaveLogic photo_server.PhotoSaveUseCase
+	PhotoSaveLogic photo_save.PhotoSaveUseCase
 }
 
 func (PhotoSaveD PhotoSaveDeliveryRealisation) upload (c echo.Context) error  {
@@ -39,7 +39,7 @@ func (PhotoSaveD PhotoSaveDeliveryRealisation) upload (c echo.Context) error  {
 	return c.JSON(http.StatusOK, response)
 }
 
-func NewSavePhotoDeliveryRealisation(logic photo_server.PhotoSaveUseCase) PhotoSaveDeliveryRealisation {
+func NewSavePhotoDeliveryRealisation(logic photo_save.PhotoSaveUseCase) PhotoSaveDeliveryRealisation {
 	return PhotoSaveDeliveryRealisation{PhotoSaveLogic: logic}
 }
 

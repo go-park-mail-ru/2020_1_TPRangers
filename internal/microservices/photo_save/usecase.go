@@ -1,4 +1,4 @@
-package photo_server
+package photo_save
 
 import "main/internal/models"
 

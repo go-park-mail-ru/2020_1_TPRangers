@@ -5,8 +5,8 @@ import (
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"os"
-	deliveryPhotoSave "main/internal/microservices/photo_server/delivery"
-	usecasePhotoSave "main/internal/microservices/photo_server/usecase"
+	deliveryPhotoSave "main/internal/microservices/photo_save/delivery"
+	usecasePhotoSave "main/internal/microservices/photo_save/usecase"
 )
 
 
