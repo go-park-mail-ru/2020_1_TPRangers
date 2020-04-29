@@ -152,6 +152,8 @@ func TestFriendDeliveryRealisation_GetPostAndComments(t *testing.T) {
 		c := e.NewContext(req, rec)
 		c.Set("id", usersId[iter])
 		c.SetPath("/api/v1/post/:id/comments")
+		c.SetParamNames("id")
+		c.SetParamValues("1234")
 		c.Set("REQUEST_ID", "123")
 		c.Set("user_id", usersId[iter])
 		if assert.NoError(t, feedD.GetPostAndComments(c)) {
