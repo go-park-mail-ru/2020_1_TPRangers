@@ -5,7 +5,6 @@ import (
 	"main/internal/microservices/photos/delivery"
 	"main/internal/models"
 	phs "main/internal/photos"
-	photoRep "main/internal/photos/repository"
 	"main/internal/tools/errors"
 )
 
@@ -37,7 +36,7 @@ func (photoR PhotoUseChecker) UploadPhotoToAlbum(ctx context.Context, newPhoto *
 	return &photos.Dummy{}, nil
 }
 
-func NewPhotoUseCaseChecker(photoDB photoRep.PhotoRepositoryRealisation) PhotoUseChecker {
+func NewPhotoUseCaseChecker(photoDB phs.PhotoRepository) PhotoUseChecker {
 	return PhotoUseChecker{
 		photoDB: photoDB,
 	}
