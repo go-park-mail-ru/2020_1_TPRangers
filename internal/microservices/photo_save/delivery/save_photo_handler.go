@@ -32,9 +32,9 @@ func (PhotoSaveD PhotoSaveDeliveryRealisation) upload (c echo.Context) error  {
 
 	response := new(models.SavePhotoResponse)
 
-	path := os.Getenv("FILEPATH")
+	path := os.Getenv("UPLOAD_PATH")
 	response.Message = "Файл загружен"
-	response.Filename = "/" + path + filename
+	response.Filename = path + filename
 
 	return c.JSON(http.StatusOK, response)
 }
