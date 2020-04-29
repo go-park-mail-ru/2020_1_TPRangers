@@ -125,6 +125,7 @@ func TestFriendDeliveryRealisation_CreateComment(t *testing.T) {
 	}
 }
 
+
 //func TestFriendDeliveryRealisation_GetPostAndComments(t *testing.T) {
 //	ctrl := gomock.NewController(t)
 //	aUseCase := mock_feeds.NewMockFeedUseCase(ctrl)
@@ -160,3 +161,42 @@ func TestFriendDeliveryRealisation_CreateComment(t *testing.T) {
 //
 //	}
 //}
+
+func TestFriendDeliveryRealisation_GetPostAndComments(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	aUseCase := mock_feeds.NewMockFeedUseCase(ctrl)
+	config := zap.NewDevelopmentConfig()
+	config.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
+	prLogger, _ := config.Build()
+	logger := prLogger.Sugar()
+	defer prLogger.Sync()
+	feedD := NewFeedDelivery(logger, aUseCase)
+	postID := "1234"
+	usersId := []int{-1, 1, 2}
+	feedBehaviour := []error{nil, nil, errors.New("smth happend")}
+	expectedBehaviour := []int{http.StatusUnauthorized, http.StatusOK, http.StatusInternalServerError}
+
+	for iter, _ := range usersId {
+
+		if expectedBehaviour[iter] != http.StatusUnauthorized {
+			post := models.Post{}
+			aUseCase.EXPECT().GetPostAndComments(usersId[iter], postID).Return(post, feedBehaviour[iter])
+		}
+
+		e := echo.New()
+		req := httptest.NewRequest(echo.GET, "/", nil)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+		c.Set("id", usersId[iter])
+		c.SetPath("/api/v1/post/:id/comments")
+		c.SetParamNames("id")
+		c.SetParamValues("1234")
+		c.Set("REQUEST_ID", "123")
+		c.Set("user_id", usersId[iter])
+		if assert.NoError(t, feedD.GetPostAndComments(c)) {
+			assert.Equal(t, expectedBehaviour[iter], rec.Code)
+		}
+
+	}
+}
+
