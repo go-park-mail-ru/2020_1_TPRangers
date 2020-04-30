@@ -93,10 +93,10 @@ func (photoD PhotoDeliveryRealisation) UploadPhotoToAlbum(rwContext echo.Context
 		photoD.logger.Debug(
 			zap.String("ID", rId),
 			zap.String("ERROR", err.Error()),
-			zap.Int("ANSWER STATUS", http.StatusInternalServerError),
+			zap.Int("ANSWER STATUS", http.StatusConflict),
 		)
 
-		return rwContext.NoContent(http.StatusInternalServerError)
+		return rwContext.NoContent(http.StatusConflict)
 	}
 
 	err = photoD.photoLogic.UploadPhotoToAlbum(*photoData)
@@ -121,6 +121,7 @@ func (photoD PhotoDeliveryRealisation) UploadPhotoToAlbum(rwContext echo.Context
 	return rwContext.NoContent(http.StatusOK)
 
 }
+
 func NewPhotoDelivery(log *zap.SugaredLogger, photoRealisation photos.PhotoUseCase) PhotoDeliveryRealisation {
 	return PhotoDeliveryRealisation{photoLogic: photoRealisation, logger: log}
 }

@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"context"
-	"fmt"
 	phs "main/internal/microservices/photos/delivery"
 	"main/internal/models"
 	"main/internal/tools/errors"
@@ -28,8 +27,6 @@ func (photoR PhotoUseCaseRealisation) UploadPhotoToAlbum(photoData models.PhotoI
 		Url:     photoData.Url,
 		AlbumID: photoData.AlbumID,
 	})
-
-	fmt.Println(err)
 
 	if err != nil {
 		return errors.FailReadFromDB

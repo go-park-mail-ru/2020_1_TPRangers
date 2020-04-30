@@ -1,0 +1,27 @@
+mode: set
+main/internal/chats/delivery/chats_handler.go:18.97,20.2 1 1
+main/internal/chats/delivery/chats_handler.go:22.66,27.18 3 1
+main/internal/chats/delivery/chats_handler.go:36.2,41.16 4 1
+main/internal/chats/delivery/chats_handler.go:51.2,53.16 2 1
+main/internal/chats/delivery/chats_handler.go:63.2,65.16 2 1
+main/internal/chats/delivery/chats_handler.go:74.2,79.43 2 1
+main/internal/chats/delivery/chats_handler.go:27.18,34.3 2 1
+main/internal/chats/delivery/chats_handler.go:41.16,49.3 2 0
+main/internal/chats/delivery/chats_handler.go:53.16,61.3 2 1
+main/internal/chats/delivery/chats_handler.go:65.16,72.3 2 1
+main/internal/chats/delivery/chats_handler.go:82.64,88.18 4 0
+main/internal/chats/delivery/chats_handler.go:97.2,99.16 2 0
+main/internal/chats/delivery/chats_handler.go:108.2,113.43 2 0
+main/internal/chats/delivery/chats_handler.go:88.18,95.3 2 0
+main/internal/chats/delivery/chats_handler.go:99.16,106.3 2 0
+main/internal/chats/delivery/chats_handler.go:116.71,122.18 4 0
+main/internal/chats/delivery/chats_handler.go:131.2,133.16 2 0
+main/internal/chats/delivery/chats_handler.go:142.2,147.48 2 0
+main/internal/chats/delivery/chats_handler.go:122.18,129.3 2 0
+main/internal/chats/delivery/chats_handler.go:133.16,140.3 2 0
+main/internal/chats/delivery/chats_handler.go:151.67,157.18 3 0
+main/internal/chats/delivery/chats_handler.go:166.2,168.16 2 0
+main/internal/chats/delivery/chats_handler.go:177.2,182.48 2 0
+main/internal/chats/delivery/chats_handler.go:157.18,164.3 2 0
+main/internal/chats/delivery/chats_handler.go:168.16,175.3 2 0
+main/internal/chats/delivery/chats_handler.go:185.57,192.2 4 0

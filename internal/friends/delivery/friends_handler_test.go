@@ -35,6 +35,11 @@ func TestFriendDeliveryRealisation_AddFriend(t *testing.T) {
 
 		if expectedBehaviour[iter] != http.StatusUnauthorized {
 			lUseCase.EXPECT().AddFriend(usersId[iter], friendLogin.String()).Return(likeBehaviour[iter])
+			chat.EXPECT().CreateChat(models.NewChatUsers{
+				ChatPhoto:  "",
+				ChatName:   "",
+				UsersLogin: []string{friendLogin.String()},
+			},usersId[iter]).Return(nil)
 		}
 
 		e := echo.New()
