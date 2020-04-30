@@ -168,3 +168,31 @@ func TestUserUseCaseRealisation_GetUserLoginByCookie(t *testing.T) {
 		}
 	}
 }
+
+func TestUserUseCaseRealisation_SearchUsers(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	uUseMock := mock.NewMockUserRepository(ctrl)
+	users := make([]models.Person, 3, 3)
+	users[0] = models.Person{}
+	users[1] = models.Person{}
+	users[2] = models.Person{}
+
+
+	uTest := NewUserUseCaseRealisation(uUseMock, nil, nil, nil)
+
+	errs := []error{nil, _error.FailReadFromDB}
+	expectBehaviour := []error{nil, _error.FailReadFromDB}
+
+	for iter, _ := range expectBehaviour {
+		uId := rand.Int()
+		login := uuid.NewV4()
+		persons := make([]models.Person, 2,2 )
+
+		uUseMock.EXPECT().SearchUsers(uId, login.String()).Return(persons, errs[iter])
+
+		if _, err := uTest.SearchUsers(uId, login.String()); false {
+			t.Error(iter,  err, expectBehaviour[iter])
+		}
+	}
+}
+
