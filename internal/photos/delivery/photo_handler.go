@@ -5,9 +5,9 @@ import (
 	"github.com/labstack/echo"
 	"go.uber.org/zap"
 	"io/ioutil"
+	"main/internal/models"
 	"main/internal/photos"
 	"main/internal/tools/errors"
-	"main/models"
 	"net/http"
 	"strconv"
 )

@@ -2,8 +2,8 @@ package usecase
 
 import (
 	"main/internal/albums"
+	"main/internal/models"
 	"main/internal/tools/errors"
-	"main/models"
 )
 
 type AlbumUseCaseRealisation struct {

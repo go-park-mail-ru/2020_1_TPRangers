@@ -1,6 +1,6 @@
 package albums
 
-import "main/models"
+import "main/internal/models"
 
 type AlbumRepository interface {
 	GetAlbums(int) ([]models.Album, error)

@@ -1,7 +1,7 @@
 package users
 
 import (
-	"main/models"
+	"main/internal/models"
 )
 
 type UserUseCase interface {

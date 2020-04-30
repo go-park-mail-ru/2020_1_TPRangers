@@ -3,9 +3,9 @@ package usecase
 import (
 	"context"
 	"main/internal/microservices/photos/delivery"
+	"main/internal/models"
 	phs "main/internal/photos"
 	"main/internal/tools/errors"
-	"main/models"
 )
 
 type PhotoUseChecker struct {

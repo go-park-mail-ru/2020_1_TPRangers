@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 	_ "github.com/lib/pq"
+	"main/internal/models"
 	"main/internal/tools/errors"
-	"main/models"
 )
 
 type AlbumRepositoryRealisation struct {
