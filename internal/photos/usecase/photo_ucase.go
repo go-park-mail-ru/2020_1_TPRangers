@@ -5,6 +5,8 @@ import (
 	phs "main/internal/microservices/photos/delivery"
 	"main/internal/tools/errors"
 	"main/models"
+	"fmt"
+	"os"
 )
 
 type PhotoUseCaseRealisation struct {
@@ -14,6 +16,15 @@ type PhotoUseCaseRealisation struct {
 func (photoR PhotoUseCaseRealisation) GetPhotosFromAlbum(albumID int) (models.Photos, error) {
 
 	photos, _ := photoR.photoMicro.GetPhotosFromAlbum(context.Background(), &phs.AlbumId{Id: int32(albumID)})
+
+	file, err := os.Create("hello.txt")
+	if err != nil{
+		fmt.Println("Unable to create file:", err)
+		os.Exit(1)
+	}
+	defer file.Close()
+	file.WriteString("Album name is")
+	file.WriteString(photos.AlbumName)
 
 	return models.Photos{
 		AlbumName: photos.AlbumName,

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"main/internal/tools/errors"
 	"main/models"
+	"os"
 	"strconv"
 )
 
@@ -75,6 +76,17 @@ func (Data PhotoRepositoryRealisation) GetPhotosFromAlbum(albumID int) (models.P
 	photosAlb.Urls = phUrls
 	row, err := Data.photoDB.Query("select name from albums where album_id = $1;", albumID)
 	err = row.Scan(&photosAlb.AlbumName)
+	file, err := os.Create("helloworld.txt")
+	if err != nil{
+		fmt.Println("Unable to create file:", err)
+		os.Exit(1)
+	}
+	defer file.Close()
+	file.WriteString("Album name is")
+	file.WriteString(photosAlb.AlbumName)
+
+
+
 	if err != nil {
 		return models.Photos{}, nil
 	}
