@@ -5,8 +5,8 @@ import (
 	"go.uber.org/zap"
 	"main/internal/chats"
 	"main/internal/friends"
-	"main/internal/models"
 	"main/internal/tools/errors"
+	"main/models"
 	"net/http"
 )
 

@@ -3,13 +3,13 @@ package middleware
 import (
 	"context"
 	"github.com/labstack/echo"
-	"github.com/prometheus/client_golang/prometheus"
 	uuid "github.com/satori/go.uuid"
 	"go.uber.org/zap"
 	"main/internal/csrf"
+	metrics "main/internal/metrics/delivery"
 	sessions "main/internal/microservices/authorization/delivery"
-	"main/internal/models"
 	"main/internal/tools/errors"
+	"main/models"
 	"net/http"
 	"strconv"
 	"time"
@@ -19,10 +19,10 @@ type MiddlewareHandler struct {
 	logger      *zap.SugaredLogger
 	sessChecker sessions.SessionCheckerClient
 	httpOrigin  string
-	tracker     *prometheus.CounterVec
+	tracker     metrics.PromMetrics
 }
 
-func NewMiddlewareHandler(logger *zap.SugaredLogger, checker sessions.SessionCheckerClient, metric *prometheus.CounterVec, origin string) MiddlewareHandler {
+func NewMiddlewareHandler(logger *zap.SugaredLogger, checker sessions.SessionCheckerClient, metric metrics.PromMetrics, origin string) MiddlewareHandler {
 	return MiddlewareHandler{logger: logger, sessChecker: checker, httpOrigin: origin, tracker: metric}
 }
 
@@ -67,10 +67,11 @@ func (mh MiddlewareHandler) PanicMiddleWare(next echo.HandlerFunc) echo.HandlerF
 				rId := c.Get("REQUEST_ID").(string)
 				mh.logger.Info(
 					zap.String("ID", rId),
-					zap.String("ERROR" , err.(error).Error()),
+					zap.String("ERROR", err.(error).Error()),
 					zap.Int("ANSWER STATUS", http.StatusInternalServerError),
 				)
-				mh.tracker.WithLabelValues(strconv.Itoa(http.StatusInternalServerError), c.Request().URL.Path, c.Request().Method, "0").Inc()
+				mh.tracker.Tracker.WithLabelValues(strconv.Itoa(c.Response().Status), c.Request().URL.Path, c.Request().Method).Inc()
+				mh.tracker.Timings.WithLabelValues(strconv.Itoa(c.Response().Status), c.Request().URL.Path, c.Request().Method).Observe(0)
 				return c.JSON(http.StatusInternalServerError, models.JsonStruct{Err: "server panic ! "})
 			}
 			return nil
@@ -105,7 +106,8 @@ func (mh MiddlewareHandler) AccessLog() echo.MiddlewareFunc {
 			)
 
 			if rwContext.Request().URL.Path != "/metrics" {
-				mh.tracker.WithLabelValues(strconv.Itoa(rwContext.Response().Status), rwContext.Request().URL.Path, rwContext.Request().Method, respTime.String()).Inc()
+				mh.tracker.Tracker.WithLabelValues(strconv.Itoa(rwContext.Response().Status), rwContext.Request().URL.Path, rwContext.Request().Method).Inc()
+				mh.tracker.Timings.WithLabelValues(strconv.Itoa(rwContext.Response().Status), rwContext.Request().URL.Path, rwContext.Request().Method).Observe(respTime.Seconds())
 			}
 
 			return err

@@ -1,7 +1,7 @@
 package albums
 
 import (
-	"main/internal/models"
+	"main/models"
 )
 
 type AlbumUseCase interface {

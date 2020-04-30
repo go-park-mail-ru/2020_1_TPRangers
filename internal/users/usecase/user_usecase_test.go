@@ -9,9 +9,9 @@ import (
 	"github.com/golang/mock/gomock"
 	uuid "github.com/satori/go.uuid"
 	"golang.org/x/crypto/pbkdf2"
-	"main/internal/models"
 	_error "main/internal/tools/errors"
 	"main/mocks"
+	"main/models"
 	"math/rand"
 	"testing"
 )

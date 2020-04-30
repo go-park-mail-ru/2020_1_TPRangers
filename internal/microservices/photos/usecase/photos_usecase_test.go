@@ -5,9 +5,9 @@ import (
 	"errors"
 	"github.com/golang/mock/gomock"
 	"main/internal/microservices/photos/delivery"
-	"main/internal/models"
 	errors2 "main/internal/tools/errors"
 	"main/mocks"
+	"main/models"
 	"testing"
 )
 

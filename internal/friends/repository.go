@@ -1,6 +1,6 @@
 package friends
 
-import "main/internal/models"
+import "main/models"
 
 type FriendRepository interface {
 	GetIdByLogin(string) (int, error)

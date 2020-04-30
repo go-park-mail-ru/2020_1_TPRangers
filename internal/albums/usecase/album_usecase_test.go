@@ -2,9 +2,9 @@ package usecase
 
 import (
 	"github.com/golang/mock/gomock"
-	"main/internal/models"
 	"main/internal/tools/errors"
 	"main/mocks"
+	"main/models"
 	"math/rand"
 	"testing"
 )

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/DATA-DOG/go-sqlmock"
 	uuid "github.com/satori/go.uuid"
-	"main/internal/models"
+	"main/models"
 	"math/rand"
 	"testing"
 )

@@ -1,6 +1,6 @@
 package photo_save
 
-import "main/internal/models"
+import "main/models"
 
 type PhotoSaveUseCase interface {
 	PhotoSave (info models.PhotoInfo) (string, error)

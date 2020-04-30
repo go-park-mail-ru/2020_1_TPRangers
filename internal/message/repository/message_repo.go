@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/gomodule/redigo/redis"
 	"github.com/nitishm/go-rejson"
-	"main/internal/models"
+	"main/models"
 	"strconv"
 	"time"
 )

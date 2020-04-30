@@ -2,8 +2,8 @@ package usecase
 
 import (
 	Friend "main/internal/friends"
-	"main/internal/models"
 	"main/internal/tools/errors"
+	"main/models"
 )
 
 type FriendUseCaseRealisation struct {

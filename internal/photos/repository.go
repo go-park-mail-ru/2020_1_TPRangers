@@ -1,6 +1,6 @@
 package photos
 
-import "main/internal/models"
+import "main/models"
 
 type PhotoRepository interface {
 	GetPhotosFromAlbum(int) (models.Photos, error)

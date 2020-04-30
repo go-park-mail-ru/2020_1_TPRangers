@@ -3,8 +3,8 @@ package repository
 import (
 	"database/sql"
 	_ "github.com/lib/pq"
-	"main/internal/models"
 	"main/internal/tools/errors"
+	"main/models"
 	"strings"
 )
 

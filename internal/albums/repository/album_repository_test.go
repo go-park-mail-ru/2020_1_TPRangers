@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/DATA-DOG/go-sqlmock"
-	"main/internal/models"
 	"main/internal/tools/errors"
+	"main/models"
 	"math/rand"
 	"testing"
 )

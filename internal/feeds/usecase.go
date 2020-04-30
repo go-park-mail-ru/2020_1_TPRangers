@@ -1,6 +1,6 @@
 package feeds
 
-import "main/internal/models"
+import "main/models"
 
 type FeedUseCase interface {
 	Feed(int) ([]models.Post, error)

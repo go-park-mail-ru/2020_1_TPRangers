@@ -3,8 +3,8 @@ package usecase
 import (
 	"context"
 	phs "main/internal/microservices/photos/delivery"
-	"main/internal/models"
 	"main/internal/tools/errors"
+	"main/models"
 )
 
 type PhotoUseCaseRealisation struct {

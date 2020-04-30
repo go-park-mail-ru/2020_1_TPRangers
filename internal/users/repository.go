@@ -1,6 +1,6 @@
 package users
 
-import "main/internal/models"
+import "main/models"
 
 type UserRepository interface {
 	GetIdByLogin(string) (int, error)

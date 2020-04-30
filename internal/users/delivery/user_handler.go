@@ -6,9 +6,9 @@ import (
 	"go.uber.org/zap"
 	"io/ioutil"
 	"main/internal/csrf"
-	"main/internal/models"
 	"main/internal/tools/errors"
 	"main/internal/users"
+	"main/models"
 	"net/http"
 	"time"
 )

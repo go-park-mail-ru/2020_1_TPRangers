@@ -1,6 +1,6 @@
 package chats
 
-import "main/internal/models"
+import "main/models"
 
 type ChatUseCase interface {
 	CreateChat(models.NewChatUsers, int) error

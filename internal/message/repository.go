@@ -1,7 +1,7 @@
 package message
 
 import (
-	"main/internal/models"
+	"main/models"
 )
 
 type MessageRepository interface {

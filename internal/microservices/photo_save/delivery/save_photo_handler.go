@@ -3,7 +3,7 @@ package delivery
 import (
 	"github.com/labstack/echo"
 	"main/internal/microservices/photo_save"
-	"main/internal/models"
+	"main/models"
 	"net/http"
 	"os"
 )

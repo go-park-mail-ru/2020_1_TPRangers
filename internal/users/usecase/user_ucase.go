@@ -9,9 +9,9 @@ import (
 	FeedRep "main/internal/feeds"
 	FriendRep "main/internal/friends"
 	sessions "main/internal/microservices/authorization/delivery"
-	"main/internal/models"
 	"main/internal/tools/errors"
 	"main/internal/users"
+	"main/models"
 )
 
 func CryptPassword(pass string, salt []byte) []byte {

@@ -4,8 +4,8 @@ import (
 	"github.com/labstack/echo"
 	"go.uber.org/zap"
 	"main/internal/like"
-	"main/internal/models"
 	"main/internal/tools/errors"
+	"main/models"
 	"net/http"
 	"strconv"
 )

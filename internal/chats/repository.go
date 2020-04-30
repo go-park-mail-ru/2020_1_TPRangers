@@ -1,6 +1,6 @@
 package chats
 
-import "main/internal/models"
+import "main/models"
 
 type ChatRepository interface {
 	CreateNewChat(string, string, []int) error

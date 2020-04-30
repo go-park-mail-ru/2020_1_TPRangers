@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"github.com/golang/mock/gomock"
 	phss "main/internal/microservices/photos/delivery"
-	"main/internal/models"
 	errs "main/internal/tools/errors"
 	"main/mocks"
+	"main/models"
 	"testing"
 )
 

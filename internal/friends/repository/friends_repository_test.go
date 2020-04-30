@@ -5,8 +5,8 @@ import (
 	errors "errors"
 	"github.com/DATA-DOG/go-sqlmock"
 	uuid "github.com/satori/go.uuid"
-	"main/internal/models"
 	_error "main/internal/tools/errors"
+	"main/models"
 	"math/rand"
 	"testing"
 )

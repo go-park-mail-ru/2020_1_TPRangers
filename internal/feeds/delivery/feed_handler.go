@@ -6,8 +6,8 @@ import (
 	"go.uber.org/zap"
 	"io/ioutil"
 	"main/internal/feeds"
-	"main/internal/models"
 	"main/internal/tools/errors"
+	"main/models"
 	"net/http"
 )
 

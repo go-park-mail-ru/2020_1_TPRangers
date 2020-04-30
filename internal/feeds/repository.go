@@ -1,6 +1,6 @@
 package feeds
 
-import "main/internal/models"
+import "main/models"
 
 type FeedRepository interface {
 	GetUserFeedById(int, int) ([]models.Post, error)
