@@ -9,9 +9,9 @@ import (
 	"golang.org/x/crypto/pbkdf2"
 	"main/internal/cookies"
 	"main/internal/microservices/authorization/delivery"
+	"main/internal/models"
 	"main/internal/tools/errors"
 	"main/internal/users"
-	"main/models"
 	"time"
 )
 

@@ -4,7 +4,7 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"io"
-	"main/models"
+	"main/internal/models"
 	"os"
 	"path/filepath"
 	"time"

@@ -3,9 +3,9 @@ package delivery
 import (
 	"github.com/labstack/echo"
 	"go.uber.org/zap"
+	"main/internal/models"
 	stoken "main/internal/socket_token"
 	"main/internal/tools/errors"
-	"main/models"
 	"net/http"
 )
 

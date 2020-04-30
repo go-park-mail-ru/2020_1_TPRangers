@@ -1,7 +1,7 @@
 package photos
 
 import (
-	"main/models"
+	"main/internal/models"
 )
 
 type PhotoUseCase interface {

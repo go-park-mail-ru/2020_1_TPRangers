@@ -7,7 +7,7 @@ package mock
 
 import (
 	gomock "github.com/golang/mock/gomock"
-	models "main/models"
+	models "main/internal/models"
 	reflect "reflect"
 )
 

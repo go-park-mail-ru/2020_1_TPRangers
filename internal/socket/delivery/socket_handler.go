@@ -4,9 +4,9 @@ import (
 	"github.com/gobwas/ws"
 	"github.com/labstack/echo"
 	"go.uber.org/zap"
+	"main/internal/models"
 	"main/internal/socket"
 	"main/internal/tools/errors"
-	"main/models"
 	"net/http"
 )
 

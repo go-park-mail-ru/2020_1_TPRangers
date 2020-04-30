@@ -1,6 +1,6 @@
 package friends
 
-import "main/models"
+import "main/internal/models"
 
 type FriendUseCase interface {
 	AddFriend(int, string) error

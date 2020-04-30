@@ -3,7 +3,7 @@ package repository
 import (
 	"database/sql"
 	"fmt"
-	"main/models"
+	"main/internal/models"
 	"strconv"
 )
 
