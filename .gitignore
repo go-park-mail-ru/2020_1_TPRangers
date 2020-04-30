@@ -1,10 +1,11 @@
-
 .DS_Store
 dist
 .idea
 # Created by https://www.gitignore.io/api/node
 # Edit at https://www.gitignore.io/?templates=node
 
+
+*.out
 ### Node ###
 # Logs
 logs
@@ -206,4 +207,4 @@ fabric.properties
 # End of https://www.gitignore.io/api/intellij
 
 test/
-
+main
