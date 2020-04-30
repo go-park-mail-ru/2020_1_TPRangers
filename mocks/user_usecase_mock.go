@@ -8,7 +8,6 @@ import (
 	gomock "github.com/golang/mock/gomock"
 	models "main/internal/models"
 	reflect "reflect"
-	time "time"
 )
 
 // MockUserUseCase is a mock of UserUseCase interface
@@ -125,17 +124,18 @@ func (mr *MockUserUseCaseMockRecorder) GetUserProfileWhileLogged(arg0, arg1 inte
 }
 
 // Login mocks base method
-func (m *MockUserUseCase) Login(arg0 models.Auth, arg1 string, arg2 time.Duration) error {
+func (m *MockUserUseCase) Login(arg0 models.Auth) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Login", arg0, arg1, arg2)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret := m.ctrl.Call(m, "Login", arg0)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // Login indicates an expected call of Login
-func (mr *MockUserUseCaseMockRecorder) Login(arg0, arg1, arg2 interface{}) *gomock.Call {
+func (mr *MockUserUseCaseMockRecorder) Login(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Login", reflect.TypeOf((*MockUserUseCase)(nil).Login), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Login", reflect.TypeOf((*MockUserUseCase)(nil).Login), arg0)
 }
 
 // Logout mocks base method
@@ -153,17 +153,33 @@ func (mr *MockUserUseCaseMockRecorder) Logout(arg0 interface{}) *gomock.Call {
 }
 
 // Register mocks base method
-func (m *MockUserUseCase) Register(arg0 models.Register, arg1 string, arg2 time.Duration) error {
+func (m *MockUserUseCase) Register(arg0 models.Register) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Register", arg0, arg1, arg2)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret := m.ctrl.Call(m, "Register", arg0)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // Register indicates an expected call of Register
-func (mr *MockUserUseCaseMockRecorder) Register(arg0, arg1, arg2 interface{}) *gomock.Call {
+func (mr *MockUserUseCaseMockRecorder) Register(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Register", reflect.TypeOf((*MockUserUseCase)(nil).Register), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Register", reflect.TypeOf((*MockUserUseCase)(nil).Register), arg0)
+}
+
+// SearchUsers mocks base method
+func (m *MockUserUseCase) SearchUsers(arg0 int, arg1 string) ([]models.Person, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SearchUsers", arg0, arg1)
+	ret0, _ := ret[0].([]models.Person)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SearchUsers indicates an expected call of SearchUsers
+func (mr *MockUserUseCaseMockRecorder) SearchUsers(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SearchUsers", reflect.TypeOf((*MockUserUseCase)(nil).SearchUsers), arg0, arg1)
 }
 
 // UploadSettings mocks base method
