@@ -188,11 +188,11 @@ func (Data FeedRepositoryRealisation) CreatePost(uId int, ownerLogin string, new
 	}
 
 	postRow, err := Data.feedDB.Query("INSERT INTO Posts (txt_data,photo_id,posts_likes_count,creation_date, attachments) VALUES($1 , $2 , $3 , $4 , $5) RETURNING post_id", newPost.Text, photo_id, 0, time.Now(), newPost.Attachments)
-	defer func () {
+	defer func() {
 		if postRow != nil {
 			postRow.Close()
 		}
-	} ()
+	}()
 	if err != nil {
 		fmt.Println(err, "ERROR ON ADDING NEW POST TO DATABASE")
 		return errors.FailSendToDB
@@ -204,11 +204,11 @@ func (Data FeedRepositoryRealisation) CreatePost(uId int, ownerLogin string, new
 	err = postRow.Scan(&postId)
 
 	ownerRow, err := Data.feedDB.Query("SELECT u_id FROM Users WHERE login = $1", ownerLogin)
-	defer func () {
+	defer func() {
 		if ownerRow != nil {
 			ownerRow.Close()
 		}
-	} ()
+	}()
 	if err != nil {
 		fmt.Println(err, "ERROR ON OWNER NEW POST TO DATABASE")
 		return errors.FailSendToDB
@@ -268,7 +268,7 @@ func (Data FeedRepositoryRealisation) DeleteComment(uID int, commentID string) e
 
 func (Data FeedRepositoryRealisation) GetPostAndComments(userID int, postID string) (models.Post, error) {
 
-	rows, err := Data.feedDB.Query("select c.comment_id, c.txt_data, c.attachments, c.comment_likes_count, c.creation_date, ph.photo_id, ph.url, ph.photos_likes_count, u.name, u.surname, u.login " +
+	rows, err := Data.feedDB.Query("select c.comment_id, c.txt_data, c.attachments, c.comment_likes_count, c.creation_date, ph.photo_id, ph.url, ph.photos_likes_count, u.name, u.surname, u.login "+
 		"from comments AS c INNER JOIN users AS u ON (c.u_id = u.u_id) LEFT JOIN photos AS ph ON c.photo_id = ph.photo_id WHERE c.post_id = $1 ORDER BY c.creation_date ASC;", postID)
 
 	if err != nil {

@@ -46,25 +46,24 @@ func TestAuthorizationUseCaseRealisation_CheckSession(t *testing.T) {
 
 	authUse := NewAuthorizationUseCaseRealisation(userDBMock, sesDBMock)
 	auth := &session.SessionData{
-		Cookies:              "123",
-		Csrf:                 "",
+		Cookies: "123",
+		Csrf:    "",
 	}
-	sesDBMock.EXPECT().GetUserIdByCookie("123").Return(1,nil)
+	sesDBMock.EXPECT().GetUserIdByCookie("123").Return(1, nil)
 
-	ses , _ := authUse.CheckSession(context.Background(),auth)
+	ses, _ := authUse.CheckSession(context.Background(), auth)
 
 	if ses.UserId != int32(1) {
 		t.Error("error")
 	}
 
-	sesDBMock.EXPECT().GetUserIdByCookie("123").Return(0,nil)
+	sesDBMock.EXPECT().GetUserIdByCookie("123").Return(0, nil)
 
-	ses , _ = authUse.CheckSession(context.Background(),auth)
+	ses, _ = authUse.CheckSession(context.Background(), auth)
 
 	if ses.UserId != int32(-1) {
 		t.Error("error")
 	}
-
 
 }
 
@@ -76,12 +75,12 @@ func TestAuthorizationUseCaseRealisation_DeleteSession(t *testing.T) {
 
 	authUse := NewAuthorizationUseCaseRealisation(userDBMock, sesDBMock)
 	auth := &session.SessionData{
-		Cookies:              "123",
-		Csrf:                 "",
+		Cookies: "123",
+		Csrf:    "",
 	}
 	sesDBMock.EXPECT().DeleteCookie("123").Return(customErr)
 
-	ses , err := authUse.DeleteSession(context.Background(),auth)
+	ses, err := authUse.DeleteSession(context.Background(), auth)
 
 	if ses.UserId != int32(-1) || err != customErr {
 		t.Error("error")

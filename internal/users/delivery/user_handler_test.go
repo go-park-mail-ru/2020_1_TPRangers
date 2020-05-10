@@ -191,8 +191,3 @@ func TestFriendDeliveryRealisation_GetSettings(t *testing.T) {
 
 	}
 }
-
-
-
-
-

@@ -10,5 +10,6 @@ type Message struct {
 	AuthorPhoto   string `json:"authorPhoto, omitempty"`
 	Text          string `json:"text, omitempty"`
 	Time          string `json:"time, omitempty"`
+	Sticker       string `json:"sticker,omitempty"`
 	IsMe          bool   `json:"isMe"`
 }

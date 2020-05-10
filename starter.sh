@@ -14,7 +14,7 @@ runner_func() {
 # shellcheck disable=SC2140
 # shellcheck disable=SC1083
 for services in "." "internal/cmd/authorization/" "internal/cmd/chats/" "internal/cmd/likes/" "internal/cmd/photos/" "internal/cmd/photo_save"; do
-  runner_func "$services" 
+  runner_func "$services"
 done
 
 

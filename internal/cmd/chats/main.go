@@ -5,10 +5,10 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo"
 	_ "github.com/lib/pq"
-	metrics "main/internal/metrics/delivery"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"google.golang.org/grpc"
+	metrics "main/internal/metrics/delivery"
 
 	repositoryMessage "main/internal/message/repository"
 	deliveryMessage "main/internal/socket/delivery"
@@ -104,7 +104,6 @@ func LoadMicroservices(server *echo.Echo) (authorMicro.SessionCheckerClient, *gr
 
 }
 
-
 func main() {
 
 	server := echo.New()
@@ -134,8 +133,7 @@ func main() {
 
 	tracker := metrics.RegisterMetrics(server)
 
-
-	midHandler := middleware.NewMiddlewareHandler(logger, auth, tracker,origin)
+	midHandler := middleware.NewMiddlewareHandler(logger, auth, tracker, origin)
 	midHandler.SetMiddleware(server)
 
 	api := NewRequestHandler(db, messages, tokens, logger)

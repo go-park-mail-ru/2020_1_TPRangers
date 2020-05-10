@@ -39,7 +39,7 @@ func TestFriendDeliveryRealisation_AddFriend(t *testing.T) {
 				ChatPhoto:  "",
 				ChatName:   "",
 				UsersLogin: []string{friendLogin.String()},
-			},usersId[iter]).Return(nil)
+			}, usersId[iter]).Return(nil)
 		}
 
 		e := echo.New()

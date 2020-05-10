@@ -143,7 +143,7 @@ func (userD UserDeliveryRealisation) UploadSettings(rwContext echo.Context) erro
 		return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: errors.CookieExpired.Error()})
 	}
 
-	b , err := ioutil.ReadAll(rwContext.Request().Body)
+	b, err := ioutil.ReadAll(rwContext.Request().Body)
 	defer rwContext.Request().Body.Close()
 
 	if err != nil {
@@ -207,7 +207,7 @@ func (userD UserDeliveryRealisation) Login(rwContext echo.Context) error {
 
 	userAuthData := new(models.Auth)
 
-	b , err := ioutil.ReadAll(rwContext.Request().Body)
+	b, err := ioutil.ReadAll(rwContext.Request().Body)
 	defer rwContext.Request().Body.Close()
 
 	if err != nil {
@@ -242,7 +242,6 @@ func (userD UserDeliveryRealisation) Login(rwContext echo.Context) error {
 			zap.String("ERROR", err.Error()),
 			zap.Int("ANSWER STATUS", http.StatusUnauthorized),
 		)
-
 
 		return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: err.Error()})
 	}
@@ -302,7 +301,7 @@ func (userD UserDeliveryRealisation) Register(rwContext echo.Context) error {
 
 	userAuthData := new(models.Register)
 
-	b , err := ioutil.ReadAll(rwContext.Request().Body)
+	b, err := ioutil.ReadAll(rwContext.Request().Body)
 	defer rwContext.Request().Body.Close()
 
 	if err != nil {

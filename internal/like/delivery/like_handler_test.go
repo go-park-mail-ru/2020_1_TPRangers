@@ -175,7 +175,6 @@ func TestLikeDelivery_DislikePost(t *testing.T) {
 
 }
 
-
 func TestLikeDelivery_LikeComment(t *testing.T) {
 
 	ctrl := gomock.NewController(t)

@@ -12,7 +12,7 @@ type PhotoSaveDeliveryRealisation struct {
 	PhotoSaveLogic photo_save.PhotoSaveUseCase
 }
 
-func (PhotoSaveD PhotoSaveDeliveryRealisation) Upload (c echo.Context) error  {
+func (PhotoSaveD PhotoSaveDeliveryRealisation) Upload(c echo.Context) error {
 	file, err := c.FormFile("fileData")
 	if err != nil {
 		return err
@@ -43,6 +43,6 @@ func NewSavePhotoDeliveryRealisation(logic photo_save.PhotoSaveUseCase) PhotoSav
 	return PhotoSaveDeliveryRealisation{PhotoSaveLogic: logic}
 }
 
-func (PhotoSaveD PhotoSaveDeliveryRealisation) InitHandler(server *echo.Echo)  {
+func (PhotoSaveD PhotoSaveDeliveryRealisation) InitHandler(server *echo.Echo) {
 	server.POST("/upload", PhotoSaveD.Upload)
 }

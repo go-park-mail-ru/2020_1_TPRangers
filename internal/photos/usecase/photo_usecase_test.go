@@ -21,23 +21,21 @@ func TestPhotoUseCaseRealisation_GetPhotosFromAlbum(t *testing.T) {
 	albumId := 1
 	phs := models.Photos{
 		AlbumName: "fuck",
-		Urls:      []string{"xd","fuck"},
+		Urls:      []string{"xd", "fuck"},
 	}
 
 	grpcPhs := phss.Photos{
-		AlbumName:            "fuck",
-		Urls:                 []string{"xd","fuck"},
-
+		AlbumName: "fuck",
+		Urls:      []string{"xd", "fuck"},
 	}
 
 	photoMicro.EXPECT().GetPhotosFromAlbum(context.Background(), &phss.AlbumId{
-		Id:                   int32(albumId),
-	}).Return(&grpcPhs,customErr)
+		Id: int32(albumId),
+	}).Return(&grpcPhs, customErr)
 
-	if ps , err := photoTest.GetPhotosFromAlbum(albumId) ; ps.AlbumName != phs.AlbumName || err != nil {
+	if ps, err := photoTest.GetPhotosFromAlbum(albumId); ps.AlbumName != phs.AlbumName || err != nil {
 		t.Error("ERROR")
 	}
-
 
 }
 
@@ -53,22 +51,20 @@ func TestPhotoUseCaseRealisation_UploadPhotoToAlbum(t *testing.T) {
 	}
 
 	grpcPhs := phss.PhotoInAlbum{
-		Url:                  "fuck",
-		AlbumID:              "2",
+		Url:     "fuck",
+		AlbumID: "2",
 	}
 
-	photoMicro.EXPECT().UploadPhotoToAlbum(context.Background(),&grpcPhs).Return(nil , nil)
+	photoMicro.EXPECT().UploadPhotoToAlbum(context.Background(), &grpcPhs).Return(nil, nil)
 	if err := photoTest.UploadPhotoToAlbum(phs); err != nil {
 		fmt.Println(err)
 		t.Error("ERROR")
 	}
 
-	photoMicro.EXPECT().UploadPhotoToAlbum(context.Background(),&grpcPhs).Return(nil , customErr)
+	photoMicro.EXPECT().UploadPhotoToAlbum(context.Background(), &grpcPhs).Return(nil, customErr)
 
 	if err := photoTest.UploadPhotoToAlbum(phs); err != errs.FailReadFromDB {
 		t.Error("ERROR")
 	}
 
 }
-
-
