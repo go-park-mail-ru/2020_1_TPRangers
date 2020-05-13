@@ -106,10 +106,10 @@ func (MR MessageRepositoryRealisation) ReceiveNewMessages(userId int) ([]models.
 		err = msgsRow.Scan(&msgId, &isGroup, &isPrivate, &userid, &msg.Time, &msg.Text, &msg.ChatName, &msg.ChatPhoto)
 
 
-		if *isGroup != int64(0) {
+		if isGroup != nil {
 			msg.ChatId = "c" + strconv.FormatInt(*isGroup,10)
 		} else {
-			if *isPrivate != int64(0) {
+			if isPrivate != nil {
 				msg.ChatId = strconv.FormatInt(*isPrivate,10)
 			}
 		}
