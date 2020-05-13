@@ -17,6 +17,9 @@ DROP TABLE IF EXISTS GroupChats CASCADE;
 DROP TABLE IF EXISTS ChatsUsers;
 DROP TABLE IF EXISTS Messages CASCADE;
 DROP TABLE IF EXISTS NewMessages;
+DROP TABLE IF EXISTS Groups;
+DROP TABLE IF EXISTS GroupsPosts;
+DROP TABLE IF EXISTS GroupsMembers;
 
 
 
@@ -41,6 +44,21 @@ CREATE TABLE Users
     password  BYTEA,
     photo_id  INT DEFAULT 1 REFERENCES Photos,
     birthdate VARCHAR(20)
+);
+
+CREATE TABLE Groups
+(
+    g_id      SERIAL PRIMARY KEY,
+    name      TEXT,
+    about     TEXT,
+    owner_id  BYTEA,
+    photo_id  INT DEFAULT 1 REFERENCES Photos
+);
+
+CREATE TABLE GroupsMembers
+(
+    g_id INT NOT NULL REFERENCES Users,
+    u_id INT NOT NULL REFERENCES Users
 );
 
 CREATE TABLE Friends
@@ -89,6 +107,13 @@ CREATE TABLE UsersPosts
 (
     u_id       INT NOT NULL REFERENCES Users,
     post_owner INT NOT NULL REFERENCES Users,
+    post_id    INT NOT NULL REFERENCES Posts
+);
+
+CREATE TABLE GroupsPosts
+(
+    g_id       INT NOT NULL REFERENCES Groups,
+    owner_of_post INT NOT NULL REFERENCES Users,
     post_id    INT NOT NULL REFERENCES Posts
 );
 

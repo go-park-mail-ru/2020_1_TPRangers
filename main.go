@@ -9,7 +9,9 @@ import (
 	"google.golang.org/grpc"
 
 	deliveryAlbum "main/internal/albums/delivery"
+	deliveryGroup "main/internal/groups/delivery"
 	repositoryAlbum "main/internal/albums/repository"
+	repositoryGroup "main/internal/groups/repository"
 	repositoryChat "main/internal/chats/repository"
 	usecaseChat "main/internal/chats/usecase"
 	deliveryFeed "main/internal/feeds/delivery"
@@ -24,6 +26,7 @@ import (
 	"os"
 
 	usecaseAlbum "main/internal/albums/usecase"
+	usecaseGroup "main/internal/groups/usecase"
 	deliveryFriends "main/internal/friends/delivery"
 	repositoryFriends "main/internal/friends/repository"
 	usecaseFriends "main/internal/friends/usecase"
@@ -45,6 +48,7 @@ type RequestHandlers struct {
 	photoHandler  deliveryPhoto.PhotoDeliveryRealisation
 	albumHandler  deliveryAlbum.AlbumDeliveryRealisation
 	friendHandler deliveryFriends.FriendDeliveryRealisation
+	groupHandler deliveryGroup.GroupDeliveryRealisation
 }
 
 func InitializeDataBases(server *echo.Echo) *sql.DB {
@@ -72,12 +76,14 @@ func NewRequestHandler(db *sql.DB, session authorMicro.SessionCheckerClient, lik
 	userDB := repositoryUser.NewUserRepositoryRealisation(db)
 	chatDB := repositoryChat.NewChatRepositoryRealisation(db)
 	albumDB := repositoryAlbum.NewAlbumRepositoryRealisation(db)
+	groupDB := repositoryGroup.NewGroupRepositoryRealisation(db)
 	friendsDB := repositoryFriends.NewFriendRepositoryRealisation(db)
 
 	photoUseCase := usecasePhoto.NewPhotoUseCaseRealisation(photos)
 	albumUseCase := usecaseAlbum.NewAlbumUseCaseRealisation(albumDB)
 	feedUseCase := usecaseFeed.NewFeedUseCaseRealisation(feedDB)
 	userUseCase := usecaseUser.NewUserUseCaseRealisation(userDB, friendsDB, feedDB, session)
+	groupUseCase := usecaseGroup.NewGroupUseCaseRealisation(groupDB, feedDB, session)
 	likesUse := usecaseLikes.NewLikeUseRealisation(likes)
 	friendsUse := usecaseFriends.NewFriendUseCaseRealisation(friendsDB)
 	chatUse := usecaseChat.NewChatUseCaseRealisation(chatDB, friendsDB)
@@ -87,6 +93,7 @@ func NewRequestHandler(db *sql.DB, session authorMicro.SessionCheckerClient, lik
 	feedH := deliveryFeed.NewFeedDelivery(logger, feedUseCase)
 	photoH := deliveryPhoto.NewPhotoDelivery(logger, photoUseCase)
 	albumH := deliveryAlbum.NewAlbumDelivery(logger, albumUseCase)
+	groupH := deliveryGroup.NewGroupDelivery(logger, groupUseCase)
 	friendH := deliveryFriends.NewFriendDelivery(logger, friendsUse, chatUse)
 
 	api := &(RequestHandlers{
@@ -97,6 +104,7 @@ func NewRequestHandler(db *sql.DB, session authorMicro.SessionCheckerClient, lik
 		feedHandler:   feedH,
 		likeHandler:   likeH,
 		friendHandler: friendH,
+		groupHandler: groupH,
 	})
 
 	return api
@@ -192,6 +200,7 @@ func main() {
 	api.photoHandler.InitHandlers(server)
 	api.albumHandler.InitHandlers(server)
 	api.friendHandler.InitHandlers(server)
+	api.groupHandler.InitHandlers(server)
 
 	port := os.Getenv("PORT")
 
