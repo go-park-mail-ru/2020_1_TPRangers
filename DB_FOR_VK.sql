@@ -51,7 +51,7 @@ CREATE TABLE Groups
     g_id      SERIAL PRIMARY KEY,
     name      TEXT,
     about     TEXT,
-    owner_id  BYTEA,
+    owner_id  INT NOT NULL REFERENCES Users,
     photo_id  INT DEFAULT 1 REFERENCES Photos
 );
 
