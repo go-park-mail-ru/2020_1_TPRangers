@@ -380,6 +380,7 @@ func (userD UserDeliveryRealisation) SearchUsers(rwContext echo.Context) error {
 	rId := rwContext.Get("REQUEST_ID").(string)
 	userId := rwContext.Get("user_id").(int)
 	valueOfSearch := rwContext.Param("value")
+	valueOfAge := rwContext.QueryParam("year")
 
 	if userId == -1 {
 		userD.logger.Debug(
@@ -390,7 +391,7 @@ func (userD UserDeliveryRealisation) SearchUsers(rwContext echo.Context) error {
 		return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: errors.CookieExpired.Error()})
 	}
 
-	jsonAnswer, err := userD.userLogic.SearchUsers(userId, valueOfSearch)
+	jsonAnswer, err := userD.userLogic.SearchUsers(userId, valueOfSearch, valueOfAge)
 
 	if err != nil {
 		userD.logger.Info(
