@@ -12,4 +12,5 @@ type GroupRepository interface {
 	GetGroupMembers(int) ([]models.FriendLandingInfo, error)
 	GetGroupFeeds(int, int) ([]models.Post, error)
 	GetUserGroupsList(int) ([]models.Group, error)
+	SearchAllGroups(int, string) ([]models.Group, error)
 }

@@ -207,6 +207,23 @@ func (Data GroupRepositoryRealisation) GetUserGroupsList(UserID int) ([]models.G
 	return groups, nil
 }
 
+func (Data GroupRepositoryRealisation) SearchAllGroups(userID int, valueOfSearch string) ([]models.Group, error) {
+	rows, err := Data.groupDB.Query("select g.g_id, g.name, g.about, ph.url from groups AS g INNER JOIN photos AS ph ON (ph.photo_id = g.photo_id)  WHERE lower(g.name) LIKE LOWER($1)", valueOfSearch + "%")
+	if err != nil {
+		return nil, err
+	}
+	groups := []models.Group{}
+	for rows.Next() {
+		group := models.Group{}
+		err = rows.Scan(&group.ID, &group.Name, &group.About, &group.PhotoUrl)
+		if err != nil {
+			return nil, errors.FailReadToVar
+		}
+		groups = append(groups, group)
+	}
+	return groups, nil
+}
+
 
 func NewGroupRepositoryRealisation(db *sql.DB) GroupRepositoryRealisation {
 	return GroupRepositoryRealisation{groupDB: db}

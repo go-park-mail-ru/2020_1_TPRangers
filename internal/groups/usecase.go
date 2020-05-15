@@ -10,6 +10,7 @@ type GroupUseCase interface {
 	GetGroupProfile(int, int) (models.GroupProfile, error)
 	GetGroupFeeds(int, int) ([]models.Post, error)
 	GetUserGroupsList(int) ([]models.Group, error)
+	SearchAllGroups(int, string) ([]models.Group, error)
 }
 
 
