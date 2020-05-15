@@ -49,11 +49,28 @@ func (groupR GroupUseCaseRealisation) GetGroupProfile(userID int, groupID int) (
 	return GroupData, nil
 }
 func (groupR GroupUseCaseRealisation) GetGroupFeeds(userID int, groupID int) ([]models.Post, error) {
-	GroupFeed, _ := groupR.groupDB.GetGroupFeeds(userID, groupID)
+	GroupFeed, err := groupR.groupDB.GetGroupFeeds(userID, groupID)
+	if err != nil {
+		return nil, err
+	}
 	return GroupFeed, nil
 }
 
+func (groupR GroupUseCaseRealisation) GetUserGroupsList(userID int) ([]models.Group, error) {
+	GroupsList, err := groupR.groupDB.GetUserGroupsList(userID)
+	if err != nil {
+		return GroupsList, err
+	}
+	return GroupsList, nil
+}
 
+func (groupR GroupUseCaseRealisation) SearchAllGroups(userID int, valueOfSearch string) ([]models.Group, error) {
+	GroupsList, err := groupR.groupDB.SearchAllGroups(userID, valueOfSearch)
+	if err != nil {
+		return GroupsList, err
+	}
+	return GroupsList, nil
+}
 func NewGroupUseCaseRealisation(groupDB groups.GroupRepository, feedDB FeedRep.FeedRepository, sessChecker sessions.SessionCheckerClient) GroupUseCaseRealisation {
 	return GroupUseCaseRealisation{
 		groupDB:   groupDB,
