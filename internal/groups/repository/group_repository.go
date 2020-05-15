@@ -144,25 +144,31 @@ func (Data GroupRepositoryRealisation) GetGroupMembers(groupID int) ([]models.Fr
 }
 
 func (Data GroupRepositoryRealisation) GetGroupFeeds(userID int, groupID int) ([]models.Post, error){
-	rows, err := Data.groupDB.Query("select  p.post_id, p.txt_data, p.attachments, p.posts_likes_count, p.creation_date, ph.url, ph.photo_id, ph.photos_likes_count, g.name from posts AS p INNER JOIN GroupsPosts AS gm ON (gm.post_id = p.post_id) INNER JOIN Groups AS g ON (g.g_id = gm.g_id) LEFT JOIN photos AS ph ON p.photo_id = ph.photo_id WHERE g.g_id = $2;", groupID)
+	rows, err := Data.groupDB.Query("select  p.post_id, p.txt_data, p.attachments, p.posts_likes_count, p.creation_date, ph.url, ph.photo_id, ph.photos_likes_count, g.name from posts AS p INNER JOIN GroupsPosts AS gm ON (gm.post_id = p.post_id) INNER JOIN Groups AS g ON (g.g_id = gm.g_id) LEFT JOIN photos AS ph ON p.photo_id = ph.photo_id WHERE g.g_id = $1;", groupID)
+
 	defer func () {
 		if rows != nil {
 			rows.Close()
 		}
 	} ()
 	if err != nil {
-		return nil, errors.FailReadFromDB
+		return nil, err
 	}
 	posts := []models.Post{}
 	for rows.Next() {
 		post := models.Post{}
-		err := rows.Scan(&post.Id, &post.Text, &post.Attachments, &post.Likes, &post.Creation,&post.Photo.Url, &post.Photo.Id, &post.Photo.Likes, &post.AuthorName, &post.AuthorUrl)
-
-		additionalRow := Data.groupDB.QueryRow("select upl.postlike_id, uphl.photolike_id from userspostslikes AS upl RIGHT JOIN posts AS p ON (p.post_id = upl.post_id) LEFT JOIN usersphotoslikes AS uphl ON (p.photo_id = uphl.photo_id) INNER JOIN groupsposts AS gp ON (gp.post_id = p.post_id) LEFT JOIN groups AS g ON (g.g_id = gp.g_id) LEFT JOIN photos AS ph ON (g.photo_id = ph.photo_id) WHERE p.post_id = $1 AND upl.u_id = $2;", post.Id, userID)
+		err := rows.Scan(&post.Id, &post.Text, &post.Attachments, &post.Likes, &post.Creation,&post.Photo.Url, &post.Photo.Id, &post.Photo.Likes, &post.AuthorName)
+		if err != nil {
+			return nil, err
+		}
 		add_row := Data.groupDB.QueryRow("select ph.url from photos AS ph INNER JOIN groups AS g ON (g.photo_id = ph.photo_id) WHERE g.g_id = $1;", groupID)
-		add_row.Scan(&post.AuthorPhoto)
+		errScan := add_row.Scan(&post.AuthorPhoto)
+		if errScan != nil {
+			return nil, err
+		}
 		var postLikes *int
 		var photoLikes *int
+		additionalRow := Data.groupDB.QueryRow("select uphl.photolike_id, upl.postlike_id from posts AS p LEFT JOIN usersphotoslikes AS uphl ON (p.photo_id = uphl.photo_id) LEFT JOIN userspostslikes AS upl ON (p.post_id = upl.post_id AND upl.u_id = $1) WHERE p.post_id = $2;", userID, post.Id)
 		additionalRow.Scan(&postLikes, &photoLikes)
 		if postLikes != nil {
 			post.WasLike = true
@@ -174,9 +180,7 @@ func (Data GroupRepositoryRealisation) GetGroupFeeds(userID int, groupID int) ([
 		} else {
 			post.Photo.WasLike = false
 		}
-		if err != nil {
-			return nil, errors.FailReadToVar
-		}
+
 		posts = append(posts, post)
 	}
 

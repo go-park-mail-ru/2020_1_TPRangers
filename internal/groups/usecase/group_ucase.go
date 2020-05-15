@@ -49,7 +49,10 @@ func (groupR GroupUseCaseRealisation) GetGroupProfile(userID int, groupID int) (
 	return GroupData, nil
 }
 func (groupR GroupUseCaseRealisation) GetGroupFeeds(userID int, groupID int) ([]models.Post, error) {
-	GroupFeed, _ := groupR.groupDB.GetGroupFeeds(userID, groupID)
+	GroupFeed, err := groupR.groupDB.GetGroupFeeds(userID, groupID)
+	if err != nil {
+		return nil, err
+	}
 	return GroupFeed, nil
 }
 
