@@ -32,7 +32,7 @@ func (Data GroupRepositoryRealisation) JoinTheGroup(userID int, groupID int) err
 func (Data GroupRepositoryRealisation) CreateGroup(userID int, groupData models.Group) error {
 	photoID := 1
 	if groupData.PhotoUrl != nil {
-		row := Data.groupDB.QueryRow("INSERT INTO Photos (url) VALUES ($1) RETURNING photo_id", groupData.PhotoUrl)
+		row := Data.groupDB.QueryRow("INSERT INTO Photos (url, photos_likes_count) VALUES ($1, $2) RETURNING photo_id", groupData.PhotoUrl, 0)
 		err := row.Scan(&photoID)
 		if err != nil {
 			return err
@@ -143,6 +143,8 @@ func (Data GroupRepositoryRealisation) GetGroupMembers(groupID int) ([]models.Fr
 	return members, nil
 }
 
+
+
 func (Data GroupRepositoryRealisation) GetGroupFeeds(userID int, groupID int) ([]models.Post, error){
 	rows, err := Data.groupDB.Query("select  p.post_id, p.txt_data, p.attachments, p.posts_likes_count, p.creation_date, ph.url, ph.photo_id, ph.photos_likes_count, g.name from posts AS p INNER JOIN GroupsPosts AS gm ON (gm.post_id = p.post_id) INNER JOIN Groups AS g ON (g.g_id = gm.g_id) LEFT JOIN photos AS ph ON p.photo_id = ph.photo_id WHERE g.g_id = $1;", groupID)
 
@@ -186,6 +188,23 @@ func (Data GroupRepositoryRealisation) GetGroupFeeds(userID int, groupID int) ([
 
 	return posts, nil
 
+}
+
+func (Data GroupRepositoryRealisation) GetUserGroupsList(UserID int) ([]models.Group, error){
+	rows, err := Data.groupDB.Query("select g.g_id, g.name, g.about, ph.url from groups AS g INNER JOIN groupsmembers AS gm ON (g.g_id = gm.g_id) INNER JOIN photos AS ph ON (ph.photo_id = g.photo_id) WHERE u_id = $1;", UserID)
+	if err != nil {
+		return nil, errors.FailReadFromDB
+	}
+	groups := []models.Group{}
+	for rows.Next() {
+		group := models.Group{}
+		err := rows.Scan(&group.ID, &group.Name, &group.About, &group.PhotoUrl)
+		if err != nil {
+			return nil, errors.FailReadToVar
+		}
+		groups = append(groups, group)
+	}
+	return groups, nil
 }
 
 

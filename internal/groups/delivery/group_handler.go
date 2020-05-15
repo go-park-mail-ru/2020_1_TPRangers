@@ -253,6 +253,39 @@ func (groupD GroupDeliveryRealisation) GetGroupFeeds(rwContext echo.Context) err
 	return rwContext.JSON(http.StatusOK, groupFeed)
 }
 
+func (groupD GroupDeliveryRealisation) GetUserGroupsList(rwContext echo.Context) error {
+	rId := rwContext.Get("REQUEST_ID").(string)
+	userId := rwContext.Get("user_id").(int)
+
+	if userId == -1 {
+		groupD.logger.Debug(
+			zap.String("ID", rId),
+			zap.String("ERROR", errors.CookieExpired.Error()),
+			zap.Int("ANSWER STATUS", http.StatusUnauthorized),
+		)
+		return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: errors.CookieExpired.Error()})
+	}
+
+	groupsList, err := groupD.groupLogic.GetUserGroupsList(userId)
+
+	if err != nil {
+		groupD.logger.Info(
+			zap.String("ID", rId),
+			zap.String("ERROR", err.Error()),
+			zap.Int("ANSWER STATUS", http.StatusNotFound),
+		)
+
+		return rwContext.JSON(http.StatusNotFound, models.JsonStruct{Err: err.Error()})
+	}
+
+	groupD.logger.Info(
+		zap.String("ID", rId),
+		zap.Int("ANSWER STATUS", http.StatusOK),
+	)
+
+	return rwContext.JSON(http.StatusOK, groupsList)
+}
+
 
 
 func NewGroupDelivery(log *zap.SugaredLogger, groupRealisation groups.GroupUseCase) GroupDeliveryRealisation {
@@ -266,6 +299,7 @@ func (groupD GroupDeliveryRealisation) InitHandlers(server *echo.Echo) {
 	server.POST("/api/v1/group/:id/post/create", groupD.CreatePostInGroup)
 	server.GET("/api/v1/group/:id/profile", groupD.GetGroupProfile)
 	server.GET("/api/v1/group/:id/feed", groupD.GetGroupFeeds)
+	server.GET("/api/v1/group/list", groupD.GetUserGroupsList)
 
 }
 

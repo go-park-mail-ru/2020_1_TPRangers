@@ -56,6 +56,13 @@ func (groupR GroupUseCaseRealisation) GetGroupFeeds(userID int, groupID int) ([]
 	return GroupFeed, nil
 }
 
+func (groupR GroupUseCaseRealisation) GetUserGroupsList(userID int) ([]models.Group, error) {
+	GroupsList, err := groupR.groupDB.GetUserGroupsList(userID)
+	if err != nil {
+		return GroupsList, err
+	}
+	return GroupsList, nil
+}
 
 func NewGroupUseCaseRealisation(groupDB groups.GroupRepository, feedDB FeedRep.FeedRepository, sessChecker sessions.SessionCheckerClient) GroupUseCaseRealisation {
 	return GroupUseCaseRealisation{
