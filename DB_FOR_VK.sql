@@ -208,7 +208,6 @@ CREATE TABLE NewMessages
 );
 
 
-
 CREATE TABLE Packs
 (
     pack_id BIGSERIAL PRIMARY KEY,

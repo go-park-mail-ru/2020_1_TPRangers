@@ -86,6 +86,8 @@ func easyjson5cadb1eDecodeMainInternalModels(in *jlexer.Lexer, out *OtherUserPro
 			}
 		case "isFriends":
 			out.IsFriends = bool(in.Bool())
+		case "isMe":
+			out.IsMe = bool(in.Bool())
 		default:
 			in.SkipRecursive()
 		}
@@ -153,6 +155,11 @@ func easyjson5cadb1eEncodeMainInternalModels(out *jwriter.Writer, in OtherUserPr
 			out.RawString(prefix)
 		}
 		out.Bool(bool(in.IsFriends))
+	}
+	{
+		const prefix string = ",\"isMe\":"
+		out.RawString(prefix)
+		out.Bool(bool(in.IsMe))
 	}
 	out.RawByte('}')
 }

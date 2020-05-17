@@ -37,6 +37,8 @@ func (userD UserDeliveryRealisation) GetUser(rwContext echo.Context) error {
 		userData, err = userD.userLogic.GetOtherUserProfileNotLogged(login)
 	}
 
+	fmt.Println(userData)
+
 	if err != nil {
 
 		userD.logger.Info(

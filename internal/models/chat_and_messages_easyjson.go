@@ -159,6 +159,8 @@ func easyjson2a129749DecodeMainInternalModels2(in *jlexer.Lexer, out *Message) {
 			out.Text = string(in.String())
 		case "time":
 			out.Time = string(in.String())
+		case "sticker":
+			out.Sticker = string(in.String())
 		case "isMe":
 			out.IsMe = bool(in.Bool())
 		default:
@@ -219,6 +221,11 @@ func easyjson2a129749EncodeMainInternalModels2(out *jwriter.Writer, in Message) 
 		const prefix string = ",\"time\":"
 		out.RawString(prefix)
 		out.String(string(in.Time))
+	}
+	if in.Sticker != "" {
+		const prefix string = ",\"sticker\":"
+		out.RawString(prefix)
+		out.String(string(in.Sticker))
 	}
 	{
 		const prefix string = ",\"isMe\":"

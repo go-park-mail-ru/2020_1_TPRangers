@@ -2,6 +2,7 @@ package repository
 
 import (
 	"database/sql"
+	"fmt"
 	_ "github.com/lib/pq"
 	"main/internal/models"
 	"main/internal/tools/errors"
@@ -177,8 +178,9 @@ func (Data UserRepositoryRealisation) UploadProfilePhoto(photoUrl string) (int, 
 func (Data UserRepositoryRealisation) GetUserProfileSettingsByLogin(login string) (models.Settings, error) {
 	user := models.Settings{}
 
-	row := Data.userDB.QueryRow("SELECT U.u_id, U.login, U.phone, U.mail, U.name, U.surname, U.birthdate , P.url FROM users U INNER JOIN photos P USING (photo_id) WHERE U.login=$1 GROUP BY U.login, U.phone, U.mail, U.name, U.surname, U.birthdate , P.url", login)
+	row := Data.userDB.QueryRow("SELECT U.u_id, U.login, U.phone, U.mail, U.name, U.surname, U.birthdate , P.url FROM users U INNER JOIN photos P USING (photo_id) WHERE U.login=$1 GROUP BY U.login, U.phone, U.mail, U.name, U.surname, U.birthdate , P.url , U.u_id", login)
 	errScan := row.Scan(&user.Id,&user.Login, &user.Telephone, &user.Email, &user.Name, &user.Surname, &user.Date, &user.Photo)
+	fmt.Println(errScan)
 	return user, errScan
 }
 

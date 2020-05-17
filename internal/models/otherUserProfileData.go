@@ -5,4 +5,5 @@ type OtherUserProfileData struct {
 	User      Settings            `json:"user,omitempty"`
 	Friends   []FriendLandingInfo `json:"friends,omitempty"`
 	IsFriends bool                `json:"isFriends"`
+	IsMe      bool                `json:"isMe"`
 }
