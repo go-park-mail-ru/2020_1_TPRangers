@@ -64,7 +64,7 @@ func (albumD AlbumDeliveryRealisation) CreateAlbum(rwContext echo.Context) error
 	}
 	albumData := new(models.AlbumReq)
 
-	b , err := ioutil.ReadAll(rwContext.Request().Body)
+	b, err := ioutil.ReadAll(rwContext.Request().Body)
 	defer rwContext.Request().Body.Close()
 
 	if err != nil {

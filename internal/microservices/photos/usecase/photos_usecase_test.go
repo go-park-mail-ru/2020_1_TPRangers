@@ -18,7 +18,7 @@ func TestPhotoUseChecker_GetPhotosFromAlbum(t *testing.T) {
 
 	id := 1
 	newId := &photos.AlbumId{
-		Id:                   int32(id),
+		Id: int32(id),
 	}
 
 	pDBMock.EXPECT().GetPhotosFromAlbum(id).Return(models.Photos{
@@ -26,7 +26,7 @@ func TestPhotoUseChecker_GetPhotosFromAlbum(t *testing.T) {
 		Urls:      nil,
 	}, nil)
 
-	if data , errs := pTest.GetPhotosFromAlbum(context.Background(),newId); data.AlbumName != "123" || data.Urls != nil || errs != nil {
+	if data, errs := pTest.GetPhotosFromAlbum(context.Background(), newId); data.AlbumName != "123" || data.Urls != nil || errs != nil {
 		t.Error("ERROR")
 	}
 }
@@ -39,8 +39,8 @@ func TestPhotoUseChecker_UploadPhotoToAlbum(t *testing.T) {
 	url := "123"
 	albumId := "123"
 	phInAlb := &photos.PhotoInAlbum{
-		Url:                  url,
-		AlbumID:              albumId,
+		Url:     url,
+		AlbumID: albumId,
 	}
 
 	pDBMock.EXPECT().UploadPhotoToAlbum(models.PhotoInAlbum{
@@ -48,7 +48,7 @@ func TestPhotoUseChecker_UploadPhotoToAlbum(t *testing.T) {
 		AlbumID: albumId,
 	}).Return(nil)
 
-	if _ , errs := pTest.UploadPhotoToAlbum(context.Background(), phInAlb); errs != nil {
+	if _, errs := pTest.UploadPhotoToAlbum(context.Background(), phInAlb); errs != nil {
 		t.Error("ERROR")
 	}
 
@@ -57,7 +57,7 @@ func TestPhotoUseChecker_UploadPhotoToAlbum(t *testing.T) {
 		AlbumID: albumId,
 	}).Return(errors.New("123"))
 
-	if _ , errs := pTest.UploadPhotoToAlbum(context.Background(), phInAlb); errs != errors2.FailReadFromDB{
+	if _, errs := pTest.UploadPhotoToAlbum(context.Background(), phInAlb); errs != errors2.FailReadFromDB {
 		t.Error("ERROR")
 	}
 }

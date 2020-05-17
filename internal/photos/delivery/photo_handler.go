@@ -72,7 +72,7 @@ func (photoD PhotoDeliveryRealisation) UploadPhotoToAlbum(rwContext echo.Context
 		return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: errors.CookieExpired.Error()})
 	}
 
-	b , err := ioutil.ReadAll(rwContext.Request().Body)
+	b, err := ioutil.ReadAll(rwContext.Request().Body)
 	defer rwContext.Request().Body.Close()
 
 	if err != nil {

@@ -24,7 +24,7 @@ func (Data UserRepositoryRealisation) SearchUsers(userID int, valueOfSearch stri
 		nameOrSurname := arrayOfvalue[0]
 		SurnameOrName := arrayOfvalue[1]
 
-		rows, err := Data.userDB.Query("SELECT u.name, u.surname, u.login, ph.url FROM users AS u INNER JOIN photos AS ph ON (u.photo_id = ph.photo_id)  WHERE u.u_id != $3 AND ((lower(u.name) LIKE LOWER($1) AND lower(u.surname) LIKE LOWER($2)) OR (lower(u.name) LIKE LOWER($2) AND lower(u.surname) LIKE LOWER($1)));", nameOrSurname + "%", SurnameOrName + "%", userID)
+		rows, err := Data.userDB.Query("SELECT u.name, u.surname, u.login, ph.url FROM users AS u INNER JOIN photos AS ph ON (u.photo_id = ph.photo_id)  WHERE u.u_id != $3 AND ((lower(u.name) LIKE LOWER($1) AND lower(u.surname) LIKE LOWER($2)) OR (lower(u.name) LIKE LOWER($2) AND lower(u.surname) LIKE LOWER($1)));", nameOrSurname+"%", SurnameOrName+"%", userID)
 
 		if err != nil {
 			return nil, errors.FailReadFromDB
@@ -40,7 +40,7 @@ func (Data UserRepositoryRealisation) SearchUsers(userID int, valueOfSearch stri
 
 	} else {
 
-		rows, err := Data.userDB.Query("SELECT u.name, u.surname, u.login, ph.url FROM users AS u INNER JOIN photos AS ph ON (u.photo_id = ph.photo_id)  WHERE u.u_id != $2 AND ((lower(u.name) LIKE LOWER($1)) OR (lower(u.surname) LIKE LOWER($1)));", valueOfSearch + "%", userID)
+		rows, err := Data.userDB.Query("SELECT u.name, u.surname, u.login, ph.url FROM users AS u INNER JOIN photos AS ph ON (u.photo_id = ph.photo_id)  WHERE u.u_id != $2 AND ((lower(u.name) LIKE LOWER($1)) OR (lower(u.surname) LIKE LOWER($1)));", valueOfSearch+"%", userID)
 
 		if err != nil {
 			return nil, errors.FailReadFromDB

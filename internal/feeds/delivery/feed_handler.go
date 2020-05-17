@@ -74,7 +74,7 @@ func (feedD FeedDeliveryRealisation) CreatePost(rwContext echo.Context) error {
 		return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: errors.CookieExpired.Error()})
 	}
 
-	b , err := ioutil.ReadAll(rwContext.Request().Body)
+	b, err := ioutil.ReadAll(rwContext.Request().Body)
 	defer rwContext.Request().Body.Close()
 
 	if err != nil {
@@ -133,7 +133,7 @@ func (feedD FeedDeliveryRealisation) CreateComment(rwContext echo.Context) error
 	}
 	newComment := new(models.Comment)
 
-	b , err := ioutil.ReadAll(rwContext.Request().Body)
+	b, err := ioutil.ReadAll(rwContext.Request().Body)
 	defer rwContext.Request().Body.Close()
 
 	if err != nil {

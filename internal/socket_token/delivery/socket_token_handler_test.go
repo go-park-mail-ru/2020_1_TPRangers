@@ -30,7 +30,7 @@ func TestTokenDelivery_TokenSetup(t *testing.T) {
 	for iter, _ := range usersId {
 
 		if expectedBehaviour[iter] != http.StatusUnauthorized {
-			tokenUseMock.EXPECT().CreateNewToken(usersId[iter]).Return("HAHA" ,errs[iter])
+			tokenUseMock.EXPECT().CreateNewToken(usersId[iter]).Return("HAHA", errs[iter])
 		}
 
 		e := echo.New()
