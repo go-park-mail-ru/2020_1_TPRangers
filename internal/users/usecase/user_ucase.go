@@ -25,8 +25,8 @@ func CheckPassword(plainPass string, hashPass []byte) bool {
 	return bytes.Equal(hashPass, checkPass)
 }
 
-func (userR UserUseCaseRealisation) SearchUsers(userID int, searchOfValue string) ([]models.Person, error) {
-	sendData, err := userR.userDB.SearchUsers(userID, searchOfValue)
+func (userR UserUseCaseRealisation) SearchUsers(userID int, searchOfValue string, age string) ([]models.Person, error) {
+	sendData, err := userR.userDB.SearchUsers(userID, searchOfValue, age)
 
 	return sendData, err
 }

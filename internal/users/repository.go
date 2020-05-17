@@ -16,5 +16,5 @@ type UserRepository interface {
 	IsUserExist(string) (bool, error)
 	GetUserLoginById(int) (string, error)
 	AddNewUser(models.User) error
-	SearchUsers(int, string) ([]models.Person, error)
+	SearchUsers(int, string, string) ([]models.Person, error)
 }
