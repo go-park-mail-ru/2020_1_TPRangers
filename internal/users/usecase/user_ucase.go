@@ -44,6 +44,7 @@ func (userR UserUseCaseRealisation) GetOtherUserProfileNotLogged(userLogin strin
 	var err error
 
 	sendData.User, err = userR.userDB.GetUserProfileSettingsByLogin(userLogin)
+	sendData.User.IsMe = false
 
 	if err != nil {
 		return *sendData, errors.NotExist
@@ -62,6 +63,11 @@ func (userR UserUseCaseRealisation) GetUserProfileWhileLogged(otherUserLogin str
 	var err error
 
 	sendData.User, err = userR.userDB.GetUserProfileSettingsByLogin(otherUserLogin)
+	sendData.User.IsMe = false
+
+	if sendData.User.Id != currentUserId {
+		sendData.User.IsMe = true
+	}
 
 	if err != nil {
 		return *sendData, errors.NotExist

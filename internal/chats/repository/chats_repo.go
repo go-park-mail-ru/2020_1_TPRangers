@@ -148,8 +148,6 @@ func (CR ChatRepositoryRealisation) GetPrivateChatMessages(chatId int64, userId 
 		var stickerLink *string
 		err := msgQuery.Scan(&uId, &msg.Text, &msg.Time, &msg.AuthorName, &msg.AuthorSurname, &msg.AuthorUrl, &msg.AuthorPhoto, &stickerLink)
 
-
-
 		if err != nil {
 			return models.ChatInfo{}, nil, err
 		}
@@ -199,9 +197,7 @@ func (CR ChatRepositoryRealisation) GetGroupChatMessages(chatId int64, userId in
 		msg := new(models.Message)
 
 		var stickerLink *string
-		err := msgQuery.Scan(&uId, &msg.Text, &msg.Time, &msg.AuthorName, &msg.AuthorSurname, &msg.AuthorUrl, &msg.AuthorPhoto ,&stickerLink)
-
-
+		err := msgQuery.Scan(&uId, &msg.Text, &msg.Time, &msg.AuthorName, &msg.AuthorSurname, &msg.AuthorUrl, &msg.AuthorPhoto, &stickerLink)
 
 		if err != nil {
 			return models.ChatInfo{}, nil, err

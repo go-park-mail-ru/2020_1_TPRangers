@@ -90,7 +90,7 @@ func (Sticker StickerRepoRealisation) UploadStickerPack(authorId int, pack model
 		rowValues += ") "
 
 		stickerRow := Sticker.database.QueryRow(insert+rowValues+returningString, stickValues...)
-		fmt.Println(insert+rowValues+returningString , stickValues)
+		fmt.Println(insert+rowValues+returningString, stickValues)
 
 		var stickerId *int64
 
@@ -101,7 +101,7 @@ func (Sticker StickerRepoRealisation) UploadStickerPack(authorId int, pack model
 			return err
 		}
 
-		_ , err := Sticker.database.Exec("INSERT INTO PackStickers (stick_id,pack_id) VALUES($1,$2)", *stickerId , packId)
+		_, err := Sticker.database.Exec("INSERT INTO PackStickers (stick_id,pack_id) VALUES($1,$2)", *stickerId, packId)
 
 		if err != nil {
 			fmt.Println("[DEBUG] error at inserting stickers to stickerpack:", err)

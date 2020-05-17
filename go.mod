@@ -14,6 +14,7 @@ require (
 	github.com/gobwas/ws v1.0.3
 	github.com/golang/mock v1.4.3
 	github.com/golang/protobuf v1.4.0
+	github.com/golangci/golangci-lint v1.27.0 // indirect
 	github.com/gomodule/redigo v2.0.0+incompatible
 	github.com/joho/godotenv v1.3.0
 	github.com/labstack/echo v3.3.10+incompatible
@@ -22,17 +23,13 @@ require (
 	github.com/mailru/easygo v0.0.0-20190618140210-3c14a0dc985f
 	github.com/mailru/easyjson v0.7.1
 	github.com/nitishm/go-rejson v2.0.0+incompatible
-	github.com/onsi/ginkgo v1.10.1 // indirect
-	github.com/onsi/gomega v1.7.0 // indirect
 	github.com/pkg/errors v0.8.1
 	github.com/prometheus/client_golang v1.6.0
 	github.com/satori/go.uuid v1.2.0
-	github.com/stretchr/testify v1.4.0
+	github.com/stretchr/testify v1.5.1
 	github.com/yuin/gopher-lua v0.0.0-20191220021717-ab39c6098bdb // indirect
 	go.uber.org/zap v1.14.1
-	golang.org/x/crypto v0.0.0-20190510104115-cbcb75029529
-	golang.org/x/net v0.0.0-20190923162816-aa69164e4478 // indirect
+	golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550
 	golang.org/x/text v0.3.2 // indirect
 	google.golang.org/grpc v1.29.1
-	gopkg.in/yaml.v2 v2.2.7 // indirect
 )
