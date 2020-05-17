@@ -13,9 +13,9 @@ type GroupRepositoryRealisation struct {
 
 func (Data GroupRepositoryRealisation) LeaveTheGroup(userID int, groupID int) error {
 
-	_, err := Data.groupDB.Exec("DELETE FROM GroupsMembers WHERE u_id = 1$ AND g_id = $2", userID, groupID)
+	_, err := Data.groupDB.Exec("DELETE FROM GroupsMembers WHERE u_id = $1 AND g_id = $2", userID, groupID)
 	if err != nil {
-		return errors.FailSendToDB
+		return err
 	}
 	return nil
 }
