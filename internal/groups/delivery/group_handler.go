@@ -326,7 +326,7 @@ func NewGroupDelivery(log *zap.SugaredLogger, groupRealisation groups.GroupUseCa
 
 func (groupD GroupDeliveryRealisation) InitHandlers(server *echo.Echo) {
 	server.POST("/api/v1/group/:id/join", groupD.JoinTheGroup)
-	server.DELETE("/api/v1/group/:id/leave", groupD.LeaveTheGroup)
+	server.DELETE("/api/v1/group/:id/join", groupD.LeaveTheGroup)
 	server.POST("/api/v1/group/create", groupD.CreateGroup)
 	server.POST("/api/v1/group/:id/post/create", groupD.CreatePostInGroup)
 	server.GET("/api/v1/group/:id/profile", groupD.GetGroupProfile)
