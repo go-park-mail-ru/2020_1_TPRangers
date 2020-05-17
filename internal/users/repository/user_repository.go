@@ -40,8 +40,8 @@ func (Data UserRepositoryRealisation) SearchUsers(userID int, valueOfSearch stri
 				if err != nil {
 					return nil, errors.FailReadToVar
 				}
-				newBirthDate := strings.Split(*birthdate, ".")
-				newYear := newBirthDate[2]
+				newBirthDate := strings.Split(*birthdate, "-")
+				newYear := newBirthDate[0]
 
 
 				if newYear == age{
@@ -81,8 +81,8 @@ func (Data UserRepositoryRealisation) SearchUsers(userID int, valueOfSearch stri
 				if err != nil {
 					return nil, errors.FailReadToVar
 				}
-				newBirthDate := strings.Split(*birthdate, ".")
-				newYear := newBirthDate[2]
+				newBirthDate := strings.Split(*birthdate, "-")
+				newYear := newBirthDate[0]
 				if newYear == age {
 					persons = append(persons, person)
 				}
