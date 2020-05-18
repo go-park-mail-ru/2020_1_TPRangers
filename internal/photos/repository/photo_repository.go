@@ -1,4 +1,4 @@
-package repository
+	package repository
 
 import (
 	"database/sql"
@@ -75,9 +75,6 @@ func (Data PhotoRepositoryRealisation) GetPhotosFromAlbum(albumID int) (models.P
 	photosAlb.Urls = phUrls
 	row, err := Data.photoDB.Query("select name from albums where album_id = $1;", albumID)
 	err = row.Scan(&photosAlb.AlbumName)
-	if err != nil {
-		return models.Photos{}, nil
-	}
 
-	return photosAlb, nil
+	return photosAlb, err
 }

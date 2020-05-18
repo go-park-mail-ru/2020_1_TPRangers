@@ -205,7 +205,7 @@ func (userR UserUseCaseRealisation) Register(userData models.Register) (string, 
 		Date:     userData.Date,
 	})
 
-	if cookie == nil {
+	if cookie == nil || err != nil {
 		return "", err
 	}
 

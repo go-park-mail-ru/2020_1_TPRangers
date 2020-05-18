@@ -52,7 +52,6 @@ func (MR MessageRepositoryRealisation) AddNewMessage(author int, message models.
 		msgRow = MR.messageDB.QueryRow("INSERT INTO Messages ("+groupType+"_id,u_id,txt,send_time) VALUES($1,$2,$3,$4) RETURNING msg_id", chat, author, message.Text, time.Now())
 	} else {
 		msgRow = MR.messageDB.QueryRow("INSERT INTO Messages ("+groupType+"_id,u_id,txt,send_time,sticker_link) VALUES($1,$2,$3,$4,$5) RETURNING msg_id", chat, author, message.Text, time.Now(), message.Sticker)
-
 	}
 
 	msgId := 0

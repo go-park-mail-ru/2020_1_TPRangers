@@ -98,7 +98,11 @@ func (AU AuthorizationUseCaseRealisation) CreateNewUser(ctx context.Context, use
 		Photo:           defaultPhotoId,
 	}
 
-	AU.userDB.AddNewUser(data)
+	err := AU.userDB.AddNewUser(data)
+
+	if err != nil {
+		return nil, errors.FailReadFromDB
+	}
 
 	id, err := AU.userDB.GetIdByEmail(email)
 
