@@ -73,8 +73,8 @@ func (Data PhotoRepositoryRealisation) GetPhotosFromAlbum(albumID int) (models.P
 		phUrls = append(phUrls, phUrl)
 	}
 	photosAlb.Urls = phUrls
-	row, err := Data.photoDB.Query("select name from albums where album_id = $1;", albumID)
-	err = row.Scan(&photosAlb.AlbumName)
+	res := Data.photoDB.QueryRow("select name from albums where album_id = $1;", albumID)
+	err = res.Scan(&photosAlb.AlbumName)
 	if err != nil {
 		return models.Photos{}, nil
 	}
