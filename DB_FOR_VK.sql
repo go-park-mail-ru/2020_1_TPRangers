@@ -63,7 +63,7 @@ CREATE TABLE Groups
 
 CREATE TABLE GroupsMembers
 (
-    g_id INT NOT NULL REFERENCES Users,
+    g_id INT NOT NULL,
     u_id INT NOT NULL REFERENCES Users
 );
 

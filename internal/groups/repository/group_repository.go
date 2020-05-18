@@ -13,9 +13,9 @@ type GroupRepositoryRealisation struct {
 
 func (Data GroupRepositoryRealisation) LeaveTheGroup(userID int, groupID int) error {
 
-	_, err := Data.groupDB.Exec("DELETE FROM GroupsMembers WHERE u_id = 1$ AND g_id = $2", userID, groupID)
+	_, err := Data.groupDB.Exec("DELETE FROM GroupsMembers WHERE u_id = $1 AND g_id = $2", userID, groupID)
 	if err != nil {
-		return errors.FailSendToDB
+		return err
 	}
 	return nil
 }
@@ -47,7 +47,7 @@ func (Data GroupRepositoryRealisation) CreateGroup(userID int, groupData models.
 	}
 	_, err = Data.groupDB.Exec("INSERT INTO GroupsMembers (g_id, u_id) VALUES ($1, $2);", groupID, userID)
 	if err != nil {
-		return errors.FailSendToDB
+		return err
 	}
 	return nil
 }
@@ -171,7 +171,7 @@ func (Data GroupRepositoryRealisation) GetGroupFeeds(userID int, groupID int) ([
 		var postLikes *int
 		var photoLikes *int
 		additionalRow := Data.groupDB.QueryRow("select uphl.photolike_id, upl.postlike_id from posts AS p LEFT JOIN usersphotoslikes AS uphl ON (p.photo_id = uphl.photo_id) LEFT JOIN userspostslikes AS upl ON (p.post_id = upl.post_id AND upl.u_id = $1) WHERE p.post_id = $2;", userID, post.Id)
-		additionalRow.Scan(&postLikes, &photoLikes)
+		additionalRow.Scan(&photoLikes, &postLikes)
 		if postLikes != nil {
 			post.WasLike = true
 		} else {

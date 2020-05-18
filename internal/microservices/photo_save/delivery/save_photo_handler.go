@@ -35,7 +35,7 @@ func (PhotoSaveD PhotoSaveDeliveryRealisation) Upload(c echo.Context) error {
 	path := os.Getenv("UPLOAD_PATH")
 	response.Message = "Файл загружен"
 	response.Filename = path + filename
-
+	c.Response().Header().Set("Access-Control-Allow-Credentials", "true")
 	return c.JSON(http.StatusOK, response)
 }
 

@@ -31,7 +31,7 @@ func main() {
 	server := echo.New()
 
 	server.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: []string{"http://localhost", "https://social-hub.ru"},
+		AllowOrigins: []string{"http://localhost:3000", "https://social-hub.ru"},
 		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
 	}))
 	server.Use(middleware.Logger())
