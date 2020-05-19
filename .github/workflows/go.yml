@@ -1,4 +1,4 @@
-name: Go
+name: CI/CD of social-hub.ru
 
 on:
   push:
@@ -29,30 +29,44 @@ jobs:
       working-directory: ${{env.working-directory}}    
   
 
-#   build:
-#     name: Build
-#     runs-on: ubuntu-latest
-#     steps:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
 
-#     - name: Set up Go 1.x
-#       uses: actions/setup-go@v2.0.3
-#       with:
-#         go-version: ^1.13
-#       id: go
+    - name: Set up Go 1.x
+      uses: actions/setup-go@v2.0.3
+      with:
+        go-version: ^1.13
+      id: go
 
-#     - name: Check out code into the Go module directory
-#       uses: actions/checkout@v2
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v2
 
-#     - name: Get dependencies
-#       run: |
-#         go get -v -t -d ./...
-#         if [ -f Gopkg.toml ]; then
-#             curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-#             dep ensure
-#         fi
+    - name: Get dependencies
+      run: |
+        go get -v -t -d ./...
+        if [ -f Gopkg.toml ]; then
+            curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+            dep ensure
+        fi
 
-#     - name: Build
-#       run: go build -v .
+    - name: Build main server
+      run: go build -v main.go
+      
+    - name: Build main authorization microserver
+      run: go build -v internal/cmd/authorization/authorization.go 
+      
+    - name: Build main chat microserver
+      run: go build -v internal/cmd/chats/chats.go 
+      
+    - name: Build main like microserver
+      run: go build -v internal/cmd/likes/likes.go 
 
-#     - name: Test
-#       run: go test -v .
+    - name: Build main photo microserver
+      run: go build -v internal/cmd/photos/photos.go       
+    
+    - name: Build main photosaver microserver
+      run: go build -v internal/cmd/photo_save/photo_save.go 
+
+      
