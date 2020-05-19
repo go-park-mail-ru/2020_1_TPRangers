@@ -78,6 +78,11 @@ jobs:
       run: go build -v internal/cmd/photo_save/photo_save.go && cp photo_save deploy/ && cp internal/cmd/photo_save/photo_save_micro.env deploy/
     - name: ls of deploy
       run: cd deploy/ && ls  
+    - name: Upload build result
+      uses: actions/upload-artifact@v1
+      with:
+        name: deploy
+        path: deploy/  
 
   Deploy:
     name: Deploy  
