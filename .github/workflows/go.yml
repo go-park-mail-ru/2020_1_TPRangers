@@ -7,7 +7,7 @@ on:
     branches: [ fe/rk_4_tests_usecase_66 , develop ]
 
 jobs:  
-  test:
+  Test:
     runs-on: ubuntu-latest
     env: 
       working-directory: ./internal
