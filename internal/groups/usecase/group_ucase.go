@@ -71,6 +71,7 @@ func (groupR GroupUseCaseRealisation) SearchAllGroups(userID int, valueOfSearch 
 	}
 	return GroupsList, nil
 }
+
 func NewGroupUseCaseRealisation(groupDB groups.GroupRepository, feedDB FeedRep.FeedRepository, sessChecker sessions.SessionCheckerClient) GroupUseCaseRealisation {
 	return GroupUseCaseRealisation{
 		groupDB:   groupDB,
