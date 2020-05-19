@@ -16,6 +16,10 @@ jobs:
         go-version: ^1.13
     - name: Checkout code
       uses: actions/checkout@v2
+    - name: ls output
+      run: ls -a   
+    - name: Cd into internal
+      run: cd /internal/ 
     - name: Test
       run: go test -coverpkg=./... -coverprofile=cover ./...
     - name: Getting cover profile
