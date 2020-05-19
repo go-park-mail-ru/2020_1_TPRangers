@@ -54,25 +54,31 @@ jobs:
             curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
             dep ensure
         fi
+    
+    - name: mk deploy dir
+      run: mkdir deploy
 
     - name: Build main server
-      run: go build -v main.go
+      run: go build -v main.go && cp main deploy/ && cp project.env deploy/
       
     - name: Build main authorization microserver
-      run: go build -v internal/cmd/authorization/authorization.go 
+      run: go build -v internal/cmd/authorization/authorization.go  && cp authorization deploy/ && cp internal/cmd/authorization/author_micro.env deploy/
       
     - name: Build main chat microserver
-      run: go build -v internal/cmd/chats/chats.go 
+      run: go build -v internal/cmd/chats/chats.go && cp chats deploy/ && cp internal/cmd/chats/chat_micro.env deploy/
       
     - name: Build main like microserver
-      run: go build -v internal/cmd/likes/likes.go 
+      run: go build -v internal/cmd/likes/likes.go && cp likes deploy/ && cp internal/cmd/likes/like_micro.env deploy/
 
     - name: Build main photo microserver
-      run: go build -v internal/cmd/photos/photos.go       
+      run: go build -v internal/cmd/photos/photos.go && cp photos deploy/ && cp internal/cmd/photos/photo_micro.env deploy/     
     
     - name: Build main photosaver microserver
-      run: go build -v internal/cmd/photo_save/photo_save.go
-    - name: ls of dir
-      run: ls -a
+      run: go build -v internal/cmd/photo_save/photo_save.go && cp photo_save deploy/ && cp internal/cmd/photo_save/photo_save_micro.env deploy/
+    - name: ls of deploy
+      run: cd deploy/ && la  
+    
+      
+      
 
       
