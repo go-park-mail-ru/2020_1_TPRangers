@@ -37,7 +37,7 @@ jobs:
 #   Build:
 #     name: Build
 #     runs-on: ubuntu-latest
-#     steps:
+#     steps:sudo passwd root
 
 #     - name: Set up Go 1.x
 #       uses: actions/setup-go@v2.0.3
@@ -102,7 +102,7 @@ jobs:
         with:
            host: ${{ secrets.HOST }}
            username: ${{ secrets.USER }}
-           password: ''
+           password: '000000'
            script: whoami
 
 #       - name: Starting deploy
