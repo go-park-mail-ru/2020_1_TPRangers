@@ -32,9 +32,18 @@ func (photoD PhotoDeliveryRealisation) GetPhotosFromAlbum(rwContext echo.Context
 		return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: errors.CookieExpired.Error()})
 	}
 
-	a_id, err := strconv.ParseInt(rwContext.Param("id"), 10, 32)
+	aId, err := strconv.ParseInt(rwContext.Param("id"), 10, 32)
+	if err != nil {
+		photoD.logger.Info(
+			zap.String("ID", uId),
+			zap.String("ERROR", err.Error()),
+			zap.Int("ANSWER STATUS", http.StatusConflict),
+		)
 
-	photos, err := photoD.photoLogic.GetPhotosFromAlbum(int(a_id))
+		return rwContext.NoContent(http.StatusConflict)
+	}
+
+	photos, err := photoD.photoLogic.GetPhotosFromAlbum(int(aId))
 
 	if err != nil {
 		photoD.logger.Info(

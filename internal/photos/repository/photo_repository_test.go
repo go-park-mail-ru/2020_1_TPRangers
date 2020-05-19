@@ -56,6 +56,9 @@ func TestPhotoRepositoryRealisation_UploadPhotoToAlbum(t *testing.T) {
 		}
 		mock.ExpectCommit()
 		tx, err := db.Begin()
+		if err != nil {
+			return
+		}
 		err = lRepo.UploadPhotoToAlbum(photoInAlb)
 
 		if err != expectBehavior[iter] {
@@ -106,8 +109,14 @@ func TestPhotoRepositoryRealisation_GetPhotosFromAlbum(t *testing.T) {
 		switch err {
 		case nil:
 			err = tx.Commit()
+			if err != nil {
+				return
+			}
 		default:
-			tx.Rollback()
+			err = tx.Rollback()
+			if err != nil {
+				return
+			}
 		}
 	}
 }

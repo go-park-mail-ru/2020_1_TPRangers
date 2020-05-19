@@ -36,6 +36,9 @@ func TestFriendRepositoryRealisation_AddFriend(t *testing.T) {
 		mock.ExpectCommit()
 
 		tx, err := db.Begin()
+		if err != nil {
+			return
+		}
 		err = fRepo.AddFriend(firstFriend[iter], secondFriend[iter])
 
 		if err != expectBehaviour[iter] {
@@ -47,8 +50,14 @@ func TestFriendRepositoryRealisation_AddFriend(t *testing.T) {
 		switch err {
 		case nil:
 			err = tx.Commit()
+			if err != nil {
+				return
+			}
 		default:
-			tx.Rollback()
+			err = tx.Rollback()
+			if err != nil {
+				return
+			}
 		}
 
 	}
@@ -89,8 +98,14 @@ func TestFriendRepositoryRealisation_DeleteFriend(t *testing.T) {
 		switch err {
 		case nil:
 			err = tx.Commit()
+			if err != nil {
+				return
+			}
 		default:
-			tx.Rollback()
+			err = tx.Rollback()
+			if err != nil {
+				return
+			}
 		}
 
 	}
@@ -342,7 +357,7 @@ func TestFriendRepositoryRealisation_GetUserFriendsByLogin(t *testing.T) {
 				if errs[iter] != nil {
 					mock.ExpectQuery(`  select name, url , login from friends F inner join users U on F\.f_id\=U\.u_id INNER JOIN photos P ON U\.photo_id\=P\.photo_id WHERE F\.u_id\=\$1 GROUP BY F\.u_id,F\.f_id,U\.u_id,P\.photo_id LIMIT \$2   `).WithArgs(id, rowsNumber).WillReturnRows(sqlmock.NewRows([]string{"name", "url", "login"}).AddRow(nil, "2", "3").AddRow(1, "2", "3").RowError(1, errs[iter]))
 				} else {
-					userFriends := make([]models.FriendLandingInfo, 6, 6)
+					userFriends := make([]models.FriendLandingInfo, 6)
 					row := sqlmock.NewRows([]string{"name", "url", "login"})
 					for i := 0; i < rowsNumber; i++ {
 						uniqueLogin := uuid.NewV4()

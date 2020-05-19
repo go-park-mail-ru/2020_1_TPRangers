@@ -6,8 +6,8 @@ type Comment struct {
 	Text          string `json:"text,omitempty"`
 	Photo         Photo  `json:"photo"`
 	Attachments   string `json:"attachments,omitempty"`
-	Likes         int    `json:"likes, omitempty"`
-	WasLike       bool   `json:"wasLike, omitempty"`
+	Likes         int    `json:"likes,omitempty"`
+	WasLike       bool   `json:"wasLike,omitempty"`
 	Creation      string `json:"date,omitempty"`
 	AuthorName    string `json:"authorName,omitempty"`
 	AuthorSurname string `json:"authorSurname,omitempty"`

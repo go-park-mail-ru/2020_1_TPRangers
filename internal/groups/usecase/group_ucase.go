@@ -35,7 +35,7 @@ func (groupR GroupUseCaseRealisation) CreatePostInGroup(userID int, groupID int,
 	if err != nil {
 		return err
 	}
-	if isUserHavePermission == true {
+	if isUserHavePermission {
 		return groupR.groupDB.CreatePostInGroup(userID, groupID, newPost)
 	}
 	return errors.DontHavePermission

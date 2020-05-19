@@ -28,8 +28,11 @@ func NewMessageRepositoryRealisation(addr, pass string, db *sql.DB) MessageRepos
 func (MR MessageRepositoryRealisation) AddNewMessage(author int, message models.Message) error {
 
 	chat := int64(0)
-	groupType := "gch"
+	var groupType string
 	err := errors.New("")
+	if err != nil {
+		return err
+	}
 
 	if message.ChatId[:1] != "c" {
 		chat, err = strconv.ParseInt(message.ChatId, 10, 64)
@@ -76,6 +79,9 @@ func (MR MessageRepositoryRealisation) AddNewMessage(author int, message models.
 		reciever := 0
 
 		err = recRows.Scan(&reciever)
+		if err != nil {
+			return err
+		}
 		_, err = MR.messageDB.Exec("INSERT INTO NewMessages (msg_id,receiver_id) VALUES($1,$2)", msgId, reciever)
 
 	}
@@ -128,7 +134,10 @@ func (MR MessageRepositoryRealisation) ReceiveNewMessages(userId int) ([]models.
 			return nil, err
 		}
 
-		MR.messageDB.Exec("DELETE FROM NewMessages WHERE msg_id = $1 AND receiver_id = $2", msgId, userId)
+		_, err = MR.messageDB.Exec("DELETE FROM NewMessages WHERE msg_id = $1 AND receiver_id = $2", msgId, userId)
+		if err != nil {
+			return nil, err
+		}
 
 		msgsArray = append(msgsArray, *msg)
 

@@ -32,6 +32,9 @@ func (userD UserDeliveryRealisation) GetUser(rwContext echo.Context) error {
 
 	if userId != -1 {
 		userData, err = userD.userLogic.GetUserProfileWhileLogged(login, userId)
+		if err != nil {
+			return err
+		}
 		userData.IsFriends, err = userD.userLogic.CheckFriendship(userId, login)
 	} else {
 		userData, err = userD.userLogic.GetOtherUserProfileNotLogged(login)

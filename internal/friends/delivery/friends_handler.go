@@ -59,6 +59,9 @@ func (userD FriendDeliveryRealisation) GetMainUserFriends(rwContext echo.Context
 	}
 
 	login, err := userD.friendLogic.GetUserLoginById(userId)
+	if err != nil {
+		return err
+	}
 	friendList, err := userD.friendLogic.GetAllFriends(login)
 
 	if err != nil {
@@ -99,7 +102,16 @@ func (userD FriendDeliveryRealisation) AddFriend(rwContext echo.Context) error {
 
 	friendLogin := rwContext.Param("id")
 	err := userD.friendLogic.AddFriend(userId, friendLogin)
-	userD.chatLogic.CreateChat(models.NewChatUsers{
+	if err != nil {
+		userD.logger.Info(
+			zap.String("ID", uId),
+			zap.String("ERROR", err.Error()),
+			zap.Int("ANSWER STATUS", http.StatusConflict),
+		)
+
+		return rwContext.NoContent(http.StatusConflict)
+	}
+	err = userD.chatLogic.CreateChat(models.NewChatUsers{
 		ChatPhoto:  "",
 		ChatName:   "",
 		UsersLogin: []string{friendLogin},

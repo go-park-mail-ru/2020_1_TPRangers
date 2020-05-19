@@ -95,8 +95,14 @@ func (Data GroupRepositoryRealisation) CreatePostInGroup(userID int, groupID int
 		return err
 	}
 
-	Data.groupDB.Exec("INSERT INTO GroupsPosts (g_id, owner_of_post, post_id) VALUES($1, $2, $3)", groupID, userID, postID)
-	Data.groupDB.Exec("INSERT INTO PostsAuthor (u_id, post_id) VALUES($1, $2)", userID, postID)
+	_, err = Data.groupDB.Exec("INSERT INTO GroupsPosts (g_id, owner_of_post, post_id) VALUES($1, $2, $3)", groupID, userID, postID)
+	if err != nil {
+		return err
+	}
+	_, err = Data.groupDB.Exec("INSERT INTO PostsAuthor (u_id, post_id) VALUES($1, $2)", userID, postID)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -117,7 +123,10 @@ func (Data GroupRepositoryRealisation) GetGroupProfile(userID int, groupID int) 
 	}
 	var userJoined *int
 	joinInfo := Data.groupDB.QueryRow("SELECT u_id FROM GroupsMembers WHERE g_id = $1 AND u_id = $2;", groupID, userID)
-	joinInfo.Scan(&userJoined)
+	err = joinInfo.Scan(&userJoined)
+	if err != nil {
+		return models.GroupProfile{}, err
+	}
 	if userJoined != nil {
 		groupProfile.IsJoined = true
 	} else {
@@ -163,15 +172,18 @@ func (Data GroupRepositoryRealisation) GetGroupFeeds(userID int, groupID int) ([
 		if err != nil {
 			return nil, err
 		}
-		add_row := Data.groupDB.QueryRow("select ph.url from photos AS ph INNER JOIN groups AS g ON (g.photo_id = ph.photo_id) WHERE g.g_id = $1;", groupID)
-		errScan := add_row.Scan(&post.AuthorPhoto)
+		addRow := Data.groupDB.QueryRow("select ph.url from photos AS ph INNER JOIN groups AS g ON (g.photo_id = ph.photo_id) WHERE g.g_id = $1;", groupID)
+		errScan := addRow.Scan(&post.AuthorPhoto)
 		if errScan != nil {
 			return nil, err
 		}
 		var postLikes *int
 		var photoLikes *int
 		additionalRow := Data.groupDB.QueryRow("select uphl.photolike_id, upl.postlike_id from posts AS p LEFT JOIN usersphotoslikes AS uphl ON (p.photo_id = uphl.photo_id) LEFT JOIN userspostslikes AS upl ON (p.post_id = upl.post_id AND upl.u_id = $1) WHERE p.post_id = $2;", userID, post.Id)
-		additionalRow.Scan(&photoLikes, &postLikes)
+		err = additionalRow.Scan(&photoLikes, &postLikes)
+		if err != nil {
+			return nil, err
+		}
 		if postLikes != nil {
 			post.WasLike = true
 		} else {

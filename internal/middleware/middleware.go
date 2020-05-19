@@ -167,7 +167,7 @@ func (mh MiddlewareHandler) CSRF() echo.MiddlewareFunc {
 					return rwContext.JSON(http.StatusForbidden, models.JsonStruct{Err: errors.CookieExpired.Error()})
 				}
 
-				if isValidCsrf == false {
+				if !isValidCsrf  {
 					return rwContext.JSON(http.StatusForbidden, models.JsonStruct{Err: errors.CookieExpired.Error()})
 				}
 			}
