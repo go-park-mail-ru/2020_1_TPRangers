@@ -16,14 +16,18 @@ jobs:
       uses: actions/setup-go@v2.0.3
       with:
         go-version: ^1.13
+
     - name: Checkout code
       uses: actions/checkout@v2
+
     - name: Get tests coverage
       run: go test -coverpkg=./... -coverprofile=cover ./...
       working-directory: ${{env.working-directory}}
+
     - name: Get clear coverage
       run: cat cover | fgrep -v "mock" | fgrep -v "pb.go" | fgrep -v "easyjson" > cover2
-      working-directory: ${{env.working-directory}}  
+      working-directory: ${{env.working-directory}}
+
     - name:  Output clear coverage
       run: go tool cover -func=cover2
       working-directory: ${{env.working-directory}}    
@@ -67,6 +71,8 @@ jobs:
       run: go build -v internal/cmd/photos/photos.go       
     
     - name: Build main photosaver microserver
-      run: go build -v internal/cmd/photo_save/photo_save.go 
+      run: go build -v internal/cmd/photo_save/photo_save.go
+    - name: ls of dir
+      run: ls -a
 
       

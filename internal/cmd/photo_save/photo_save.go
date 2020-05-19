@@ -23,7 +23,7 @@ func NewRequestHandlers() *RequestHandlers {
 }
 
 func main() {
-	err := godotenv.Load("project.env")
+	err := godotenv.Load("photo_save_micro.env")
 	if err != nil {
 		return
 	}
