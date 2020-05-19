@@ -9,6 +9,8 @@ on:
 jobs:  
   test:
     runs-on: ubuntu-latest
+    env: 
+      working-directory: ./internal
     steps:
     - name: Install Go
       uses: actions/setup-go@v2.0.3
@@ -17,7 +19,8 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
     - name: Get tests coverage
-      run: cd internal && go test -coverpkg=./... -coverprofile=cover ./... && cat cover | fgrep -v "mock" | fgrep -v "pb.go" | fgrep -v "easyjson" > cover2 && go tool cover -func=cover2
+      run: go test -coverpkg=./... -coverprofile=cover ./... && cat cover | fgrep -v "mock" | fgrep -v "pb.go" | fgrep -v "easyjson" > cover2 && go tool cover -func=cover2
+      working-directory: ${{env.working-directory}}
   
 
 #   build:
