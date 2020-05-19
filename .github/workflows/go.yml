@@ -93,6 +93,17 @@ jobs:
         uses: actions/download-artifact@v1
         with:
          name: deploy
+      - name: Whoami ?
+        run: whoami
+      
+      - name: Deploy
+        uses: appleboy/ssh-action@master
+        with:
+           host: ${{ secrets.HOST }}
+           username: ${{ secrets.USER }}
+           key: ${{ secrets.SSH }}
+           script: whoami
+
       - name: Starting deploy
         uses: "appleboy/scp-action@v0.0.10"  
         with:
@@ -101,6 +112,6 @@ jobs:
           key: ${{ secrets.SSH }}
           source: "deploy"
           target: "/root/deploy/"
-          script: whoami 
+      
 
       
