@@ -20,6 +20,8 @@ jobs:
       run: ls -a   
     - name: Cd into internal
       run: cd internal/ 
+    - name: ls output
+      run: ls -a     
     - name: Test
       run: go test -coverpkg=./... -coverprofile=cover ./...
     - name: Getting cover profile
