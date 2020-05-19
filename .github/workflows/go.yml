@@ -7,92 +7,92 @@ on:
     branches: [ fe/rk_4_tests_usecase_66 , develop ]
 
 jobs:  
-#   Test:
-#     name: Test
-#     runs-on: ubuntu-latest
-#     env: 
-#       working-directory: ./internal
-#     steps:
-#     - name: Install Go
-#       uses: actions/setup-go@v2.0.3
-#       with:
-#         go-version: ^1.13
+  Test:
+    name: Test
+    runs-on: ubuntu-latest
+    env: 
+      working-directory: ./internal
+    steps:
+    - name: Install Go
+      uses: actions/setup-go@v2.0.3
+      with:
+        go-version: ^1.13
 
-#     - name: Checkout code
-#       uses: actions/checkout@v2
+    - name: Checkout code
+      uses: actions/checkout@v2
 
-#     - name: Get tests coverage
-#       run: go test -coverpkg=./... -coverprofile=cover ./...
-#       working-directory: ${{env.working-directory}}
+    - name: Get tests coverage
+      run: go test -coverpkg=./... -coverprofile=cover ./...
+      working-directory: ${{env.working-directory}}
 
-#     - name: Get clear coverage
-#       run: cat cover | fgrep -v "mock" | fgrep -v "pb.go" | fgrep -v "easyjson" > cover2
-#       working-directory: ${{env.working-directory}}
+    - name: Get clear coverage
+      run: cat cover | fgrep -v "mock" | fgrep -v "pb.go" | fgrep -v "easyjson" > cover2
+      working-directory: ${{env.working-directory}}
 
-#     - name:  Output clear coverage
-#       run: go tool cover -func=cover2
-#       working-directory: ${{env.working-directory}}    
+    - name:  Output clear coverage
+      run: go tool cover -func=cover2
+      working-directory: ${{env.working-directory}}    
   
 
-#   Build:
-#     name: Build
-#     runs-on: ubuntu-latest
-#     steps:sudo passwd root
+  Build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:sudo passwd root
 
-#     - name: Set up Go 1.x
-#       uses: actions/setup-go@v2.0.3
-#       with:
-#         go-version: ^1.13
-#       id: go
+    - name: Set up Go 1.x
+      uses: actions/setup-go@v2.0.3
+      with:
+        go-version: ^1.13
+      id: go
 
-#     - name: Check out code into the Go module directory
-#       uses: actions/checkout@v2
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v2
 
-#     - name: Get dependencies
-#       run: |
-#         go get -v -t -d ./...
-#         if [ -f Gopkg.toml ]; then
-#             curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-#             dep ensure
-#         fi
+    - name: Get dependencies
+      run: |
+        go get -v -t -d ./...
+        if [ -f Gopkg.toml ]; then
+            curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+            dep ensure
+        fi
     
-#     - name: mk deploy dir
-#       run: mkdir deploy
+    - name: mk deploy dir
+      run: mkdir deploy
 
-#     - name: Build main server
-#       run: go build -v main.go && cp main deploy/ && cp project.env deploy/
+    - name: Build main server
+      run: go build -v main.go && cp main deploy/ && cp project.env deploy/
       
-#     - name: Build main authorization microserver
-#       run: go build -v internal/cmd/authorization/authorization.go  && cp authorization deploy/ && cp internal/cmd/authorization/author_micro.env deploy/
+    - name: Build main authorization microserver
+      run: go build -v internal/cmd/authorization/authorization.go  && cp authorization deploy/ && cp internal/cmd/authorization/author_micro.env deploy/
       
-#     - name: Build main chat microserver
-#       run: go build -v internal/cmd/chats/chats.go && cp chats deploy/ && cp internal/cmd/chats/chat_micro.env deploy/
+    - name: Build main chat microserver
+      run: go build -v internal/cmd/chats/chats.go && cp chats deploy/ && cp internal/cmd/chats/chat_micro.env deploy/
       
-#     - name: Build main like microserver
-#       run: go build -v internal/cmd/likes/likes.go && cp likes deploy/ && cp internal/cmd/likes/like_micro.env deploy/
+    - name: Build main like microserver
+      run: go build -v internal/cmd/likes/likes.go && cp likes deploy/ && cp internal/cmd/likes/like_micro.env deploy/
 
-#     - name: Build main photo microserver
-#       run: go build -v internal/cmd/photos/photos.go && cp photos deploy/ && cp internal/cmd/photos/photo_micro.env deploy/     
+    - name: Build main photo microserver
+      run: go build -v internal/cmd/photos/photos.go && cp photos deploy/ && cp internal/cmd/photos/photo_micro.env deploy/     
     
-#     - name: Build main photosaver microserver
-#       run: go build -v internal/cmd/photo_save/photo_save.go && cp photo_save deploy/ && cp internal/cmd/photo_save/photo_save_micro.env deploy/
-#     - name: ls of deploy
-#       run: cd deploy/ && ls  
-#     - name: Upload build result
-#       uses: actions/upload-artifact@v1
-#       with:
-#         name: deploy
-#         path: deploy/  
+    - name: Build main photosaver microserver
+      run: go build -v internal/cmd/photo_save/photo_save.go && cp photo_save deploy/ && cp internal/cmd/photo_save/photo_save_micro.env deploy/
+    - name: ls of deploy
+      run: cd deploy/ && ls  
+    - name: Upload build result
+      uses: actions/upload-artifact@v1
+      with:
+        name: deploy
+        path: deploy/  
 
   Deploy:
     name: Deploy  
     runs-on: ubuntu-latest
-#     needs: ["Build"]  
+    needs: ["Build"]  
     steps:
-#       - name: Download bin file
-#         uses: actions/download-artifact@v1
-#         with:
-#          name: deploy
+      - name: Download bin file
+        uses: actions/download-artifact@v1
+        with:
+         name: deploy
       - name: Whoami ?
         run: whoami
       
@@ -105,13 +105,16 @@ jobs:
            password: '000000'
            script: whoami
 
-#       - name: Starting deploy
-#         uses: "appleboy/scp-action@v0.0.10"  
-#         with:
-#           host: ${{ secrets.HOST }}
-#           username: ${{ secrets.USER }}
-#           source: "deploy"
-#           target: "/root/deploy/"
+      - name: Starting deploy
+        uses: "appleboy/scp-action@v0.0.10"  
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USER }}
+          password: '000000'
+          source: "deploy"
+          target: "/root/deploy/"
+       - name: ls
+         run: ls   
       
 
       
