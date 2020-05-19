@@ -93,8 +93,10 @@ jobs:
         uses: actions/download-artifact@v1
         with:
          name: deploy
+      - name : ls of deploy
+        run : ls && cd deploy && ls  
       - name: Starting deploy
-        uses: "appleboy/scp-action@v0.0.1"  
+        uses: "appleboy/scp-action@v0.0.10"  
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USER }}
