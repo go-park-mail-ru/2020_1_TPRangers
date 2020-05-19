@@ -2,9 +2,9 @@ name: Go
 
 on:
   push:
-    branches: [ master ]
+    branches: [ fe/rk_4_tests_usecase_66 , develop ]
   pull_request:
-    branches: [ master ]
+    branches: [ fe/rk_4_tests_usecase_66 , develop ]
 
 jobs:  
   test:
