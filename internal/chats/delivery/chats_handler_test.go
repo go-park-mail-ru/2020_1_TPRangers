@@ -154,7 +154,7 @@ func TestChatsDelivery_GetAllChats(t *testing.T) {
 	expectedBehaviour := []int{http.StatusOK, http.StatusUnauthorized, http.StatusConflict}
 
 	for iter, _ := range expectedBehaviour {
-		defInfo := make([]models.Chat, 3, 3)
+		defInfo := make([]models.Chat, 3)
 		if expectedBehaviour[iter] != http.StatusUnauthorized {
 			cUseCase.EXPECT().GetAllChats(users[iter]).Return(defInfo, exitErr[iter])
 		}

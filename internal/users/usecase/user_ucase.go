@@ -88,6 +88,9 @@ func (userR UserUseCaseRealisation) GetMainUserProfile(userId int) (models.MainU
 
 	sendData.User, _ = userR.userDB.GetUserProfileSettingsById(userId)
 	sendData.Friends, err = userR.friendDB.GetUserFriendsById(userId, 6)
+	if err != nil {
+		return  *sendData, err
+	}
 	sendData.Feed, err = userR.feedDB.GetUserPostsById(userId)
 
 	return *sendData, err
@@ -118,7 +121,10 @@ func (userR UserUseCaseRealisation) UploadSettings(userId int, newUserSettings m
 	if jsonData.Password != "" {
 
 		salt := make([]byte, 8)
-		rand.Read(salt)
+		_, err := rand.Read(salt)
+		if err != nil {
+			return models.Settings{}, err
+		}
 		currentUserData.CryptedPassword = CryptPassword(jsonData.Password, salt)
 	}
 

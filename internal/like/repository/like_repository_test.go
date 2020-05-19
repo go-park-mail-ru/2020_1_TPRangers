@@ -43,8 +43,14 @@ func TestLikeRepositoryRealisation_LikePhoto(t *testing.T) {
 		switch err {
 		case nil:
 			err = tx.Commit()
+			if err != nil {
+				return
+			}
 		default:
-			tx.Rollback()
+			err = tx.Rollback()
+			if err != nil {
+				return
+			}
 		}
 
 	}
@@ -86,8 +92,14 @@ func TestLikeRepositoryRealisation_DislikePhoto(t *testing.T) {
 		switch err {
 		case nil:
 			err = tx.Commit()
+			if err != nil {
+				return
+			}
 		default:
-			tx.Rollback()
+			err = tx.Rollback()
+			if err != nil {
+				return
+			}
 		}
 
 	}
@@ -129,8 +141,14 @@ func TestLikeRepositoryRealisation_LikePost(t *testing.T) {
 		switch err {
 		case nil:
 			err = tx.Commit()
+			if err != nil {
+				return
+			}
 		default:
-			tx.Rollback()
+			err = tx.Rollback()
+			if err != nil {
+				return
+			}
 		}
 
 	}
@@ -172,8 +190,14 @@ func TestLikeRepositoryRealisation_DislikePost(t *testing.T) {
 		switch err {
 		case nil:
 			err = tx.Commit()
+			if err != nil {
+				return
+			}
 		default:
-			tx.Rollback()
+			err = tx.Rollback()
+			if err != nil {
+				return
+			}
 		}
 
 	}

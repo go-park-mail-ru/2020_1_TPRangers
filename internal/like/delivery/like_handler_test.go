@@ -30,7 +30,7 @@ func TestLikeDelivery_LikePhoto(t *testing.T) {
 	likeBehaviour := []error{nil, nil, errors.New("smth happend")}
 	expectedBehaviour := []int{http.StatusUnauthorized, http.StatusOK, http.StatusConflict}
 
-	for iter, _ := range usersId {
+	for iter := range usersId {
 		photoId := rand.Int()
 
 		if expectedBehaviour[iter] != http.StatusUnauthorized {
@@ -70,7 +70,7 @@ func TestLikeDelivery_DislikePhoto(t *testing.T) {
 	likeBehaviour := []error{nil, nil, errors.New("smth happend")}
 	expectedBehaviour := []int{http.StatusUnauthorized, http.StatusOK, http.StatusConflict}
 
-	for iter, _ := range usersId {
+	for iter  := range usersId {
 		photoId := rand.Int()
 
 		if expectedBehaviour[iter] != http.StatusUnauthorized {

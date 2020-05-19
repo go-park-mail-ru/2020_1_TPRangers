@@ -75,7 +75,7 @@ func (AU AuthorizationUseCaseRealisation) CreateNewUser(ctx context.Context, use
 
 	email := userData.Email
 
-	if flag, _ := AU.userDB.IsUserExist(email); flag == true {
+	if flag, _ := AU.userDB.IsUserExist(email); flag {
 		return nil, errors.AlreadyExist
 	}
 
@@ -84,7 +84,10 @@ func (AU AuthorizationUseCaseRealisation) CreateNewUser(ctx context.Context, use
 	defaultPhotoId, _ := AU.userDB.GetDefaultProfilePhotoId()
 
 	salt := make([]byte, 8)
-	rand.Read(salt)
+	_, err := rand.Read(salt)
+	if err != nil {
+		return nil, err
+	}
 	crypPass := CryptPassword(userData.Password, salt)
 
 	data := models.User{
@@ -98,7 +101,7 @@ func (AU AuthorizationUseCaseRealisation) CreateNewUser(ctx context.Context, use
 		Photo:           defaultPhotoId,
 	}
 
-	err := AU.userDB.AddNewUser(data)
+	err = AU.userDB.AddNewUser(data)
 
 	if err != nil {
 		return nil, errors.FailReadFromDB

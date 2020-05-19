@@ -21,7 +21,7 @@ func TestChatUseCaseRealisation_CreateChat(t *testing.T) {
 	chErr := errors.New("create chat error")
 	expectedBehaviour := []error{nil, customErr, chErr}
 
-	for iter, _ := range expectedBehaviour {
+	for iter  := range expectedBehaviour {
 
 		newChat := new(models.NewChatUsers)
 		uId := rand.Int()
@@ -57,7 +57,7 @@ func TestChatUseCaseRealisation_ExitChat(t *testing.T) {
 
 	expectedBehaviour := []error{nil, errs.FailSendToDB, errs.FailSendToDB, chErr}
 
-	for iter, _ := range expectedBehaviour {
+	for iter := range expectedBehaviour {
 		uId := rand.Int()
 		chatId := ""
 		if expectedBehaviour[iter] != errs.FailSendToDB {
@@ -124,7 +124,7 @@ func TestChatUseCaseRealisation_GetAllChats(t *testing.T) {
 
 	cUseCase := NewChatUseCaseRealisation(cRepoMock, fRepoMock)
 	customErr := errors.New("123")
-	chs := make([]models.Chat, 2, 2)
+	chs := make([]models.Chat, 2)
 
 	cRepoMock.EXPECT().GetAllChats(1).Return(chs, customErr)
 

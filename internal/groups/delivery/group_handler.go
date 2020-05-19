@@ -29,6 +29,14 @@ func (groupD GroupDeliveryRealisation) JoinTheGroup(rwContext echo.Context) erro
 	}
 
 	groupID, err := strconv.Atoi(rwContext.Param("id"))
+	if err != nil {
+		groupD.logger.Info(
+			zap.String("ID", uId),
+			zap.String("ERROR", err.Error()),
+			zap.Int("ANSWER STATUS", http.StatusConflict),
+		)
+		return rwContext.JSON(http.StatusConflict, models.JsonStruct{Err: err.Error()})
+	}
 	err = groupD.groupLogic.JoinTheGroup(userId, groupID)
 
 	if err != nil {
@@ -64,6 +72,14 @@ func (groupD GroupDeliveryRealisation) LeaveTheGroup(rwContext echo.Context) err
 	}
 
 	groupID, err := strconv.Atoi(rwContext.Param("id"))
+	if err != nil {
+		groupD.logger.Info(
+			zap.String("ID", uId),
+			zap.String("ERROR", err.Error()),
+			zap.Int("ANSWER STATUS", http.StatusConflict),
+		)
+		return rwContext.JSON(http.StatusConflict, models.JsonStruct{Err: err.Error()})
+	}
 	err = groupD.groupLogic.LeaveTheGroup(userId, groupID)
 
 	if err != nil {
@@ -158,6 +174,14 @@ func (groupD GroupDeliveryRealisation) CreatePostInGroup(rwContext echo.Context)
 	}
 
 	groupID, err := strconv.Atoi(rwContext.Param("id"))
+	if err != nil {
+		groupD.logger.Info(
+			zap.String("ID", uId),
+			zap.String("ERROR", err.Error()),
+			zap.Int("ANSWER STATUS", http.StatusConflict),
+		)
+		return rwContext.JSON(http.StatusConflict, models.JsonStruct{Err: err.Error()})
+	}
 	err = groupD.groupLogic.CreatePostInGroup(userId, groupID, *newPost)
 
 	var responseStatus int
@@ -233,6 +257,15 @@ func (groupD GroupDeliveryRealisation) GetGroupFeeds(rwContext echo.Context) err
 	}
 
 	groupID, err := strconv.Atoi(rwContext.Param("id"))
+	if err != nil {
+		groupD.logger.Info(
+			zap.String("ID", rId),
+			zap.String("ERROR", err.Error()),
+			zap.Int("ANSWER STATUS", http.StatusNotFound),
+		)
+
+		return rwContext.JSON(http.StatusNotFound, models.JsonStruct{Err: err.Error()})
+	}
 	groupFeed, err := groupD.groupLogic.GetGroupFeeds(userId, groupID)
 
 	if err != nil {

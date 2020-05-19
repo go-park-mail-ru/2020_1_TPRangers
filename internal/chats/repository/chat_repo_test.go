@@ -17,9 +17,15 @@ func TestChatRepositoryRealisation_CreateNewChat(t *testing.T) {
 	tx, _ := db.Begin()
 	if err := cRepo.CreateNewChat("", "", []int{0}); err == nil {
 		fmt.Println(err)
-		tx.Rollback()
+		err = tx.Rollback()
+		if err != nil {
+			return
+		}
 	} else {
-		tx.Commit()
+		err = tx.Commit()
+		if err != nil {
+			return
+		}
 	}
 }
 
@@ -37,7 +43,10 @@ func TestChatRepositoryRealisation_ExitChat(t *testing.T) {
 		fmt.Println(err)
 		tx.Rollback()
 	} else {
-		tx.Commit()
+		err = tx.Commit()
+		if err != nil {
+			return
+		}
 	}
 
 }

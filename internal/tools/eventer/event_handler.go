@@ -66,7 +66,10 @@ func (EV Eventer) GetNewMessages(conn net.Conn) {
 
 	if err != nil {
 		answer.Event = "can't get new messages"
-		encoder.Encode(&answer)
+		err = encoder.Encode(&answer)
+		if err != nil {
+			return
+		}
 		fmt.Println("GET NEW MESSAGES ERROR : ", err)
 		return
 	}
@@ -75,7 +78,10 @@ func (EV Eventer) GetNewMessages(conn net.Conn) {
 
 	for iter, _ := range messages {
 		answer.Message = messages[iter]
-		encoder.Encode(&answer)
+		err = encoder.Encode(&answer)
+		if err != nil {
+			return
+		}
 		resp.Flush()
 	}
 

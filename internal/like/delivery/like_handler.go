@@ -21,6 +21,9 @@ func NewLikeDelivery(log *zap.SugaredLogger, likeRealisation like.UseCaseLike) L
 
 func (Like LikeDelivery) LikePhoto(rwContext echo.Context) error {
 	photoId, err := strconv.Atoi(rwContext.Param("id"))
+	if err != nil {
+		return err
+	}
 	uId := rwContext.Get("REQUEST_ID").(string)
 
 	userId := rwContext.Get("user_id").(int)
@@ -56,6 +59,9 @@ func (Like LikeDelivery) LikePhoto(rwContext echo.Context) error {
 
 func (Like LikeDelivery) DislikePhoto(rwContext echo.Context) error {
 	photoId, err := strconv.Atoi(rwContext.Param("id"))
+	if err != nil {
+		return err
+	}
 	uId := rwContext.Get("REQUEST_ID").(string)
 
 	userId := rwContext.Get("user_id").(int)
@@ -91,6 +97,9 @@ func (Like LikeDelivery) DislikePhoto(rwContext echo.Context) error {
 
 func (Like LikeDelivery) LikePost(rwContext echo.Context) error {
 	postId, err := strconv.Atoi(rwContext.Param("id"))
+	if err != nil {
+		return err
+	}
 	uId := rwContext.Get("REQUEST_ID").(string)
 
 	userId := rwContext.Get("user_id").(int)
@@ -126,6 +135,9 @@ func (Like LikeDelivery) LikePost(rwContext echo.Context) error {
 
 func (Like LikeDelivery) DislikePost(rwContext echo.Context) error {
 	postId, err := strconv.Atoi(rwContext.Param("id"))
+	if err != nil {
+		return err
+	}
 	uId := rwContext.Get("REQUEST_ID").(string)
 
 	userId := rwContext.Get("user_id").(int)
@@ -161,6 +173,9 @@ func (Like LikeDelivery) DislikePost(rwContext echo.Context) error {
 
 func (Like LikeDelivery) LikeComment(rwContext echo.Context) error {
 	commentId, err := strconv.Atoi(rwContext.Param("id"))
+	if err != nil {
+		return err
+	}
 	uId := rwContext.Get("REQUEST_ID").(string)
 	userId := rwContext.Get("user_id").(int)
 
@@ -193,6 +208,9 @@ func (Like LikeDelivery) LikeComment(rwContext echo.Context) error {
 
 func (Like LikeDelivery) DislikeComment(rwContext echo.Context) error {
 	commentId, err := strconv.Atoi(rwContext.Param("id"))
+	if err != nil {
+		return err
+	}
 	uId := rwContext.Get("REQUEST_ID").(string)
 
 	userId := rwContext.Get("user_id").(int)

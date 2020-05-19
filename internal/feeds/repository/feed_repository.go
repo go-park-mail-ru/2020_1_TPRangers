@@ -32,16 +32,25 @@ func (Data FeedRepositoryRealisation) GetUserFeedById(id int, count int) ([]mode
 		}
 		post := models.Post{}
 		err := rows.Scan(&post.Id, &post.Text, &post.Attachments, &post.Likes, &post.Creation, &post.Photo.Id, &post.Photo.Url, &post.Photo.Likes, &post.AuthorName, &post.AuthorSurname, &post.AuthorUrl)
-
-		additional_row := Data.feedDB.QueryRow("select upl.postlike_id, uphl.photolike_id from userspostslikes AS upl RIGHT JOIN posts AS p "+
+		if err != nil {
+			return  nil, err
+		}
+		additionalRow := Data.feedDB.QueryRow("select upl.postlike_id, uphl.photolike_id from userspostslikes AS upl RIGHT JOIN posts AS p "+
 			"ON (p.post_id = upl.post_id) LEFT JOIN usersphotoslikes AS uphl ON (p.photo_id = uphl.photo_id) INNER JOIN postsauthor AS pa ON (pa.post_id = p.post_id) "+
 			"LEFT JOIN users AS u ON (u.u_id = pa.u_id) LEFT JOIN photos AS ph ON (u.photo_id = ph.photo_id) WHERE p.post_id = $1 AND upl.u_id = $2;", post.Id, id)
 
 		var postLikes *int
 		var photoLikes *int
-		add_row := Data.feedDB.QueryRow("select ph.url from photos AS ph INNER JOIN users AS u ON (u.photo_id = ph.photo_id) INNER JOIN postsauthor AS pa ON (pa.post_id = $1 AND pa.u_id = u.u_id);", post.Id)
-		add_row.Scan(&post.AuthorPhoto)
-		additional_row.Scan(&postLikes, &photoLikes)
+		addRow := Data.feedDB.QueryRow("select ph.url from photos AS ph INNER JOIN users AS u ON (u.photo_id = ph.photo_id) INNER JOIN postsauthor AS pa ON (pa.post_id = $1 AND pa.u_id = u.u_id);", post.Id)
+		err = addRow.Scan(&post.AuthorPhoto)
+		if err != nil {
+			return nil, errors.FailReadToVar
+		}
+
+		err = additionalRow.Scan(&postLikes, &photoLikes)
+		if err != nil {
+			return nil, errors.FailReadToVar
+		}
 		if postLikes != nil {
 			post.WasLike = true
 		} else {
@@ -53,7 +62,7 @@ func (Data FeedRepositoryRealisation) GetUserFeedById(id int, count int) ([]mode
 			post.Photo.WasLike = false
 		}
 		if err != nil {
-			return nil, errors.FailReadToVar
+			return nil, err
 		}
 
 		posts = append(posts, post)
@@ -105,7 +114,10 @@ func (Data FeedRepositoryRealisation) GetUserPostsByLogin(login string) ([]model
 	userRow := Data.feedDB.QueryRow("SELECT u_id FROM Users WHERE login = $1", login)
 
 	userId := 0
-	userRow.Scan(&userId)
+	err := userRow.Scan(&userId)
+	if err != nil {
+		return nil, err
+	}
 
 	feed := make([]models.Post, 0)
 	row, err := Data.feedDB.Query("SELECT P.post_id,PH.photo_id,P.txt_data, P.posts_likes_count, P.creation_date,P.attachments,PH.url,A.login,A.name,A.surname,AP.url FROM UsersPosts UP INNER JOIN Posts P ON(P.post_id=UP.post_id) LEFT JOIN Photos PH ON(PH.photo_id=P.photo_id) LEFT JOIN PostsAuthor PA ON(PA.post_id=P.post_id) LEFT JOIN Users A ON(PA.u_id=A.u_id) INNER JOIN Photos AP ON(A.photo_id=AP.photo_id) WHERE UP.post_owner = $1", userId)
@@ -137,7 +149,11 @@ func (Data FeedRepositoryRealisation) GetPostsOfOtherUserWhileLogged(login strin
 	userRow := Data.feedDB.QueryRow("SELECT u_id FROM Users WHERE login = $1", login)
 
 	userId := 0
-	userRow.Scan(&userId)
+	err := userRow.Scan(&userId)
+	if err != nil {
+		return nil, err
+	}
+
 
 	feed := make([]models.Post, 0)
 	row, err := Data.feedDB.Query("SELECT P.post_id,PH.photo_id,P.txt_data, P.posts_likes_count, P.creation_date,P.attachments,UPL.postlike_id,PH.url,A.login,A.name,A.surname,AP.url FROM UsersPosts UP INNER JOIN Posts P ON(P.post_id=UP.post_id) LEFT JOIN Photos PH ON(PH.photo_id=P.photo_id) LEFT JOIN UsersPostsLikes UPL ON(UPL.u_id = $2 AND P.post_id = UPL.post_id) LEFT JOIN PostsAuthor PA ON(PA.post_id=P.post_id) LEFT JOIN Users A ON(PA.u_id=A.u_id) INNER JOIN Photos AP ON(A.photo_id=AP.photo_id) WHERE UP.post_owner = $1", userId, currentUserId)
@@ -202,6 +218,9 @@ func (Data FeedRepositoryRealisation) CreatePost(uId int, ownerLogin string, new
 
 	postId := 0
 	err = postRow.Scan(&postId)
+	if err != nil {
+		return err
+	}
 
 	ownerRow, err := Data.feedDB.Query("SELECT u_id FROM Users WHERE login = $1", ownerLogin)
 	defer func() {
@@ -220,8 +239,14 @@ func (Data FeedRepositoryRealisation) CreatePost(uId int, ownerLogin string, new
 	err = ownerRow.Scan(&ownerId)
 
 	if err == nil {
-		Data.feedDB.Exec("INSERT INTO UsersPosts (u_id,post_id,post_owner) VALUES($1,$2,$3)", uId, postId, ownerId)
-		Data.feedDB.Exec("INSERT INTO PostsAuthor (u_id,post_id) VALUES($1,$2)", uId, postId)
+		_, err = Data.feedDB.Exec("INSERT INTO UsersPosts (u_id,post_id,post_owner) VALUES($1,$2,$3)", uId, postId, ownerId)
+		if err != nil {
+			return err
+		}
+		_, err = Data.feedDB.Exec("INSERT INTO PostsAuthor (u_id,post_id) VALUES($1,$2)", uId, postId)
+		if err != nil {
+			return err
+		}
 		return nil
 
 	}
@@ -242,12 +267,10 @@ func (Data FeedRepositoryRealisation) CreateComment(uId int, newComment models.C
 	}
 
 	commentRow, err := Data.feedDB.Query("INSERT INTO comments (u_id, post_id, txt_data, photo_id, comment_likes_count,creation_date, attachments) VALUES($1 , $2 , $3 , $4 , $5, $6, $7) RETURNING post_id", uId, newComment.PostID, newComment.Text, photo_id, 0, time.Now(), newComment.Attachments)
-	defer commentRow.Close()
-
 	if err != nil {
 		return errors.FailSendToDB
 	}
-
+	defer commentRow.Close()
 	fmt.Println(err, "ERROR ON ADDING NEW COMMENT TO DATABASE!!!!", uId)
 	return nil
 }
@@ -282,14 +305,20 @@ func (Data FeedRepositoryRealisation) GetPostAndComments(userID int, postID stri
 		if err != nil {
 			return models.Post{}, errors.FailReadToVar
 		}
-		additional_row := Data.feedDB.QueryRow("select ucl.commentlike_id, uphl.photolike_id from userscommentslikes AS ucl RIGHT JOIN comments AS c "+
+		additionalRow := Data.feedDB.QueryRow("select ucl.commentlike_id, uphl.photolike_id from userscommentslikes AS ucl RIGHT JOIN comments AS c "+
 			"ON (c.comment_id = ucl.comment_id) LEFT JOIN usersphotoslikes AS uphl ON (c.photo_id = uphl.photo_id) INNER JOIN "+
 			"users AS u ON (u.u_id = c.u_id) LEFT JOIN photos AS ph ON (u.photo_id = ph.photo_id) WHERE c.comment_id = $1 AND ucl.u_id = $2 ORDER BY c.creation_date ASC;", comment.CommentID, userID)
 		var commentLikes *int
 		var photoLikes *int
-		add_row := Data.feedDB.QueryRow("select ph.url from photos AS ph INNER JOIN users AS u ON (u.photo_id = ph.photo_id) INNER JOIN comments AS c ON (c.comment_id = $1 AND c.u_id = u.u_id) ORDER BY c.creation_date ASC;", comment.CommentID)
-		add_row.Scan(&comment.AuthorPhoto)
-		additional_row.Scan(&commentLikes, &photoLikes)
+		addRow := Data.feedDB.QueryRow("select ph.url from photos AS ph INNER JOIN users AS u ON (u.photo_id = ph.photo_id) INNER JOIN comments AS c ON (c.comment_id = $1 AND c.u_id = u.u_id) ORDER BY c.creation_date ASC;", comment.CommentID)
+		err = addRow.Scan(&comment.AuthorPhoto)
+		if err != nil {
+			return post, err
+		}
+		err = additionalRow.Scan(&commentLikes, &photoLikes)
+		if err != nil {
+			return post, err
+		}
 		if commentLikes != nil {
 			comment.WasLike = true
 		} else {
@@ -303,24 +332,30 @@ func (Data FeedRepositoryRealisation) GetPostAndComments(userID int, postID stri
 		post.Comments = append(post.Comments, comment)
 	}
 
-	post_rows := Data.feedDB.QueryRow("select  p.post_id, p.txt_data, p.attachments, p.posts_likes_count, p.creation_date, ph.photo_id, ph.url, ph.photos_likes_count, u.name, u.surname, u.login "+
+	postRows := Data.feedDB.QueryRow("select  p.post_id, p.txt_data, p.attachments, p.posts_likes_count, p.creation_date, ph.photo_id, ph.url, ph.photos_likes_count, u.name, u.surname, u.login "+
 		"from posts AS p INNER JOIN postsauthor AS pa ON (p.post_id = pa.post_id) INNER JOIN users AS u ON (pa.u_id = u.u_id) LEFT JOIN photos AS ph ON p.photo_id = ph.photo_id WHERE p.post_id = $1", postID)
 	if err != nil {
 		return models.Post{}, errors.FailReadFromDB
 	}
 
-	err = post_rows.Scan(&post.Id, &post.Text, &post.Attachments, &post.Likes, &post.Creation, &post.Photo.Id, &post.Photo.Url, &post.Photo.Likes, &post.AuthorName, &post.AuthorSurname, &post.AuthorUrl)
+	err = postRows.Scan(&post.Id, &post.Text, &post.Attachments, &post.Likes, &post.Creation, &post.Photo.Id, &post.Photo.Url, &post.Photo.Likes, &post.AuthorName, &post.AuthorSurname, &post.AuthorUrl)
 	if err != nil {
 		return models.Post{}, errors.FailReadToVar
 	}
-	additional_row := Data.feedDB.QueryRow("select upl.postlike_id, uphl.photolike_id from userspostslikes AS upl RIGHT JOIN posts AS p "+
+	additionalRow := Data.feedDB.QueryRow("select upl.postlike_id, uphl.photolike_id from userspostslikes AS upl RIGHT JOIN posts AS p "+
 		"ON (p.post_id = upl.post_id) LEFT JOIN usersphotoslikes AS uphl ON (p.photo_id = uphl.photo_id) INNER JOIN postsauthor AS pa ON (pa.post_id = p.post_id) "+
 		"LEFT JOIN users AS u ON (u.u_id = pa.u_id) LEFT JOIN photos AS ph ON (u.photo_id = ph.photo_id) WHERE p.post_id = $1 AND upl.u_id = $2;", post.Id, userID)
 	var postLikes *int
 	var photoLikes *int
-	add_row := Data.feedDB.QueryRow("select ph.url from photos AS ph INNER JOIN users AS u ON (u.photo_id = ph.photo_id) INNER JOIN postsauthor AS pa ON (pa.post_id = $1 AND pa.u_id = u.u_id);", postID)
-	add_row.Scan(&post.AuthorPhoto)
-	additional_row.Scan(&postLikes, &photoLikes)
+	addRow := Data.feedDB.QueryRow("select ph.url from photos AS ph INNER JOIN users AS u ON (u.photo_id = ph.photo_id) INNER JOIN postsauthor AS pa ON (pa.post_id = $1 AND pa.u_id = u.u_id);", postID)
+	err = addRow.Scan(&post.AuthorPhoto)
+	if err != nil {
+		return post, err
+	}
+	err = additionalRow.Scan(&postLikes, &photoLikes)
+	if err != nil {
+		return post, err
+	}
 	if postLikes != nil {
 		post.WasLike = true
 	} else {

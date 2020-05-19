@@ -288,6 +288,9 @@ func (CR ChatRepositoryRealisation) GetAllChats(userId int) ([]models.Chat, erro
 
 		chat := new(models.Chat)
 		err = chatRow.Scan(&isPrivate, &isGroup, &chatName, &prName, &prSurname, &prLogin, &chat.ChatPhoto, &chat.LastMessageAuthorPhoto, &chat.LastMessageTime, &chat.LastMessageTxt)
+		if err != nil {
+			return chats, err
+		}
 		if isPrivate == nil {
 			chat.IsGroupChat = true
 			chat.ChatId = "c" + strconv.FormatInt(*isGroup, 10)
