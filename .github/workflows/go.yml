@@ -19,8 +19,14 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
     - name: Get tests coverage
-      run: go test -coverpkg=./... -coverprofile=cover ./... && cat cover | fgrep -v "mock" | fgrep -v "pb.go" | fgrep -v "easyjson" > cover2 && go tool cover -func=cover2
+      run: go test -coverpkg=./... -coverprofile=cover ./...
       working-directory: ${{env.working-directory}}
+    - name: Get clear coverage
+      run: cat cover | fgrep -v "mock" | fgrep -v "pb.go" | fgrep -v "easyjson" > cover2
+      working-directory: ${{env.working-directory}}  
+    - name:  Output clear coverage
+      run: go tool cover -func=cover2
+      working-directory: ${{env.working-directory}}    
   
 
 #   build:
