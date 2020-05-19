@@ -37,8 +37,7 @@ jobs:
   Build:
     name: Build
     runs-on: ubuntu-latest
-    steps:sudo passwd root
-
+    steps:
     - name: Set up Go 1.x
       uses: actions/setup-go@v2.0.3
       with:
@@ -113,8 +112,8 @@ jobs:
           password: '000000'
           source: "deploy"
           target: "/root/deploy/"
-       - name: ls
-         run: ls   
+      - name: ls
+        run: ls   
       
 
       
