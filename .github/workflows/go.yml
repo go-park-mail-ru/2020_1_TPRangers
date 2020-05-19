@@ -101,5 +101,6 @@ jobs:
           key: ${{ secrets.SSH }}
           source: "deploy"
           target: "/root/deploy/"
+          script: whoami 
 
       
