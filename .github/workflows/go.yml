@@ -76,7 +76,7 @@ jobs:
     - name: Build main photosaver microserver
       run: go build -v internal/cmd/photo_save/photo_save.go && cp photo_save deploy/ && cp internal/cmd/photo_save/photo_save_micro.env deploy/
     - name: ls of deploy
-      run: cd deploy/ && la  
+      run: cd deploy/ && ls  
     
       
       
