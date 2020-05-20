@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo"
 	"go.uber.org/zap"
@@ -10,14 +9,14 @@ import (
 	"google.golang.org/grpc"
 
 	deliveryAlbum "main/internal/albums/delivery"
-	deliveryGroup "main/internal/groups/delivery"
 	repositoryAlbum "main/internal/albums/repository"
-	repositoryGroup "main/internal/groups/repository"
 	repositoryChat "main/internal/chats/repository"
 	usecaseChat "main/internal/chats/usecase"
 	deliveryFeed "main/internal/feeds/delivery"
 	repositoryFeed "main/internal/feeds/repository"
 	usecaseFeed "main/internal/feeds/usecase"
+	deliveryGroup "main/internal/groups/delivery"
+	repositoryGroup "main/internal/groups/repository"
 	"main/internal/middleware"
 	deliveryPhoto "main/internal/photos/delivery"
 	deliveryUser "main/internal/users/delivery"
@@ -27,10 +26,10 @@ import (
 	"os"
 
 	usecaseAlbum "main/internal/albums/usecase"
-	usecaseGroup "main/internal/groups/usecase"
 	deliveryFriends "main/internal/friends/delivery"
 	repositoryFriends "main/internal/friends/repository"
 	usecaseFriends "main/internal/friends/usecase"
+	usecaseGroup "main/internal/groups/usecase"
 	deliveryLikes "main/internal/like/delivery"
 	usecaseLikes "main/internal/like/usecase"
 	usecasePhoto "main/internal/photos/usecase"
@@ -217,7 +216,7 @@ func main() {
 
 
 	port := os.Getenv("MAIN_PORT")
-	fmt.Println(port)
 
-	server.Logger.Fatal(server.Start(":3001"))
+
+	server.Logger.Fatal(server.Start(port))
 }
