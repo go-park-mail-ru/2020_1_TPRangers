@@ -23,7 +23,7 @@ func NewRequestHandlers() *RequestHandlers {
 }
 
 func main() {
-	err := godotenv.Load("project.env")
+	err := godotenv.Load("photo_save_micro.env")
 	if err != nil {
 		return
 	}
@@ -40,6 +40,6 @@ func main() {
 	api := NewRequestHandlers()
 	api.photoSaveHandler.InitHandler(server)
 
-	port := os.Getenv("PORT")
+	port := os.Getenv("PORT_SAVE")
 	server.Logger.Fatal(server.Start(port))
 }

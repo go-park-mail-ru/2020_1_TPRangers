@@ -1,65 +1,61 @@
 #!/bin/bash
 
 runner_func_authorization() {
-  echo "cd to $1"
+  echo "authorization"
   # shellcheck disable=SC2164
   cd $1
-  go build authorization.go
-  nohup ./authorization > server.log &
+
+  nohup ./authorization > author.log &
   if [[ "$1" != "." ]]; then
     cd ../../../
   fi  
 }
 
 runner_func_chats() {
-  echo "cd to $1"
+  echo "chats"
   # shellcheck disable=SC2164
   cd $1
-  go build chats.go
-  nohup ./chats > server.log &
+
+  nohup ./chats > chats.log &
   if [[ "$1" != "." ]]; then
     cd ../../../
   fi
 }
 
 runner_func_likes() {
-  echo "cd to $1"
+  echo "likes"
   # shellcheck disable=SC2164
   cd $1
-  go build likes.go
-  nohup ./likes > server.log &
+  nohup ./likes > likes.log &
   if [[ "$1" != "." ]]; then
     cd ../../../
   fi
 }
 
 runner_func_photos() {
-  echo "cd to $1"
+  echo "photos"
   # shellcheck disable=SC2164
   cd $1
-  go build photos.go
-  nohup ./photos > server.log &
+  nohup ./photos > photos.log &
   if [[ "$1" != "." ]]; then
     cd ../../../
   fi
 }
 
 runner_func_photo_save() {
-  echo "cd to $1"
+  echo "photo_save"
   # shellcheck disable=SC2164
   cd $1
-  go build photo_save.go
-  nohup ./photo_save > server.log &
+  nohup ./photo_save > photo_save.log &
   if [[ "$1" != "." ]]; then
     cd ../../../
   fi
 }
 
 runner_func_main() {
-  echo "cd to $1"
+  echo "main"
   # shellcheck disable=SC2164
   cd $1
-  go build main.go
   nohup ./main > server.log &
   if [[ "$1" != "." ]]; then
     cd ../../../
@@ -69,11 +65,11 @@ runner_func_main() {
 # shellcheck disable=SC2140
 # shellcheck disable=SC1083
 
-runner_func_authorization "internal/cmd/authorization"
-runner_func_chats "internal/cmd/chats/"
-runner_func_likes "internal/cmd/likes/"
-runner_func_photos "internal/cmd/photos/"
-runner_func_photo_save "internal/cmd/photo_save"
+runner_func_authorization "."
+runner_func_chats "."
+runner_func_likes "."
+runner_func_photos "."
+runner_func_photo_save "."
 runner_func_main "."
 
 

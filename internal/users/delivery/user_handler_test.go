@@ -1,4 +1,5 @@
 package delivery
+
 //
 //import (
 //	"errors"
@@ -14,6 +15,7 @@ package delivery
 //	"testing"
 //)
 //
+
 //func TestFriendDeliveryRealisation_Logout(t *testing.T) {
 //	ctrl := gomock.NewController(t)
 //	lUseCase := mock_users.NewMockUserUseCase(ctrl)

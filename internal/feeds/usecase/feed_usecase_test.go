@@ -1,97 +1,154 @@
 package usecase
 
-//func TestFeedUseCaseRealisation_Feed(t *testing.T) {
-//
-//	cVal := uuid.NewV4()
-//
-//	ctrl := gomock.NewController(t)
-//	defer ctrl.Finish()
-//
-//	cRepoMock := mock.NewMockCookieRepository(ctrl)
-//	fRepoMock := mock.NewMockFeedRepository(ctrl)
-//	fRepoTest := NewFeedUseCaseRealisation(fRepoMock, cRepoMock)
-//
-//	cookieErr := []error{nil, nil, errors.InvalidCookie, errors.InvalidCookie}
-//	feedErr := []error{nil, errors.FailReadFromDB, nil, errors.FailReadFromDB}
-//	expectErr := []error{nil, errors.FailReadFromDB, errors.InvalidCookie, errors.InvalidCookie}
-//	expectValues := [][]models.Post{[]models.Post{models.Post{
-//		Id:            0,
-//		Text:          "",
-//		Photo:         models.Photo{},
-//		Attachments:   "",
-//		Likes:         0,
-//		WasLike:       false,
-//		Creation:      "",
-//		AuthorName:    "",
-//		AuthorSurname: "",
-//		AuthorUrl:     "",
-//		AuthorPhoto:   "",
-//	}}, nil, nil, nil}
-//
-//	for iter, _ := range expectValues {
-//
-//		uId := rand.Int()
-//		cookieVal := cVal.String()
-//
-//		cRepoMock.EXPECT().GetUserIdByCookie(cookieVal).Return(uId, cookieErr[iter])
-//		if cookieErr[iter] == nil {
-//			fRepoMock.EXPECT().GetUserFeedById(uId, 30).Return(expectValues[iter], feedErr[iter])
-//		}
-//
-//		eVal, eErr := fRepoTest.Feed(cookieVal)
-//
-//		if eErr != expectErr[iter] {
-//			t.Error("expected value :", expectValues[iter], " got value : ", eVal)
-//		}
-//
-//	}
-//
-//}
-//
-//func TestFeedUseCaseRealisation_CreatePost(t *testing.T) {
-//
-//	cVal := uuid.NewV4()
-//
-//	ctrl := gomock.NewController(t)
-//	defer ctrl.Finish()
-//
-//	cRepoMock := mock.NewMockCookieRepository(ctrl)
-//	fRepoMock := mock.NewMockFeedRepository(ctrl)
-//	fRepoTest := NewFeedUseCaseRealisation(fRepoMock, cRepoMock)
-//
-//	cookieErr := []error{nil, nil, errors.InvalidCookie, errors.InvalidCookie}
-//	createErr := []error{nil, errors.FailReadFromDB, nil, errors.FailReadFromDB}
-//	expectErr := []error{nil, errors.FailReadFromDB, errors.InvalidCookie, errors.InvalidCookie}
-//	expectValues := models.Post{
-//		Id:            0,
-//		Text:          "",
-//		Photo:         models.Photo{},
-//		Attachments:   "",
-//		Likes:         0,
-//		WasLike:       false,
-//		Creation:      "",
-//		AuthorName:    "",
-//		AuthorSurname: "",
-//		AuthorUrl:     "",
-//		AuthorPhoto:   "",
-//	}
-//
-//	for iter, _ := range expectErr {
-//
-//		uId := rand.Int()
-//		cookieVal := cVal.String()
-//
-//		cRepoMock.EXPECT().GetUserIdByCookie(cookieVal).Return(uId, cookieErr[iter])
-//		if cookieErr[iter] == nil {
-//			fRepoMock.EXPECT().CreatePost(uId, expectValues).Return(createErr[iter])
-//		}
-//
-//		eErr := fRepoTest.CreatePost(cookieVal, expectValues)
-//
-//		if eErr != expectErr[iter] {
-//			t.Error("expected value :", expectErr[iter], " got value : ", eErr)
-//		}
-//
-//	}
-//
-//}
+import (
+	"github.com/golang/mock/gomock"
+	uuid "github.com/satori/go.uuid"
+	"main/internal/models"
+	"main/internal/tools/errors"
+	"main/mocks"
+	"testing"
+)
+
+func TestFeedUseCaseRealisation_Feed(t *testing.T) {
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	fRepoMock := mock.NewMockFeedRepository(ctrl)
+	fRepoTest := NewFeedUseCaseRealisation(fRepoMock)
+
+	feedErr := []error{nil, errors.FailReadFromDB}
+	expectErr := []error{nil, errors.FailReadFromDB}
+	expectValues := [][]models.Post{[]models.Post{models.Post{
+		Id:            0,
+		Text:          "",
+		Photo:         models.Photo{},
+		Attachments:   "",
+		Likes:         0,
+		WasLike:       false,
+		Creation:      "",
+		AuthorName:    "",
+		AuthorSurname: "",
+		AuthorUrl:     "",
+		AuthorPhoto:   "",
+	}}, nil}
+
+	for iter, _ := range expectValues {
+		userId := 30
+		fRepoMock.EXPECT().GetUserFeedById(userId, 30).Return(expectValues[iter], feedErr[iter])
+
+		if _, err := fRepoTest.Feed(userId); err != expectErr[iter] {
+			t.Error("unexpected behaviour")
+		}
+	}
+
+}
+
+func TestFeedUseCaseRealisation_CreatePost(t *testing.T) {
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	fRepoMock := mock.NewMockFeedRepository(ctrl)
+	fRepoTest := NewFeedUseCaseRealisation(fRepoMock)
+
+	feedErr := []error{nil, errors.FailReadFromDB}
+	expectErr := []error{nil, errors.FailReadFromDB}
+
+
+	for iter, _ := range expectErr {
+		userId := 30
+		userLogin := uuid.NewV4()
+		post := models.Post{
+			Id:            0,
+			Text:          "123123123123123123",
+		}
+		fRepoMock.EXPECT().CreatePost(userId, userLogin.String(),post).Return(feedErr[iter])
+
+		if err := fRepoTest.CreatePost(userId, userLogin.String(),post); err != expectErr[iter] {
+			t.Error("unexpected behaviour")
+		}
+	}
+
+}
+
+func TestFeedUseCaseRealisation_CreateComment(t *testing.T) {
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	fRepoMock := mock.NewMockFeedRepository(ctrl)
+	fRepoTest := NewFeedUseCaseRealisation(fRepoMock)
+
+	feedErr := []error{nil, errors.FailReadFromDB}
+	expectErr := []error{nil, errors.FailReadFromDB}
+
+
+	for iter, _ := range expectErr {
+		userId := 30
+		userLogin := uuid.NewV4()
+		comment := models.Comment{
+			Text:          userLogin.String(),
+		}
+		fRepoMock.EXPECT().CreateComment(userId, comment).Return(feedErr[iter])
+
+		if err := fRepoTest.CreateComment(userId, comment); err != expectErr[iter] {
+			t.Error("unexpected behaviour")
+		}
+	}
+
+}
+
+func TestFeedUseCaseRealisation_DeleteComment(t *testing.T) {
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	fRepoMock := mock.NewMockFeedRepository(ctrl)
+	fRepoTest := NewFeedUseCaseRealisation(fRepoMock)
+
+	feedErr := []error{nil, errors.FailReadFromDB}
+	expectErr := []error{nil, errors.FailReadFromDB}
+
+
+	for iter, _ := range expectErr {
+		userId := 30
+		commentId := uuid.NewV4()
+
+		fRepoMock.EXPECT().DeleteComment(userId, commentId.String()).Return(feedErr[iter])
+
+		if err := fRepoTest.DeleteComment(userId, commentId.String()); err != expectErr[iter] {
+			t.Error("unexpected behaviour")
+		}
+	}
+
+}
+
+func TestFeedUseCaseRealisation_GetPostAndComments(t *testing.T) {
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	fRepoMock := mock.NewMockFeedRepository(ctrl)
+	fRepoTest := NewFeedUseCaseRealisation(fRepoMock)
+
+	feedErr := []error{nil, errors.FailReadFromDB}
+	expectErr := []error{nil, errors.FailReadFromDB}
+
+
+	for iter, _ := range expectErr {
+		userId := 30
+		commentId := uuid.NewV4()
+		post := models.Post{
+			Id:            0,
+			Text:          "123123123123123123",
+		}
+
+		fRepoMock.EXPECT().GetPostAndComments(userId, commentId.String()).Return(post,feedErr[iter])
+
+		if _ , err := fRepoTest.GetPostAndComments(userId, commentId.String()); err != expectErr[iter] {
+			t.Error("unexpected behaviour")
+		}
+	}
+
+}
