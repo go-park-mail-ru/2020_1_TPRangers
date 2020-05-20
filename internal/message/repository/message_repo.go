@@ -83,6 +83,9 @@ func (MR MessageRepositoryRealisation) AddNewMessage(author int, message models.
 			return err
 		}
 		_, err = MR.messageDB.Exec("INSERT INTO NewMessages (msg_id,receiver_id) VALUES($1,$2)", msgId, reciever)
+		if err != nil {
+			return err
+		}
 
 	}
 

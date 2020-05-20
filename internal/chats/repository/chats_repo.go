@@ -85,10 +85,10 @@ func (CR ChatRepositoryRealisation) CreateNewChat(chatPhoto, chatName string, us
 	insertRow := ""
 	insertValues := make([]interface{}, 0)
 
-	for i, _ := range users {
+	for _, val := range users {
 
 		insertRow += "($" + strconv.Itoa(iter-1) + ",$" + strconv.Itoa(iter) + "),"
-		insertValues = append(insertValues, chatId, users[i])
+		insertValues = append(insertValues, chatId, val)
 		iter += 2
 
 	}

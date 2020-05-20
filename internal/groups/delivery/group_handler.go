@@ -222,7 +222,7 @@ func (groupD GroupDeliveryRealisation) GetGroupProfile(rwContext echo.Context) e
 		return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: errors.CookieExpired.Error()})
 	}
 
-	groupID, err := strconv.Atoi(rwContext.Param("id"))
+	groupID, _ := strconv.Atoi(rwContext.Param("id"))
 	groupData, err := groupD.groupLogic.GetGroupProfile(userId, groupID)
 
 	if err != nil {

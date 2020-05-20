@@ -55,7 +55,7 @@ func (Sticker StickerRepoRealisation) UploadStickerPack(authorId int, pack model
 
 	fmt.Println(len(pack.Stickers))
 
-	for iter, _ := range pack.Stickers {
+	for iter, sticker := range pack.Stickers {
 
 		insert := "INSERT INTO Stickers (pack_id,"
 		rowValues := "VALUES($1,"
@@ -63,21 +63,21 @@ func (Sticker StickerRepoRealisation) UploadStickerPack(authorId int, pack model
 		stickValues = append(stickValues, packId)
 		packCounter := 1
 
-		if pack.Stickers[iter].Name != nil {
+		if sticker.Name != nil {
 			packCounter++
 			insert += "sticker_name,"
 			rowValues += "$" + strconv.Itoa(packCounter) + ","
 			stickValues = append(stickValues, *pack.Stickers[iter].Name)
 		}
 
-		if pack.Stickers[iter].Phrase != nil {
+		if sticker.Phrase != nil {
 			packCounter++
 			insert += "sticker_default_phrase,"
 			rowValues += "$" + strconv.Itoa(packCounter) + ","
 			stickValues = append(stickValues, *pack.Stickers[iter].Phrase)
 		}
 
-		if pack.Stickers[iter].Link != nil {
+		if sticker.Link != nil {
 			packCounter++
 			insert += "sticker_link,"
 			rowValues += "$" + strconv.Itoa(packCounter) + ","

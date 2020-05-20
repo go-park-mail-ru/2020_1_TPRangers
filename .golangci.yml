@@ -1,6 +1,6 @@
 run:
   # include test files or not, default is true
-  tests: true
+  tests: false
 
   # list of build tags, all linters use it. Default is empty list.
   build-tags:
@@ -15,9 +15,10 @@ run:
   skip-dirs:
     - mocks
     - internal/models
-    
+    - internal/tools
+    - internal/middleware
+    - internal/cmd
+  skip-files:
+    - main.go
 
-linter:
-  golangci-lint-version: 1.12.x
-skip-files:
-    - '?=(test\.(go))'
+

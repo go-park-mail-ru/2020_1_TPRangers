@@ -26,7 +26,7 @@ func (Data PhotoRepositoryRealisation) UploadPhotoToAlbum(photoData models.Photo
 	album := Data.photoDB.QueryRow("select name from albums where album_id = $1;", int(albumId))
 	var albumName string
 	err = album.Scan(&albumName)
-	if albumName == "" {
+	if albumName == "" || err != nil{
 		return errors.AlbumDoesntExist
 	}
 
