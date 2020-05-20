@@ -19,7 +19,10 @@ func NewPhotoRepositoryRealisation(db *sql.DB) PhotoRepositoryRealisation {
 
 func (Data PhotoRepositoryRealisation) UploadPhotoToAlbum(photoData models.PhotoInAlbum) error {
 	albumId, err := strconv.ParseInt(photoData.AlbumID, 10, 32)
-
+	if err != nil {
+		//fmt.Println(err)
+		return err
+	}
 	album := Data.photoDB.QueryRow("select name from albums where album_id = $1;", int(albumId))
 	var albumName string
 	err = album.Scan(&albumName)

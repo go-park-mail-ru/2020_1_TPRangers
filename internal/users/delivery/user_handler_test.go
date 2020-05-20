@@ -1,5 +1,21 @@
 package delivery
 
+//
+//import (
+//	"errors"
+//	"github.com/golang/mock/gomock"
+//	"github.com/labstack/echo"
+//	"github.com/stretchr/testify/assert"
+//	"go.uber.org/zap"
+//	"go.uber.org/zap/zapcore"
+//	"main/internal/models"
+//	mock_users "main/mocks"
+//	"net/http"
+//	"net/http/httptest"
+//	"testing"
+//)
+//
+
 //func TestFriendDeliveryRealisation_Logout(t *testing.T) {
 //	ctrl := gomock.NewController(t)
 //	lUseCase := mock_users.NewMockUserUseCase(ctrl)

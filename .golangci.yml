@@ -1,0 +1,4 @@
+linter:
+  golangci-lint-version: 1.12.x
+skip-files:
+    - '?=(test\.(go))'
