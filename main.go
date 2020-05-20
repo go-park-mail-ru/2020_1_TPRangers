@@ -58,7 +58,7 @@ type RequestHandlers struct {
 }
 
 func InitializeDataBases(server *echo.Echo) *sql.DB {
-	err := godotenv.Load("photo_save_micro.env")
+	err := godotenv.Load("project.env")
 	if err != nil {
 		server.Logger.Fatal("can't load .env file :", err.Error())
 	}
