@@ -6,7 +6,6 @@ on:
   pull_request:
     branches: [ linter-test ]
 
-
 jobs:
   Linter:
     name: Linter run output
