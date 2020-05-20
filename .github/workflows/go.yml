@@ -28,8 +28,6 @@ jobs:
         uses: actions-contrib/golangci-lint@v1
         env:
           GOROOT: ""
-        with:
-          args: "run"
         
 
 #   Test:
