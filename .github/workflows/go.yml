@@ -7,10 +7,29 @@ on:
     branches: [ linter-test , develop ]
 
 jobs:
-#   Linter:
-#     name: Linter run output
+
+  Linter:
+    name: Linter
+    runs-on: ubuntu-latest
+    steps: 
+      - name: Install Go
+        uses: actions/setup-go@v2.0.3
+        with:
+          go-version: ^1.13
+
+#       - name: Checkout code
+#         uses: actions/checkout@v2
+        
+#       - name: Run golangci-lint
+#         uses: actions-contrib/golangci-lint@v1
+        
+
+#   Test:
+#     name: Test
 #     runs-on: ubuntu-latest
-#     steps: 
+#     env:
+#       working-directory: ./internal
+#     steps:
 #       - name: Install Go
 #         uses: actions/setup-go@v2.0.3
 #         with:
@@ -18,35 +37,18 @@ jobs:
 
 #       - name: Checkout code
 #         uses: actions/checkout@v2
-        
-#       - name: Run golangci-lint
-#         uses: actions-contrib/golangci-lint@v1
 
-  Test:
-    name: Test run output
-    runs-on: ubuntu-latest
-    env:
-      working-directory: ./internal
-    steps:
-      - name: Install Go
-        uses: actions/setup-go@v2.0.3
-        with:
-          go-version: ^1.13
+#       - name: Get tests coverage
+#         run: go test -coverpkg=./... -coverprofile=cover ./...
+#         working-directory: ${{env.working-directory}}
 
-      - name: Checkout code
-        uses: actions/checkout@v2
+#       - name: Get clear coverage
+#         run: cat cover | fgrep -v "mock" | fgrep -v "pb.go" | fgrep -v "easyjson" > cover2
+#         working-directory: ${{env.working-directory}}
 
-      - name: Get tests coverage
-        run: go test -coverpkg=./... -coverprofile=cover ./...
-        working-directory: ${{env.working-directory}}
-
-      - name: Get clear coverage
-        run: cat cover | fgrep -v "mock" | fgrep -v "pb.go" | fgrep -v "easyjson" > cover2
-        working-directory: ${{env.working-directory}}
-
-      - name:  Output clear coverage
-        run: go tool cover -func=cover2
-        working-directory: ${{env.working-directory}}
+#       - name:  Output clear coverage
+#         run: go tool cover -func=cover2
+#         working-directory: ${{env.working-directory}}
 
 
 #  Build:
