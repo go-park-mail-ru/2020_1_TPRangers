@@ -2,9 +2,9 @@ name: CI/CD of social-hub.ru
 
 on:
   push:
-    branches: [ develop ]
+    branches: [ linter-test ]
   pull_request:
-    branches: [ develop ]
+    branches: [ linter-test ]
 
 
 jobs:
