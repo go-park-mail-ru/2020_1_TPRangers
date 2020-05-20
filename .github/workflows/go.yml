@@ -76,6 +76,10 @@ jobs:
 
       - name: Build main photosaver microserver
         run: go build -v internal/cmd/photo_save/photo_save.go && cp photo_save deploy/ && cp internal/cmd/photo_save/photo_save_micro.env deploy/
+
+      - name: Cpy of start and finish scripts
+        run: cp starter.sh deploy/ && cp finish.sh deploy/
+
       - name: ls of deploy
         run: cd deploy/ && ls
       - name: Upload build result
@@ -86,7 +90,7 @@ jobs:
 
 
   Deploy:
-    name: Deploy  
+    name: Deploy
     runs-on: ubuntu-latest
     needs: ["Build"]
     steps:
@@ -96,7 +100,7 @@ jobs:
           name: deploy
 
       - name: Starting deploy
-        uses: "appleboy/scp-action@v0.0.10"  
+        uses: "appleboy/scp-action@v0.0.10"
 
         with:
           host: ${{ secrets.HOST }}
@@ -120,6 +124,6 @@ jobs:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USER }}
           password: '000000'
-          script: cd /root/deploy/deploy && nohup ./authorization > author.log & nohup ./chats > chat.log & nohup ./likes > like.log & nohup ./photos > photos.log & nohup ./photo_save > photo_save.log & nohup ./main > server.log & echo "all services are running!"
+          script: cd /root/deploy/deploy && ./starter.sh
 
       
