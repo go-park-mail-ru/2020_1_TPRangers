@@ -2,25 +2,25 @@ name: CI/CD of social-hub.ru
 
 on:
   push:
-    branches: [ linter-test ]
+    branches: [ linter-test , develop ]
   pull_request:
-    branches: [ linter-test ]
+    branches: [ linter-test , develop ]
 
 jobs:
-  Linter:
-    name: Linter run output
-    runs-on: ubuntu-latest
-    steps: 
-      - name: Install Go
-        uses: actions/setup-go@v2.0.3
-        with:
-          go-version: ^1.13
+#   Linter:
+#     name: Linter run output
+#     runs-on: ubuntu-latest
+#     steps: 
+#       - name: Install Go
+#         uses: actions/setup-go@v2.0.3
+#         with:
+#           go-version: ^1.13
 
-      - name: Checkout code
-        uses: actions/checkout@v2
+#       - name: Checkout code
+#         uses: actions/checkout@v2
         
-      - name: Run golangci-lint
-        uses: actions-contrib/golangci-lint@v1
+#       - name: Run golangci-lint
+#         uses: actions-contrib/golangci-lint@v1
 
   Test:
     name: Test run output
