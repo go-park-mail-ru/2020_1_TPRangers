@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo"
 	"go.uber.org/zap"
@@ -215,7 +216,8 @@ func main() {
 	api.groupHandler.InitHandlers(server)
 
 
-	port := os.Getenv("PORT")
+	port := os.Getenv("MAIN_PORT")
+	fmt.Println(port)
 
-	server.Logger.Fatal(server.Start(port))
+	server.Logger.Fatal(server.Start(":3001"))
 }
