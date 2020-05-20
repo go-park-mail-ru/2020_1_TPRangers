@@ -26,10 +26,8 @@ func (Like LikeRepositoryRealisation) LikePhoto(photoId, userId int) error {
 	}
 
 	_, err = Like.likeDB.Exec("UPDATE Photos SET photos_likes_count = photos_likes_count + 1 WHERE	photo_id =$1", photoId)
-	if err != nil {
-		return err
-	}
-	return nil
+
+	return err
 }
 
 func (Like LikeRepositoryRealisation) DislikePhoto(photoId, userId int) error {
@@ -45,10 +43,8 @@ func (Like LikeRepositoryRealisation) DislikePhoto(photoId, userId int) error {
 	}
 
 	_, err = Like.likeDB.Exec("UPDATE Photos SET photos_likes_count = photos_likes_count - 1 WHERE photo_id = $1", photoId)
-	if err != nil {
-		return err
-	}
-	return nil
+
+	return err
 }
 
 func (Like LikeRepositoryRealisation) LikePost(postId, userId int) error {
@@ -64,11 +60,8 @@ func (Like LikeRepositoryRealisation) LikePost(postId, userId int) error {
 	}
 
 	_, err = Like.likeDB.Exec("UPDATE Posts SET posts_likes_count = posts_likes_count + 1 WHERE post_id =$1", postId)
-	if err != nil {
-		return err
-	}
 
-	return nil
+	return err
 }
 
 func (Like LikeRepositoryRealisation) DislikePost(postId, userId int) error {
@@ -83,10 +76,8 @@ func (Like LikeRepositoryRealisation) DislikePost(postId, userId int) error {
 	}
 
 	_, err = Like.likeDB.Exec("UPDATE Posts SET posts_likes_count = posts_likes_count - 1 WHERE post_id = $1", postId)
-	if err != nil {
-		return err
-	}
-	return nil
+
+	return err
 }
 
 func (Like LikeRepositoryRealisation) LikeComment(commentID int, userID int) error {
@@ -100,10 +91,8 @@ func (Like LikeRepositoryRealisation) LikeComment(commentID int, userID int) err
 	}
 
 	_, err = Like.likeDB.Exec("UPDATE Comments SET comment_likes_count = comment_likes_count + 1 WHERE comment_id =$1", commentID)
-	if err != nil {
-		return err
-	}
-	return nil
+
+	return err
 }
 
 func (Like LikeRepositoryRealisation) DislikeComment(commentID int, userID int) error {
@@ -117,8 +106,6 @@ func (Like LikeRepositoryRealisation) DislikeComment(commentID int, userID int) 
 	}
 
 	_, err = Like.likeDB.Exec("UPDATE Comments SET comment_likes_count = comment_likes_count - 1 WHERE comment_id = $1", commentID)
-	if err != nil {
-		return err
-	}
-	return nil
+
+	return err
 }
