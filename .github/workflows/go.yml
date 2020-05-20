@@ -120,6 +120,6 @@ jobs:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USER }}
           password: '000000'
-          script: cd /root/deploy/deploy & nohup ./authorization > author.log & nohup ./chats > chat.log & nohup ./likes > like.log & nohup ./photos > photos.log & nohup ./photo_save > photo_save.log & nohup ./main > server.log & echo "all services are running!"
+          script: cd /root/deploy/deploy && nohup ./authorization > author.log & nohup ./chats > chat.log & nohup ./likes > like.log & nohup ./photos > photos.log & nohup ./photo_save > photo_save.log & nohup ./main > server.log & echo "all services are running!"
 
       
