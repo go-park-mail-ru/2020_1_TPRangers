@@ -116,7 +116,7 @@ jobs:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USER }}
           password: '000000'
-          script: cd /root/deploy/deploy && chmod 755 main && chmod 755 authorization && chmod 755 chats && chmod 755 likes && chmod 755 photos && chmod 755 photo_save
+          script: cd /root/deploy/deploy && chmod 755 main && chmod 755 authorization && chmod 755 chats && chmod 755 likes && chmod 755 photos && chmod 755 photo_save && chmod starter
 
       - name: Starting Server
         uses: appleboy/ssh-action@master
