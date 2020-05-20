@@ -124,7 +124,7 @@ jobs:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USER }}
           password: '000000'
-          script: cd /root/deploy/deploy && cat startet.sh && ./starter.sh
+          script: cd /root/deploy/deploy && cat starter.sh && ./starter.sh
 
 
       
