@@ -4,20 +4,16 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
-	"os"
 	deliveryPhotoSave "main/internal/microservices/photo_save/delivery"
 	usecasePhotoSave "main/internal/microservices/photo_save/usecase"
+	"os"
 )
-
-
-
-
 
 type RequestHandlers struct {
 	photoSaveHandler deliveryPhotoSave.PhotoSaveDeliveryRealisation
 }
 
-func NewRequestHandlers () *RequestHandlers{
+func NewRequestHandlers() *RequestHandlers {
 	photoSaveUseCase := usecasePhotoSave.NewUserUseCaseRealisation()
 
 	photoSaveDelivery := deliveryPhotoSave.NewSavePhotoDeliveryRealisation(photoSaveUseCase)
@@ -27,7 +23,7 @@ func NewRequestHandlers () *RequestHandlers{
 }
 
 func main() {
-	err := godotenv.Load("project.env")
+	err := godotenv.Load("photo_save_micro.env")
 	if err != nil {
 		return
 	}
@@ -35,7 +31,7 @@ func main() {
 	server := echo.New()
 
 	server.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: []string{"http://localhost", "https://social-hub.ru"},
+		AllowOrigins: []string{"http://localhost:3000", "https://social-hub.ru"},
 		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
 	}))
 	server.Use(middleware.Logger())
@@ -44,7 +40,6 @@ func main() {
 	api := NewRequestHandlers()
 	api.photoSaveHandler.InitHandler(server)
 
-
-	port := os.Getenv("PORT")
+	port := os.Getenv("PORT_SAVE")
 	server.Logger.Fatal(server.Start(port))
 }

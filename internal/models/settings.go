@@ -9,4 +9,5 @@ type Settings struct {
 	Surname   string `json:"surname,omitempty"`
 	Date      string `json:"date,omitempty"`
 	Photo     string `json:"photo,omitempty"`
+	Id        int    `json:"-"`
 }

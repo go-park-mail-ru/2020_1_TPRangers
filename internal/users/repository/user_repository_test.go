@@ -57,7 +57,10 @@ func TestUserRepositoryRealisation_AddNewUser(t *testing.T) {
 				fmt.Println(err)
 			}
 		default:
-			tx.Rollback()
+			err = tx.Rollback()
+			if err != nil {
+				fmt.Println(err)
+			}
 		}
 	}
 
@@ -91,7 +94,10 @@ func TestUserRepositoryRealisation_IsUserExist(t *testing.T) {
 
 		switch err {
 		case nil:
-			tx.Commit()
+			err = tx.Commit()
+			if err != nil {
+				return
+			}
 		default:
 			tx.Rollback()
 		}
@@ -127,9 +133,15 @@ func TestUserRepositoryRealisation_GetDefaultProfilePhotoId(t *testing.T) {
 
 		switch err {
 		case nil:
-			tx.Commit()
+			err = tx.Commit()
+			if err != nil {
+				return
+			}
 		default:
-			tx.Rollback()
+			err = tx.Rollback()
+			if err != nil {
+				return
+			}
 		}
 	}
 }
@@ -144,7 +156,10 @@ func TestUserRepositoryRealisation_GetPassword(t *testing.T) {
 	for iter, _ := range expectBehaviour {
 		login := uuid.NewV4()
 		password := make([]byte, 8)
-		cr.Read(password)
+		_, err := cr.Read(password)
+		if err != nil {
+			return
+		}
 
 		mock.ExpectBegin()
 		if errs[iter] != nil {
@@ -166,7 +181,10 @@ func TestUserRepositoryRealisation_GetPassword(t *testing.T) {
 
 		switch err {
 		case nil:
-			tx.Commit()
+			err = tx.Commit()
+			if err != nil {
+				return
+			}
 		default:
 			tx.Rollback()
 		}
@@ -206,7 +224,10 @@ func TestUserRepositoryRealisation_GetIdByEmail(t *testing.T) {
 
 		switch err {
 		case nil:
-			tx.Commit()
+			err = tx.Commit()
+			if err != nil {
+				return
+			}
 		default:
 			tx.Rollback()
 		}
@@ -225,6 +246,7 @@ func TestUserRepositoryRealisation_GetUserProfileSettingsByLogin(t *testing.T) {
 	for iter, _ := range expectBehaviour {
 		login := uuid.NewV4()
 		user := models.Settings{
+			Id:        2,
 			Login:     "123123",
 			Telephone: "123123",
 			Email:     "123123",
@@ -236,10 +258,10 @@ func TestUserRepositoryRealisation_GetUserProfileSettingsByLogin(t *testing.T) {
 
 		mock.ExpectBegin()
 		if errs[iter] != nil {
-			mock.ExpectQuery(`  SELECT U\.login, U\.phone, U\.mail, U\.name, U\.surname, U\.birthdate , P\.url FROM users U INNER JOIN photos P USING \(photo_id\) WHERE U\.login\=\$1 GROUP BY U\.login, U\.phone, U\.mail, U\.name, U\.surname, U\.birthdate , P\.url  `).WithArgs(login.String()).WillReturnError(errs[iter])
+			mock.ExpectQuery(`  SELECT U\.u_id, U\.login, U\.phone, U\.mail, U\.name, U\.surname, U\.birthdate , P\.url FROM users U INNER JOIN photos P USING \(photo_id\) WHERE U\.login\=\$1 GROUP BY U\.login, U\.phone, U\.mail, U\.name, U\.surname, U\.birthdate , P\.url , U\.u_id  `).WithArgs(login.String()).WillReturnError(errs[iter])
 			user = models.Settings{}
 		} else {
-			mock.ExpectQuery(`   SELECT U\.login, U\.phone, U\.mail, U\.name, U\.surname, U\.birthdate , P\.url FROM users U INNER JOIN photos P USING \(photo_id\) WHERE U\.login\=\$1 GROUP BY U\.login, U\.phone, U\.mail, U\.name, U\.surname, U\.birthdate , P\.url `).WithArgs(login.String()).WillReturnRows(sqlmock.NewRows([]string{"U.login", "U.phone", "U.mail", "U.name", "U.surname", "U.birthdate", "P.url"}).AddRow(user.Login, user.Telephone, user.Email, user.Name, user.Surname, user.Date, user.Photo))
+			mock.ExpectQuery(`   SELECT U\.u_id, U\.login, U\.phone, U\.mail, U\.name, U\.surname, U\.birthdate , P\.url FROM users U INNER JOIN photos P USING \(photo_id\) WHERE U\.login\=\$1 GROUP BY U\.login, U\.phone, U\.mail, U\.name, U\.surname, U\.birthdate , P\.url , U\.u_id `).WithArgs(login.String()).WillReturnRows(sqlmock.NewRows([]string{"U.u_id", "U.login", "U.phone", "U.mail", "U.name", "U.surname", "U.birthdate", "P.url"}).AddRow(2, user.Login, user.Telephone, user.Email, user.Name, user.Surname, user.Date, user.Photo))
 		}
 		mock.ExpectCommit()
 
@@ -254,7 +276,10 @@ func TestUserRepositoryRealisation_GetUserProfileSettingsByLogin(t *testing.T) {
 
 		switch err {
 		case nil:
-			tx.Commit()
+			err = tx.Commit()
+			if err != nil {
+				return
+			}
 		default:
 			tx.Rollback()
 		}
@@ -302,7 +327,10 @@ func TestUserRepositoryRealisation_GetUserProfileSettingsById(t *testing.T) {
 
 		switch err {
 		case nil:
-			tx.Commit()
+			err = tx.Commit()
+			if err != nil {
+				return
+			}
 		default:
 			tx.Rollback()
 		}
@@ -342,7 +370,10 @@ func TestUserRepositoryRealisation_UploadProfilePhoto(t *testing.T) {
 
 		switch err {
 		case nil:
-			tx.Commit()
+			err = tx.Commit()
+			if err != nil {
+				return
+			}
 		default:
 			tx.Rollback()
 		}
@@ -459,7 +490,10 @@ func TestUserRepositoryRealisation_GetUserDataById(t *testing.T) {
 	errs := []error{nil, errors.New("smth wrong")}
 	expectBehaviour := []error{nil, _errors.FailReadToVar}
 	pass := make([]byte, 8)
-	cr.Read(pass)
+	_, err := cr.Read(pass)
+	if err != nil {
+		return
+	}
 	user := models.User{
 		Login:           "123123",
 		Telephone:       "123123",
@@ -535,7 +569,10 @@ func TestUserRepositoryRealisation_GetIdByLogin(t *testing.T) {
 		err = nil
 		switch err {
 		case nil:
-			tx.Commit()
+			err = tx.Commit()
+			if err != nil {
+				return
+			}
 
 		default:
 			tx.Rollback()
@@ -574,7 +611,10 @@ func TestUserRepositoryRealisation_GetUserLoginById(t *testing.T) {
 		err = nil
 		switch err {
 		case nil:
-			tx.Commit()
+			err = tx.Commit()
+			if err != nil {
+				return
+			}
 
 		default:
 			tx.Rollback()

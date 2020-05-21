@@ -2,6 +2,7 @@ package repository
 
 import (
 	"database/sql"
+	"fmt"
 	_ "github.com/lib/pq"
 	"main/internal/models"
 	"main/internal/tools/errors"
@@ -17,42 +18,93 @@ func NewUserRepositoryRealisation(db *sql.DB) UserRepositoryRealisation {
 
 }
 
-func (Data UserRepositoryRealisation) SearchUsers(userID int, valueOfSearch string) ([]models.Person, error) {
+func (Data UserRepositoryRealisation) SearchUsers(userID int, valueOfSearch string, age string) ([]models.Person, error) {
 	persons := make([]models.Person, 0)
 	if strings.Contains(valueOfSearch, " ") {
 		arrayOfvalue := strings.Split(valueOfSearch, " ")
 		nameOrSurname := arrayOfvalue[0]
 		SurnameOrName := arrayOfvalue[1]
 
-		rows, err := Data.userDB.Query("SELECT u.name, u.surname, u.login, ph.url FROM users AS u INNER JOIN photos AS ph ON (u.photo_id = ph.photo_id)  WHERE u.u_id != $3 AND ((lower(u.name) LIKE LOWER($1) AND lower(u.surname) LIKE LOWER($2)) OR (lower(u.name) LIKE LOWER($2) AND lower(u.surname) LIKE LOWER($1)));", nameOrSurname + "%", SurnameOrName + "%", userID)
 
-		if err != nil {
-			return nil, errors.FailReadFromDB
-		}
-		person := models.Person{}
-		for rows.Next() {
-			err = rows.Scan(&person.Name, &person.Surname, &person.Login, &person.PhotoUrl)
+		if age != ""{
+
+			rows, err := Data.userDB.Query("SELECT u.birthdate, u.name, u.surname, u.login, ph.url FROM users AS u INNER JOIN photos AS ph ON (u.photo_id = ph.photo_id)  WHERE u.u_id != $3 AND ((lower(u.name) LIKE LOWER($1) AND lower(u.surname) LIKE LOWER($2)) OR (lower(u.name) LIKE LOWER($2) AND lower(u.surname) LIKE LOWER($1)));", nameOrSurname + "%", SurnameOrName + "%", userID)
+
 			if err != nil {
-				return nil, errors.FailReadToVar
+				return nil, errors.FailReadFromDB
 			}
-			persons = append(persons, person)
+			person := models.Person{}
+			for rows.Next() {
+				birthdate := new(string)
+				err = rows.Scan(&birthdate, &person.Name, &person.Surname, &person.Login, &person.PhotoUrl)
+				if err != nil {
+					return nil, errors.FailReadToVar
+				}
+				newBirthDate := strings.Split(*birthdate, "-")
+				newYear := newBirthDate[0]
+
+
+				if newYear == age{
+					persons = append(persons, person)
+				}
+			}
+		} else {
+			rows, err := Data.userDB.Query("SELECT u.name, u.surname, u.login, ph.url FROM users AS u INNER JOIN photos AS ph ON (u.photo_id = ph.photo_id)  WHERE u.u_id != $3 AND ((lower(u.name) LIKE LOWER($1) AND lower(u.surname) LIKE LOWER($2)) OR (lower(u.name) LIKE LOWER($2) AND lower(u.surname) LIKE LOWER($1)));", nameOrSurname + "%", SurnameOrName + "%", userID)
+
+
+			if err != nil {
+				return nil, err
+			}
+			person := models.Person{}
+			for rows.Next() {
+				err = rows.Scan(&person.Name, &person.Surname, &person.Login, &person.PhotoUrl)
+				if err != nil {
+					return nil, err
+				}
+				persons = append(persons, person)
+
+			}
 		}
+
 
 	} else {
+		if age != "" {
+			rows, err := Data.userDB.Query("SELECT u.birthdate, u.name, u.surname, u.login, ph.url FROM users AS u INNER JOIN photos AS ph ON (u.photo_id = ph.photo_id)  WHERE u.u_id != $2 AND ((lower(u.name) LIKE LOWER($1)) OR (lower(u.surname) LIKE LOWER($1)));", valueOfSearch + "%", userID)
 
-		rows, err := Data.userDB.Query("SELECT u.name, u.surname, u.login, ph.url FROM users AS u INNER JOIN photos AS ph ON (u.photo_id = ph.photo_id)  WHERE u.u_id != $2 AND ((lower(u.name) LIKE LOWER($1)) OR (lower(u.surname) LIKE LOWER($1)));", valueOfSearch + "%", userID)
-
-		if err != nil {
-			return nil, errors.FailReadFromDB
-		}
-		person := models.Person{}
-		for rows.Next() {
-			err = rows.Scan(&person.Name, &person.Surname, &person.Login, &person.PhotoUrl)
 			if err != nil {
-				return nil, errors.FailReadToVar
+				return nil, errors.FailReadFromDB
 			}
-			persons = append(persons, person)
+			person := models.Person{}
+			for rows.Next() {
+				birthdate := new(string)
+				err = rows.Scan(&birthdate, &person.Name, &person.Surname, &person.Login, &person.PhotoUrl)
+				if err != nil {
+					return nil, errors.FailReadToVar
+				}
+				newBirthDate := strings.Split(*birthdate, "-")
+				newYear := newBirthDate[0]
+				if newYear == age {
+					persons = append(persons, person)
+				}
+			}
+
+		} else {
+			rows, err := Data.userDB.Query("SELECT u.name, u.surname, u.login, ph.url FROM users AS u INNER JOIN photos AS ph ON (u.photo_id = ph.photo_id)  WHERE u.u_id != $2 AND ((lower(u.name) LIKE LOWER($1)) OR (lower(u.surname) LIKE LOWER($1)));", valueOfSearch + "%", userID)
+
+
+			if err != nil {
+				return nil, errors.FailReadFromDB
+			}
+			person := models.Person{}
+			for rows.Next() {
+				err = rows.Scan(&person.Name, &person.Surname, &person.Login, &person.PhotoUrl)
+				if err != nil {
+					return nil, errors.FailReadToVar
+				}
+				persons = append(persons, person)
+			}
 		}
+
 	}
 
 	return persons, nil
@@ -126,8 +178,9 @@ func (Data UserRepositoryRealisation) UploadProfilePhoto(photoUrl string) (int, 
 func (Data UserRepositoryRealisation) GetUserProfileSettingsByLogin(login string) (models.Settings, error) {
 	user := models.Settings{}
 
-	row := Data.userDB.QueryRow("SELECT U.login, U.phone, U.mail, U.name, U.surname, U.birthdate , P.url FROM users U INNER JOIN photos P USING (photo_id) WHERE U.login=$1 GROUP BY U.login, U.phone, U.mail, U.name, U.surname, U.birthdate , P.url", login)
-	errScan := row.Scan(&user.Login, &user.Telephone, &user.Email, &user.Name, &user.Surname, &user.Date, &user.Photo)
+	row := Data.userDB.QueryRow("SELECT U.u_id, U.login, U.phone, U.mail, U.name, U.surname, U.birthdate , P.url FROM users U INNER JOIN photos P USING (photo_id) WHERE U.login=$1 GROUP BY U.login, U.phone, U.mail, U.name, U.surname, U.birthdate , P.url , U.u_id", login)
+	errScan := row.Scan(&user.Id,&user.Login, &user.Telephone, &user.Email, &user.Name, &user.Surname, &user.Date, &user.Photo)
+	fmt.Println(errScan)
 	return user, errScan
 }
 

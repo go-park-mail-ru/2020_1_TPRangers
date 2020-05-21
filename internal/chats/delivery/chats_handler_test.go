@@ -15,6 +15,7 @@ import (
 	"strings"
 	"testing"
 )
+
 func TestChatsDelivery_CreateChat(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	cUseCase := mock.NewMockChatUseCase(ctrl)
@@ -30,18 +31,17 @@ func TestChatsDelivery_CreateChat(t *testing.T) {
 	chatData := `{"chatName" : "nn"}`
 	wrongChat := `{"haha":"lol"}`
 	chats := []string{chatData, chatData, wrongChat, "asdasdasd", chatData}
-	mockErr := []error{nil , nil , nil , nil , errors.New("oh shit here we go again")}
+	mockErr := []error{nil, nil, nil, nil, errors.New("oh shit here we go again")}
 	expectedBehaviour := []int{http.StatusOK, http.StatusUnauthorized, http.StatusConflict, http.StatusConflict, http.StatusConflict}
 
 	for iter, _ := range users {
-		if expectedBehaviour[iter] == http.StatusOK || iter == len(users) -1 {
+		if expectedBehaviour[iter] == http.StatusOK || iter == len(users)-1 {
 			newChat := new(models.NewChatUsers)
 			if chats[iter] != wrongChat {
 				newChat.ChatName = "nn"
 			}
-			cUseCase.EXPECT().CreateChat(*newChat,users[iter]).Return(mockErr[iter])
+			cUseCase.EXPECT().CreateChat(*newChat, users[iter]).Return(mockErr[iter])
 		}
-
 
 		e := echo.New()
 		var req *http.Request
@@ -57,7 +57,7 @@ func TestChatsDelivery_CreateChat(t *testing.T) {
 		c.Set("REQUEST_ID", "123")
 		c.Set("user_id", users[iter])
 
-		if assert.NoError(t , chatTest.CreateChat(c)) {
+		if assert.NoError(t, chatTest.CreateChat(c)) {
 			assert.Equal(t, expectedBehaviour[iter], rec.Code)
 		}
 	}
@@ -74,16 +74,14 @@ func TestChatsDelivery_ExitChat(t *testing.T) {
 
 	chatTest := NewChatsDelivery(logger, cUseCase)
 
-
 	users := []int{2, -1, 3}
-	exitErr := []error{nil , nil , errors.New("smth")}
+	exitErr := []error{nil, nil, errors.New("smth")}
 	expectedBehaviour := []int{http.StatusOK, http.StatusUnauthorized, http.StatusConflict}
 
-
-	for iter , _ := range expectedBehaviour {
+	for iter, _ := range expectedBehaviour {
 		chatId := uuid.NewV4()
 		if expectedBehaviour[iter] != http.StatusUnauthorized {
-			cUseCase.EXPECT().ExitChat(chatId.String() , users[iter]).Return(exitErr[iter])
+			cUseCase.EXPECT().ExitChat(chatId.String(), users[iter]).Return(exitErr[iter])
 		}
 
 		e := echo.New()
@@ -96,7 +94,7 @@ func TestChatsDelivery_ExitChat(t *testing.T) {
 		c.Set("REQUEST_ID", "123")
 		c.Set("user_id", users[iter])
 
-		if assert.NoError(t , chatTest.ExitChat(c)) {
+		if assert.NoError(t, chatTest.ExitChat(c)) {
 			assert.Equal(t, expectedBehaviour[iter], rec.Code)
 		}
 	}
@@ -113,17 +111,15 @@ func TestChatsDelivery_GetChatMessages(t *testing.T) {
 
 	chatTest := NewChatsDelivery(logger, cUseCase)
 
-
 	users := []int{2, -1, 3}
-	exitErr := []error{nil , nil , errors.New("smth")}
+	exitErr := []error{nil, nil, errors.New("smth")}
 	expectedBehaviour := []int{http.StatusOK, http.StatusUnauthorized, http.StatusConflict}
 
-
-	for iter , _ := range expectedBehaviour {
+	for iter, _ := range expectedBehaviour {
 		chatId := uuid.NewV4()
 		defInfo := models.ChatAndMessages{}
 		if expectedBehaviour[iter] != http.StatusUnauthorized {
-			cUseCase.EXPECT().GetChatMessages(chatId.String() , users[iter]).Return(defInfo,exitErr[iter])
+			cUseCase.EXPECT().GetChatMessages(chatId.String(), users[iter]).Return(defInfo, exitErr[iter])
 		}
 
 		e := echo.New()
@@ -136,7 +132,7 @@ func TestChatsDelivery_GetChatMessages(t *testing.T) {
 		c.Set("REQUEST_ID", "123")
 		c.Set("user_id", users[iter])
 
-		if assert.NoError(t , chatTest.GetChatMessages(c)) {
+		if assert.NoError(t, chatTest.GetChatMessages(c)) {
 			assert.Equal(t, expectedBehaviour[iter], rec.Code)
 		}
 	}
@@ -153,16 +149,14 @@ func TestChatsDelivery_GetAllChats(t *testing.T) {
 
 	chatTest := NewChatsDelivery(logger, cUseCase)
 
-
 	users := []int{2, -1, 3}
-	exitErr := []error{nil , nil , errors.New("smth")}
+	exitErr := []error{nil, nil, errors.New("smth")}
 	expectedBehaviour := []int{http.StatusOK, http.StatusUnauthorized, http.StatusConflict}
 
-
-	for iter , _ := range expectedBehaviour {
-		defInfo := make([]models.Chat,3,3)
+	for iter, _ := range expectedBehaviour {
+		defInfo := make([]models.Chat, 3)
 		if expectedBehaviour[iter] != http.StatusUnauthorized {
-			cUseCase.EXPECT().GetAllChats(users[iter]).Return(defInfo,exitErr[iter])
+			cUseCase.EXPECT().GetAllChats(users[iter]).Return(defInfo, exitErr[iter])
 		}
 
 		e := echo.New()
@@ -173,7 +167,7 @@ func TestChatsDelivery_GetAllChats(t *testing.T) {
 		c.Set("REQUEST_ID", "123")
 		c.Set("user_id", users[iter])
 
-		if assert.NoError(t , chatTest.GetAllChats(c)) {
+		if assert.NoError(t, chatTest.GetAllChats(c)) {
 			assert.Equal(t, expectedBehaviour[iter], rec.Code)
 		}
 	}

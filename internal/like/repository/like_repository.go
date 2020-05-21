@@ -25,26 +25,26 @@ func (Like LikeRepositoryRealisation) LikePhoto(photoId, userId int) error {
 		return err
 	}
 
-	Like.likeDB.Exec("UPDATE Photos SET photos_likes_count = photos_likes_count + 1 WHERE	photo_id =$1", photoId)
+	_, err = Like.likeDB.Exec("UPDATE Photos SET photos_likes_count = photos_likes_count + 1 WHERE	photo_id =$1", photoId)
 
-	return nil
+	return err
 }
 
 func (Like LikeRepositoryRealisation) DislikePhoto(photoId, userId int) error {
 
-	like_id := int64(0)
+	likeId := int64(0)
 
 	row := Like.likeDB.QueryRow("DELETE FROM UsersPhotosLikes WHERE u_id = $1 AND photo_id = $2 RETURNING photolike_id", userId, photoId)
 
-	err := row.Scan(&like_id)
+	err := row.Scan(&likeId)
 
 	if err != nil {
 		return err
 	}
 
-	Like.likeDB.Exec("UPDATE Photos SET photos_likes_count = photos_likes_count - 1 WHERE photo_id = $1", photoId)
+	_, err = Like.likeDB.Exec("UPDATE Photos SET photos_likes_count = photos_likes_count - 1 WHERE photo_id = $1", photoId)
 
-	return nil
+	return err
 }
 
 func (Like LikeRepositoryRealisation) LikePost(postId, userId int) error {
@@ -59,9 +59,9 @@ func (Like LikeRepositoryRealisation) LikePost(postId, userId int) error {
 		return err
 	}
 
-	Like.likeDB.Exec("UPDATE Posts SET posts_likes_count = posts_likes_count + 1 WHERE post_id =$1", postId)
+	_, err = Like.likeDB.Exec("UPDATE Posts SET posts_likes_count = posts_likes_count + 1 WHERE post_id =$1", postId)
 
-	return nil
+	return err
 }
 
 func (Like LikeRepositoryRealisation) DislikePost(postId, userId int) error {
@@ -75,24 +75,24 @@ func (Like LikeRepositoryRealisation) DislikePost(postId, userId int) error {
 		return err
 	}
 
-	Like.likeDB.Exec("UPDATE Posts SET posts_likes_count = posts_likes_count - 1 WHERE post_id = $1", postId)
+	_, err = Like.likeDB.Exec("UPDATE Posts SET posts_likes_count = posts_likes_count - 1 WHERE post_id = $1", postId)
 
-	return nil
+	return err
 }
 
 func (Like LikeRepositoryRealisation) LikeComment(commentID int, userID int) error {
-	like_id := int64(0)
+	likeId := int64(0)
 	row := Like.likeDB.QueryRow("INSERT INTO UsersCommentsLikes (u_id,comment_id) VALUES ($1,$2) RETURNING commentlike_id", userID, commentID)
 
-	err := row.Scan(&like_id)
+	err := row.Scan(&likeId)
 
 	if err != nil {
 		return err
 	}
 
-	Like.likeDB.Exec("UPDATE Comments SET comment_likes_count = comment_likes_count + 1 WHERE comment_id =$1", commentID)
+	_, err = Like.likeDB.Exec("UPDATE Comments SET comment_likes_count = comment_likes_count + 1 WHERE comment_id =$1", commentID)
 
-	return nil
+	return err
 }
 
 func (Like LikeRepositoryRealisation) DislikeComment(commentID int, userID int) error {
@@ -105,7 +105,7 @@ func (Like LikeRepositoryRealisation) DislikeComment(commentID int, userID int) 
 		return err
 	}
 
-	Like.likeDB.Exec("UPDATE Comments SET comment_likes_count = comment_likes_count - 1 WHERE comment_id = $1", commentID)
+	_, err = Like.likeDB.Exec("UPDATE Comments SET comment_likes_count = comment_likes_count - 1 WHERE comment_id = $1", commentID)
 
-	return nil
+	return err
 }

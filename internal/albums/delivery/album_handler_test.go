@@ -29,10 +29,10 @@ func TestFriendDeliveryRealisation_GetAlbums(t *testing.T) {
 	albumBehaviour := []error{nil, nil, errors.New("smth happend")}
 	expectedBehaviour := []int{http.StatusUnauthorized, http.StatusOK, http.StatusInternalServerError}
 
-	for iter, _ := range usersId {
+	for iter := range usersId {
 
 		if expectedBehaviour[iter] != http.StatusUnauthorized {
-			albums := make([]models.Album, 2, 2)
+			albums := make([]models.Album, 2)
 			aUseCase.EXPECT().GetAlbums(usersId[iter]).Return(albums, albumBehaviour[iter])
 		}
 
@@ -65,7 +65,7 @@ func TestFriendDeliveryRealisation_CreateAlbum(t *testing.T) {
 	albumBehaviour := []error{nil, nil, errors.New("smth happend"), nil, nil}
 	expectedBehaviour := []int{http.StatusUnauthorized, http.StatusOK, http.StatusConflict, http.StatusInternalServerError}
 
-	for iter, _ := range usersId {
+	for iter := range usersId {
 
 		album := models.AlbumReq{Name: "123"}
 		if expectedBehaviour[iter] != http.StatusUnauthorized {

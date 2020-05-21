@@ -33,7 +33,7 @@ func TestTokenRepositoryRealisation_AddNewToken(t *testing.T) {
 
 		client.Set(cVal, "123", 5*time.Millisecond)
 
-		if err := cRepo.AddNewToken("123",1); err != expectedBehaviour[iter] {
+		if err := cRepo.AddNewToken("123", 1); err != expectedBehaviour[iter] {
 			t.Error(iter, err, expectedBehaviour[iter])
 		}
 
@@ -54,7 +54,7 @@ func TestTokenRepositoryRealisation_GetUserIdByToken(t *testing.T) {
 
 		client.Set(tVal, "123", 5*time.Millisecond)
 
-		if _ ,err := cRepo.GetUserIdByToken(tVal); err != expectedBehaviour[iter] {
+		if _, err := cRepo.GetUserIdByToken(tVal); err != expectedBehaviour[iter] {
 			t.Error(iter, err, expectedBehaviour[iter])
 		}
 
@@ -63,11 +63,8 @@ func TestTokenRepositoryRealisation_GetUserIdByToken(t *testing.T) {
 	c := uuid.NewV4()
 	tVal := c.String()
 
-	if _ ,err := cRepo.GetUserIdByToken(tVal); err == nil {
+	if _, err := cRepo.GetUserIdByToken(tVal); err == nil {
 		t.Error("ERROR")
 	}
 
 }
-
-
-

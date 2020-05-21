@@ -12,7 +12,7 @@ type PhotoSaveDeliveryRealisation struct {
 	PhotoSaveLogic photo_save.PhotoSaveUseCase
 }
 
-func (PhotoSaveD PhotoSaveDeliveryRealisation) Upload (c echo.Context) error  {
+func (PhotoSaveD PhotoSaveDeliveryRealisation) Upload(c echo.Context) error {
 	file, err := c.FormFile("fileData")
 	if err != nil {
 		return err
@@ -35,7 +35,7 @@ func (PhotoSaveD PhotoSaveDeliveryRealisation) Upload (c echo.Context) error  {
 	path := os.Getenv("UPLOAD_PATH")
 	response.Message = "Файл загружен"
 	response.Filename = path + filename
-
+	c.Response().Header().Set("Access-Control-Allow-Credentials", "true")
 	return c.JSON(http.StatusOK, response)
 }
 
@@ -43,6 +43,6 @@ func NewSavePhotoDeliveryRealisation(logic photo_save.PhotoSaveUseCase) PhotoSav
 	return PhotoSaveDeliveryRealisation{PhotoSaveLogic: logic}
 }
 
-func (PhotoSaveD PhotoSaveDeliveryRealisation) InitHandler(server *echo.Echo)  {
+func (PhotoSaveD PhotoSaveDeliveryRealisation) InitHandler(server *echo.Echo) {
 	server.POST("/upload", PhotoSaveD.Upload)
 }

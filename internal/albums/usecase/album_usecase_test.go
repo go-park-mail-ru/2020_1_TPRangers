@@ -22,7 +22,7 @@ func TestAlbumUseCaseRealisation_GetAlbums(t *testing.T) {
 	for iter, _ := range expectBehaviour {
 
 		uId := rand.Int()
-		albums := make([]models.Album, 1, 1)
+		albums := make([]models.Album, 1)
 		if errs[iter] != nil {
 			albums[0] = models.Album{}
 		} else {

@@ -34,9 +34,9 @@ func Test_LikePhoto(t *testing.T) {
 		tests.photoId = rand.Int()
 		tests.userId = rand.Int()
 		lRepoMock.EXPECT().LikePhoto(context.Background(), &lks.Like{
-			UserId:               int32(tests.userId),
-			DataId:               int32(tests.photoId),
-		}).Return(nil,photoErr[iter])
+			UserId: int32(tests.userId),
+			DataId: int32(tests.photoId),
+		}).Return(nil, photoErr[iter])
 
 		errs := likeUseCase.LikePhoto(int(tests.photoId), int(tests.userId))
 		if errs != expectErr[iter] {
@@ -71,9 +71,9 @@ func Test_DislikePhoto(t *testing.T) {
 		tests.userId = rand.Int()
 
 		lRepoMock.EXPECT().DislikePhoto(context.Background(), &lks.Like{
-			UserId:               int32(tests.userId),
-			DataId:               int32(tests.photoId),
-		}).Return(nil,photoErr[iter])
+			UserId: int32(tests.userId),
+			DataId: int32(tests.photoId),
+		}).Return(nil, photoErr[iter])
 
 		errs := likeUseCase.DislikePhoto(int(tests.photoId), int(tests.userId))
 		if errs != expectErr[iter] {
@@ -108,9 +108,9 @@ func Test_LikePost(t *testing.T) {
 		tests.userId = rand.Int()
 
 		lRepoMock.EXPECT().LikePost(context.Background(), &lks.Like{
-			UserId:               int32(tests.userId),
-			DataId:               int32(tests.postId),
-		}).Return(nil,postErr[iter])
+			UserId: int32(tests.userId),
+			DataId: int32(tests.postId),
+		}).Return(nil, postErr[iter])
 
 		errs := likeUseCase.LikePost(int(tests.postId), int(tests.userId))
 		if errs != expectErr[iter] {
@@ -145,9 +145,9 @@ func Test_DislikePost(t *testing.T) {
 		tests.userId = rand.Int()
 
 		lRepoMock.EXPECT().DislikePost(context.Background(), &lks.Like{
-			UserId:               int32(tests.userId),
-			DataId:               int32(tests.postId),
-		}).Return(nil,postErr[iter])
+			UserId: int32(tests.userId),
+			DataId: int32(tests.postId),
+		}).Return(nil, postErr[iter])
 
 		errs := likeUseCase.DislikePost(int(tests.postId), int(tests.userId))
 		if errs != expectErr[iter] {
@@ -182,9 +182,9 @@ func TestLikesUseRealisation_DislikeComment(t *testing.T) {
 		tests.userId = rand.Int()
 
 		lRepoMock.EXPECT().DislikeComment(context.Background(), &lks.Like{
-			UserId:               int32(tests.userId),
-			DataId:               int32(tests.postId),
-		}).Return(nil,postErr[iter])
+			UserId: int32(tests.userId),
+			DataId: int32(tests.postId),
+		}).Return(nil, postErr[iter])
 
 		errs := likeUseCase.DislikeComment(int(tests.postId), int(tests.userId))
 		if errs != expectErr[iter] {
@@ -219,9 +219,9 @@ func TestLikesUseRealisation_LikeComment(t *testing.T) {
 		tests.userId = rand.Int()
 
 		lRepoMock.EXPECT().LikeComment(context.Background(), &lks.Like{
-			UserId:               int32(tests.userId),
-			DataId:               int32(tests.postId),
-		}).Return(nil,postErr[iter])
+			UserId: int32(tests.userId),
+			DataId: int32(tests.postId),
+		}).Return(nil, postErr[iter])
 
 		errs := likeUseCase.LikeComment(int(tests.postId), int(tests.userId))
 		if errs != expectErr[iter] {

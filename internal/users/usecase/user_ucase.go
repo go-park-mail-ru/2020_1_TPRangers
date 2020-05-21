@@ -25,8 +25,8 @@ func CheckPassword(plainPass string, hashPass []byte) bool {
 	return bytes.Equal(hashPass, checkPass)
 }
 
-func (userR UserUseCaseRealisation) SearchUsers(userID int, searchOfValue string) ([]models.Person, error) {
-	sendData, err := userR.userDB.SearchUsers(userID, searchOfValue)
+func (userR UserUseCaseRealisation) SearchUsers(userID int, searchOfValue string, age string) ([]models.Person, error) {
+	sendData, err := userR.userDB.SearchUsers(userID, searchOfValue, age)
 
 	return sendData, err
 }
@@ -44,6 +44,7 @@ func (userR UserUseCaseRealisation) GetOtherUserProfileNotLogged(userLogin strin
 	var err error
 
 	sendData.User, err = userR.userDB.GetUserProfileSettingsByLogin(userLogin)
+	sendData.IsMe = false
 
 	if err != nil {
 		return *sendData, errors.NotExist
@@ -62,6 +63,11 @@ func (userR UserUseCaseRealisation) GetUserProfileWhileLogged(otherUserLogin str
 	var err error
 
 	sendData.User, err = userR.userDB.GetUserProfileSettingsByLogin(otherUserLogin)
+	sendData.IsMe = false
+
+	if sendData.User.Id == currentUserId {
+		sendData.IsMe = true
+	}
 
 	if err != nil {
 		return *sendData, errors.NotExist
@@ -69,6 +75,7 @@ func (userR UserUseCaseRealisation) GetUserProfileWhileLogged(otherUserLogin str
 
 	sendData.Feed, _ = userR.feedDB.GetPostsOfOtherUserWhileLogged(otherUserLogin, currentUserId)
 	sendData.Friends, err = userR.friendDB.GetUserFriendsByLogin(otherUserLogin, 6)
+
 
 	return *sendData, err
 
@@ -81,6 +88,9 @@ func (userR UserUseCaseRealisation) GetMainUserProfile(userId int) (models.MainU
 
 	sendData.User, _ = userR.userDB.GetUserProfileSettingsById(userId)
 	sendData.Friends, err = userR.friendDB.GetUserFriendsById(userId, 6)
+	if err != nil {
+		return  *sendData, err
+	}
 	sendData.Feed, err = userR.feedDB.GetUserPostsById(userId)
 
 	return *sendData, err
@@ -111,7 +121,10 @@ func (userR UserUseCaseRealisation) UploadSettings(userId int, newUserSettings m
 	if jsonData.Password != "" {
 
 		salt := make([]byte, 8)
-		rand.Read(salt)
+		_, err := rand.Read(salt)
+		if err != nil {
+			return models.Settings{}, err
+		}
 		currentUserData.CryptedPassword = CryptPassword(jsonData.Password, salt)
 	}
 
@@ -198,7 +211,7 @@ func (userR UserUseCaseRealisation) Register(userData models.Register) (string, 
 		Date:     userData.Date,
 	})
 
-	if cookie == nil {
+	if cookie == nil || err != nil {
 		return "", err
 	}
 

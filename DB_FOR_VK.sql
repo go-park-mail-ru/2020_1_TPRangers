@@ -12,11 +12,20 @@ DROP TABLE IF EXISTS PhotosFromAlbums;
 DROP TABLE IF EXISTS PostsAuthor;
 DROP TABLE IF EXISTS Comments;
 DROP TABLE IF EXISTS UsersCommentsLikes;
-DROP TABLE IF EXISTS PrivateChats CASCADE;
+DROP TABLE IF EXISTS Chats CASCADE;
 DROP TABLE IF EXISTS GroupChats CASCADE;
+DROP TABLE IF EXISTS PrivateChats CASCADE;
 DROP TABLE IF EXISTS ChatsUsers;
 DROP TABLE IF EXISTS Messages CASCADE;
 DROP TABLE IF EXISTS NewMessages;
+DROP TABLE IF EXISTS Packs CASCADE;
+DROP TABLE IF EXISTS Stickers CASCADE;
+DROP TABLE IF EXISTS PackStickers CASCADE;
+DROP TABLE IF EXISTS PacksOwners;
+DROP TABLE IF EXISTS Groups;
+DROP TABLE IF EXISTS GroupsPosts;
+DROP TABLE IF EXISTS GroupsMembers;
+
 
 
 
@@ -41,6 +50,21 @@ CREATE TABLE Users
     password  BYTEA,
     photo_id  INT DEFAULT 1 REFERENCES Photos,
     birthdate VARCHAR(20)
+);
+
+CREATE TABLE Groups
+(
+    g_id      SERIAL PRIMARY KEY,
+    name      TEXT,
+    about     TEXT,
+    owner_id  INT NOT NULL REFERENCES Users,
+    photo_id  INT DEFAULT 1 REFERENCES Photos
+);
+
+CREATE TABLE GroupsMembers
+(
+    g_id INT NOT NULL,
+    u_id INT NOT NULL REFERENCES Users
 );
 
 CREATE TABLE Friends
@@ -69,14 +93,14 @@ CREATE TABLE PostsAuthor
 
 CREATE TABLE Comments
 (
-    comment_id SERIAL PRIMARY KEY,
-    u_id       INT NOT NULL REFERENCES Users,
-    post_id    INT NOT NULL REFERENCES Posts ON DELETE CASCADE,
-    txt_data          TEXT,
-    photo_id          INT,
+    comment_id          SERIAL PRIMARY KEY,
+    u_id                INT NOT NULL REFERENCES Users,
+    post_id             INT NOT NULL REFERENCES Posts ON DELETE CASCADE,
+    txt_data            TEXT,
+    photo_id            INT,
     comment_likes_count INT,
-    creation_date     TIMESTAMP,
-    attachments       TEXT
+    creation_date       TIMESTAMP,
+    attachments         TEXT
 );
 
 CREATE TABLE Feeds
@@ -89,6 +113,13 @@ CREATE TABLE UsersPosts
 (
     u_id       INT NOT NULL REFERENCES Users,
     post_owner INT NOT NULL REFERENCES Users,
+    post_id    INT NOT NULL REFERENCES Posts
+);
+
+CREATE TABLE GroupsPosts
+(
+    g_id       INT NOT NULL REFERENCES Groups,
+    owner_of_post INT NOT NULL REFERENCES Users,
     post_id    INT NOT NULL REFERENCES Posts
 );
 
@@ -116,7 +147,7 @@ CREATE TABLE UsersPostsLikes
 CREATE TABLE UsersCommentsLikes
 (
     commentlike_id BIGSERIAL PRIMARY KEY,
-    u_id        INT NOT NULL REFERENCES Users,
+    u_id           INT NOT NULL REFERENCES Users,
     comment_id     INT NOT NULL
 );
 
@@ -160,13 +191,14 @@ CREATE UNIQUE INDEX chatuser_idx ON ChatsUsers (u_id, gch_id, pch_id);
 
 CREATE TABLE Messages
 (
-    msg_id    BIGSERIAL PRIMARY KEY,
-    pch_id    BIGINT DEFAULT 0,
-    gch_id    BIGINT DEFAULT 0,
-    u_id      INT    NOT NULL REFERENCES Users,
-    del_stat  BOOLEAN DEFAULT TRUE,
-    send_time TIMESTAMP,
-    txt       TEXT
+    msg_id       BIGSERIAL PRIMARY KEY,
+    pch_id       BIGINT  DEFAULT 0,
+    gch_id       BIGINT  DEFAULT 0,
+    u_id         INT NOT NULL REFERENCES Users,
+    del_stat     BOOLEAN DEFAULT TRUE,
+    send_time    TIMESTAMP,
+    sticker_link TEXT    DEFAULT NULL,
+    txt          TEXT
 );
 
 CREATE TABLE NewMessages
@@ -174,6 +206,44 @@ CREATE TABLE NewMessages
     msg_id      BIGINT REFERENCES Messages,
     receiver_id INT REFERENCES Users
 );
+
+
+CREATE TABLE Packs
+(
+    pack_id BIGSERIAL PRIMARY KEY,
+    author  INT NOT NULL REFERENCES Users (u_id),
+    name    TEXT DEFAULT 'DEFAULT STICKER PACK',
+    readme  TEXT DEFAULT ''
+);
+
+CREATE TABLE Stickers
+(
+    stick_id               BIGSERIAL PRIMARY KEY,
+    pack_id                BIGINT NOT NULL REFERENCES Packs (pack_id),
+    sticker_name           TEXT DEFAULT '',
+    sticker_default_phrase TEXT DEFAULT '',
+    sticker_link           TEXT
+);
+
+
+CREATE TABLE PackStickers
+(
+    stick_id BIGINT NOT NULL REFERENCES Stickers (stick_id),
+    pack_id  BIGINT NOT NULL REFERENCES Packs (pack_id)
+);
+
+CREATE UNIQUE INDEX idx_packstick_uniquesticktopack ON PackStickers (stick_id, pack_id);
+
+
+CREATE TABLE PacksOwners
+(
+    order_id BIGSERIAL PRIMARY KEY,
+    owner    INT    NOT NULL REFERENCES Users (u_id),
+    pack_id  BIGINT NOT NULL REFERENCES Packs (pack_id)
+);
+
+CREATE UNIQUE INDEX idx_packstick_uniquepackowner ON PacksOwners (owner, pack_id);
+
 
 
 INSERT INTO photos (url, photos_likes_count)

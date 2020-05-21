@@ -15,6 +15,8 @@ import (
 	deliveryFeed "main/internal/feeds/delivery"
 	repositoryFeed "main/internal/feeds/repository"
 	usecaseFeed "main/internal/feeds/usecase"
+	deliveryGroup "main/internal/groups/delivery"
+	repositoryGroup "main/internal/groups/repository"
 	"main/internal/middleware"
 	deliveryPhoto "main/internal/photos/delivery"
 	deliveryUser "main/internal/users/delivery"
@@ -27,9 +29,13 @@ import (
 	deliveryFriends "main/internal/friends/delivery"
 	repositoryFriends "main/internal/friends/repository"
 	usecaseFriends "main/internal/friends/usecase"
+	usecaseGroup "main/internal/groups/usecase"
 	deliveryLikes "main/internal/like/delivery"
 	usecaseLikes "main/internal/like/usecase"
 	usecasePhoto "main/internal/photos/usecase"
+	deliveryStickers "main/internal/stickers/delivery"
+	repositoryStickers "main/internal/stickers/repository"
+	usecaseStickers "main/internal/stickers/usecase"
 
 	authorMicro "main/internal/microservices/authorization/delivery"
 	likeMicro "main/internal/microservices/likes/delivery"
@@ -39,12 +45,16 @@ import (
 )
 
 type RequestHandlers struct {
-	userHandler   deliveryUser.UserDeliveryRealisation
-	feedHandler   deliveryFeed.FeedDeliveryRealisation
-	likeHandler   deliveryLikes.LikeDelivery
-	photoHandler  deliveryPhoto.PhotoDeliveryRealisation
-	albumHandler  deliveryAlbum.AlbumDeliveryRealisation
-	friendHandler deliveryFriends.FriendDeliveryRealisation
+
+	userHandler    deliveryUser.UserDeliveryRealisation
+	feedHandler    deliveryFeed.FeedDeliveryRealisation
+	likeHandler    deliveryLikes.LikeDelivery
+	photoHandler   deliveryPhoto.PhotoDeliveryRealisation
+	albumHandler   deliveryAlbum.AlbumDeliveryRealisation
+	friendHandler  deliveryFriends.FriendDeliveryRealisation
+	stickerHandler deliveryStickers.StickerDeliveryRealisation
+	groupHandler deliveryGroup.GroupDeliveryRealisation
+
 }
 
 func InitializeDataBases(server *echo.Echo) *sql.DB {
@@ -72,31 +82,41 @@ func NewRequestHandler(db *sql.DB, session authorMicro.SessionCheckerClient, lik
 	userDB := repositoryUser.NewUserRepositoryRealisation(db)
 	chatDB := repositoryChat.NewChatRepositoryRealisation(db)
 	albumDB := repositoryAlbum.NewAlbumRepositoryRealisation(db)
+	groupDB := repositoryGroup.NewGroupRepositoryRealisation(db)
 	friendsDB := repositoryFriends.NewFriendRepositoryRealisation(db)
+	stickerDB := repositoryStickers.NewStickerRepoRealisation(db)
 
 	photoUseCase := usecasePhoto.NewPhotoUseCaseRealisation(photos)
 	albumUseCase := usecaseAlbum.NewAlbumUseCaseRealisation(albumDB)
 	feedUseCase := usecaseFeed.NewFeedUseCaseRealisation(feedDB)
 	userUseCase := usecaseUser.NewUserUseCaseRealisation(userDB, friendsDB, feedDB, session)
+	groupUseCase := usecaseGroup.NewGroupUseCaseRealisation(groupDB, feedDB, session)
 	likesUse := usecaseLikes.NewLikeUseRealisation(likes)
 	friendsUse := usecaseFriends.NewFriendUseCaseRealisation(friendsDB)
 	chatUse := usecaseChat.NewChatUseCaseRealisation(chatDB, friendsDB)
+	stickerUse := usecaseStickers.NewStickerUseRealisation(stickerDB)
 
 	likeH := deliveryLikes.NewLikeDelivery(logger, likesUse)
 	userH := deliveryUser.NewUserDelivery(logger, userUseCase)
 	feedH := deliveryFeed.NewFeedDelivery(logger, feedUseCase)
 	photoH := deliveryPhoto.NewPhotoDelivery(logger, photoUseCase)
 	albumH := deliveryAlbum.NewAlbumDelivery(logger, albumUseCase)
+	groupH := deliveryGroup.NewGroupDelivery(logger, groupUseCase)
 	friendH := deliveryFriends.NewFriendDelivery(logger, friendsUse, chatUse)
+	stickerH := deliveryStickers.NewStickerDelivery(logger, stickerUse)
 
 	api := &(RequestHandlers{
 
-		photoHandler:  photoH,
-		albumHandler:  albumH,
-		userHandler:   userH,
-		feedHandler:   feedH,
-		likeHandler:   likeH,
-		friendHandler: friendH,
+
+		photoHandler:   photoH,
+		albumHandler:   albumH,
+		userHandler:    userH,
+		feedHandler:    feedH,
+		likeHandler:    likeH,
+		friendHandler:  friendH,
+		stickerHandler: stickerH,
+		groupHandler: groupH,
+
 	})
 
 	return api
@@ -150,7 +170,6 @@ func LoadMicroservices(server *echo.Echo) (authorMicro.SessionCheckerClient, lik
 
 }
 
-
 func main() {
 
 	server := echo.New()
@@ -192,8 +211,12 @@ func main() {
 	api.photoHandler.InitHandlers(server)
 	api.albumHandler.InitHandlers(server)
 	api.friendHandler.InitHandlers(server)
+	api.stickerHandler.InitHandlers(server)
+	api.groupHandler.InitHandlers(server)
 
-	port := os.Getenv("PORT")
+
+	port := os.Getenv("MAIN_PORT")
+
 
 	server.Logger.Fatal(server.Start(port))
 }

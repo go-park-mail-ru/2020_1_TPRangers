@@ -74,4 +74,3 @@ func (mr *MockPhotoCheckerClientMockRecorder) UploadPhotoToAlbum(arg0, arg1 inte
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UploadPhotoToAlbum", reflect.TypeOf((*MockPhotoCheckerClient)(nil).UploadPhotoToAlbum), varargs...)
 }
-

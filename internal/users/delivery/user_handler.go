@@ -32,10 +32,15 @@ func (userD UserDeliveryRealisation) GetUser(rwContext echo.Context) error {
 
 	if userId != -1 {
 		userData, err = userD.userLogic.GetUserProfileWhileLogged(login, userId)
+		if err != nil {
+			return err
+		}
 		userData.IsFriends, err = userD.userLogic.CheckFriendship(userId, login)
 	} else {
 		userData, err = userD.userLogic.GetOtherUserProfileNotLogged(login)
 	}
+
+	fmt.Println(userData)
 
 	if err != nil {
 
@@ -143,7 +148,7 @@ func (userD UserDeliveryRealisation) UploadSettings(rwContext echo.Context) erro
 		return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: errors.CookieExpired.Error()})
 	}
 
-	b , err := ioutil.ReadAll(rwContext.Request().Body)
+	b, err := ioutil.ReadAll(rwContext.Request().Body)
 	defer rwContext.Request().Body.Close()
 
 	if err != nil {
@@ -207,7 +212,7 @@ func (userD UserDeliveryRealisation) Login(rwContext echo.Context) error {
 
 	userAuthData := new(models.Auth)
 
-	b , err := ioutil.ReadAll(rwContext.Request().Body)
+	b, err := ioutil.ReadAll(rwContext.Request().Body)
 	defer rwContext.Request().Body.Close()
 
 	if err != nil {
@@ -242,7 +247,6 @@ func (userD UserDeliveryRealisation) Login(rwContext echo.Context) error {
 			zap.String("ERROR", err.Error()),
 			zap.Int("ANSWER STATUS", http.StatusUnauthorized),
 		)
-
 
 		return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: err.Error()})
 	}
@@ -302,7 +306,7 @@ func (userD UserDeliveryRealisation) Register(rwContext echo.Context) error {
 
 	userAuthData := new(models.Register)
 
-	b , err := ioutil.ReadAll(rwContext.Request().Body)
+	b, err := ioutil.ReadAll(rwContext.Request().Body)
 	defer rwContext.Request().Body.Close()
 
 	if err != nil {
@@ -380,6 +384,7 @@ func (userD UserDeliveryRealisation) SearchUsers(rwContext echo.Context) error {
 	rId := rwContext.Get("REQUEST_ID").(string)
 	userId := rwContext.Get("user_id").(int)
 	valueOfSearch := rwContext.Param("value")
+	valueOfAge := rwContext.QueryParam("year")
 
 	if userId == -1 {
 		userD.logger.Debug(
@@ -390,7 +395,7 @@ func (userD UserDeliveryRealisation) SearchUsers(rwContext echo.Context) error {
 		return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: errors.CookieExpired.Error()})
 	}
 
-	jsonAnswer, err := userD.userLogic.SearchUsers(userId, valueOfSearch)
+	jsonAnswer, err := userD.userLogic.SearchUsers(userId, valueOfSearch, valueOfAge)
 
 	if err != nil {
 		userD.logger.Info(

@@ -28,7 +28,7 @@ func (CR ConnReceiver) StartRecieving() {
 	go func() {
 		desc := netpoll.Must(netpoll.HandleReadWrite(CR.connection))
 
-		CR.netPool.Start(desc, func(ev netpoll.Event) {
+		err := CR.netPool.Start(desc, func(ev netpoll.Event) {
 
 			fmt.Println("current event is : ", ev.String())
 
@@ -45,6 +45,9 @@ func (CR ConnReceiver) StartRecieving() {
 			}
 
 		})
+		if err != nil {
+			return
+		}
 
 		go func() {
 			for {

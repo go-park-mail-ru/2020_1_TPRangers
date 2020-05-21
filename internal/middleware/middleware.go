@@ -32,12 +32,12 @@ func (mh MiddlewareHandler) SetMiddleware(server *echo.Echo) {
 	logFunc := mh.AccessLog()
 	server.Use(mh.PanicMiddleWare)
 	authFunc := mh.CheckAuthentication()
-	csrfFunc := mh.CSRF()
+	//csrfFunc := mh.CSRF()
 
 	server.Use(authFunc)
 	server.Use(logFunc)
 
-	server.Use(csrfFunc)
+	//server.Use(csrfFunc)
 }
 
 func (mh MiddlewareHandler) SetCorsMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
@@ -167,7 +167,7 @@ func (mh MiddlewareHandler) CSRF() echo.MiddlewareFunc {
 					return rwContext.JSON(http.StatusForbidden, models.JsonStruct{Err: errors.CookieExpired.Error()})
 				}
 
-				if isValidCsrf == false {
+				if !isValidCsrf  {
 					return rwContext.JSON(http.StatusForbidden, models.JsonStruct{Err: errors.CookieExpired.Error()})
 				}
 			}

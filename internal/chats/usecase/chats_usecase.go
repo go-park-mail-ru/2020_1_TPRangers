@@ -26,9 +26,9 @@ func (CU ChatUseCaseRealisation) CreateChat(newChat models.NewChatUsers, userId 
 	usersChat := make([]int, 0)
 	usersChat = append(usersChat, userId)
 
-	for iter, _ := range newChat.UsersLogin {
+	for _, login := range newChat.UsersLogin {
 
-		uId, err := CU.userRepo.GetIdByLogin(newChat.UsersLogin[iter])
+		uId, err := CU.userRepo.GetIdByLogin(login)
 
 		if err != nil {
 			return err

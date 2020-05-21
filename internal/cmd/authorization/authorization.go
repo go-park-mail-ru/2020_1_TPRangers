@@ -54,5 +54,8 @@ func main() {
 	session.RegisterSessionCheckerServer(server, usecase.NewAuthorizationUseCaseRealisation(users, sessions))
 
 	fmt.Println("starting server at " + port)
-	server.Serve(lis)
+	err = server.Serve(lis)
+	if err != nil {
+		log.Fatal("CANNOT LISTEN PORT : ", port, err.Error())
+	}
 }

@@ -29,10 +29,10 @@ func TestFriendDeliveryRealisation_Feed(t *testing.T) {
 	feedBehaviour := []error{nil, nil, errors.New("smth happend")}
 	expectedBehaviour := []int{http.StatusUnauthorized, http.StatusOK, http.StatusInternalServerError}
 
-	for iter, _ := range usersId {
+	for iter := range usersId {
 
 		if expectedBehaviour[iter] != http.StatusUnauthorized {
-			feeds := make([]models.Post, 2, 2)
+			feeds := make([]models.Post, 2)
 			aUseCase.EXPECT().Feed(usersId[iter]).Return(feeds, feedBehaviour[iter])
 		}
 
@@ -66,7 +66,7 @@ func TestFriendDeliveryRealisation_CreatePost(t *testing.T) {
 	feedBehaviour := []error{nil, nil, errors.New("smth happend")}
 	expectedBehaviour := []int{http.StatusUnauthorized, http.StatusConflict, http.StatusConflict}
 
-	for iter, _ := range usersId {
+	for iter := range usersId {
 
 		if expectedBehaviour[iter] != http.StatusUnauthorized {
 			post := models.Post{}
@@ -124,7 +124,6 @@ func TestFriendDeliveryRealisation_CreateComment(t *testing.T) {
 
 	}
 }
-
 
 //func TestFriendDeliveryRealisation_GetPostAndComments(t *testing.T) {
 //	ctrl := gomock.NewController(t)
@@ -198,4 +197,3 @@ func TestFriendDeliveryRealisation_GetPostAndComments(t *testing.T) {
 
 	}
 }
-

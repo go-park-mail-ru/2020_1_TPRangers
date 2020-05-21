@@ -36,8 +36,6 @@ func (feedR FeedUseCaseRealisation) DeleteComment(userID int, commentID string) 
 	return feedR.feedDB.DeleteComment(userID, commentID)
 }
 
-
-
 func (feedR FeedUseCaseRealisation) GetPostAndComments(userID int, postID string) (models.Post, error) {
 
 	return feedR.feedDB.GetPostAndComments(userID, postID)
