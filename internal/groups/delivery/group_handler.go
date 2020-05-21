@@ -209,6 +209,7 @@ func (groupD GroupDeliveryRealisation) CreatePostInGroup(rwContext echo.Context)
 
 	return rwContext.NoContent(http.StatusOK)
 }
+
 func (groupD GroupDeliveryRealisation) GetGroupProfile(rwContext echo.Context) error {
 	rId := rwContext.Get("REQUEST_ID").(string)
 	userId := rwContext.Get("user_id").(int)
@@ -224,6 +225,53 @@ func (groupD GroupDeliveryRealisation) GetGroupProfile(rwContext echo.Context) e
 
 	groupID, _ := strconv.Atoi(rwContext.Param("id"))
 	groupData, err := groupD.groupLogic.GetGroupProfile(userId, groupID)
+
+	if err != nil {
+		groupD.logger.Info(
+			zap.String("ID", rId),
+			zap.String("ERROR", err.Error()),
+			zap.Int("ANSWER STATUS", http.StatusNotFound),
+		)
+
+		return rwContext.JSON(http.StatusNotFound, models.JsonStruct{Err: err.Error()})
+	}
+
+	groupD.logger.Info(
+		zap.String("ID", rId),
+		zap.Int("ANSWER STATUS", http.StatusOK),
+	)
+
+	return rwContext.JSON(http.StatusOK, groupData)
+}
+
+func (groupD GroupDeliveryRealisation) UpdateGroupProfile(rwContext echo.Context) error {
+	rId := rwContext.Get("REQUEST_ID").(string)
+	userId := rwContext.Get("user_id").(int)
+
+	if userId == -1 {
+		groupD.logger.Debug(
+			zap.String("ID", rId),
+			zap.String("ERROR", errors.CookieExpired.Error()),
+			zap.Int("ANSWER STATUS", http.StatusUnauthorized),
+		)
+		return rwContext.JSON(http.StatusUnauthorized, models.JsonStruct{Err: errors.CookieExpired.Error()})
+	}
+
+	newGroupInfo := new(models.Group)
+
+	err := rwContext.Bind(newGroupInfo)
+
+	if err != nil {
+		groupD.logger.Info(
+			zap.String("ID", rId),
+			zap.String("ERROR", err.Error()),
+			zap.Int("ANSWER STATUS", http.StatusConflict),
+		)
+		return rwContext.JSON(http.StatusConflict, models.JsonStruct{Err: err.Error()})
+	}
+
+	groupID, _ := strconv.Atoi(rwContext.Param("id"))
+	groupData, err := groupD.groupLogic.UpdateGroupProfile(userId, groupID,*newGroupInfo)
 
 	if err != nil {
 		groupD.logger.Info(
@@ -363,6 +411,7 @@ func (groupD GroupDeliveryRealisation) InitHandlers(server *echo.Echo) {
 	server.POST("/api/v1/group/create", groupD.CreateGroup)
 	server.POST("/api/v1/group/:id/post/create", groupD.CreatePostInGroup)
 	server.GET("/api/v1/group/:id/profile", groupD.GetGroupProfile)
+	server.PUT("/api/v1/group/:id/profile", groupD.UpdateGroupProfile)
 	server.GET("/api/v1/group/:id/feed", groupD.GetGroupFeeds)
 	server.GET("/api/v1/group/list", groupD.GetUserGroupsList)
 	server.GET("/api/v1/group/search/:value", groupD.SearchAllGroups)

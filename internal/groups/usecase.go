@@ -11,6 +11,7 @@ type GroupUseCase interface {
 	GetGroupFeeds(int, int) ([]models.Post, error)
 	GetUserGroupsList(int) ([]models.Group, error)
 	SearchAllGroups(int, string) ([]models.Group, error)
+	UpdateGroupProfile(int, int,models.Group) (models.GroupProfile , error)
 }
 
 

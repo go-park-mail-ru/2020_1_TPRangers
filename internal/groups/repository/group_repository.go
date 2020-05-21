@@ -66,6 +66,13 @@ func (Data GroupRepositoryRealisation) IsUserOwnerOfGroup(userID int, groupID in
 	return true, nil
 }
 
+func (Data GroupRepositoryRealisation) UpdateGroupProfile(userID int, groupID int, newGroupInfo models.Group) error {
+
+	_ , err := Data.groupDB.Exec("UPDATE Groups SET about = $3 WHERE g_id = $2 AND owner_id = $1" , userID , groupID , *newGroupInfo.About)
+
+	return err
+}
+
 func (Data GroupRepositoryRealisation) CreatePostInGroup(userID int, groupID int, newPost models.Post) error {
 	photo_id := 0
 
