@@ -146,7 +146,7 @@ jobs:
          host: ${{ secrets.HOST }}
          username: ${{ secrets.USER }}
          password: ${{ secrets.PASS }}
-         script: cd /root/deploy/deploy && cat starter.sh && ./starter.sh
+         script: cd /root/deploy/deploy && cat starter.sh && ./starter.sh && ./finish.sh && ./starter.sh
 
 
       
