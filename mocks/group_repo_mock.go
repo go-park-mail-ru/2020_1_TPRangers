@@ -178,3 +178,17 @@ func (mr *MockGroupRepositoryMockRecorder) SearchAllGroups(arg0, arg1 interface{
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SearchAllGroups", reflect.TypeOf((*MockGroupRepository)(nil).SearchAllGroups), arg0, arg1)
 }
+
+// UpdateGroupProfile mocks base method
+func (m *MockGroupRepository) UpdateGroupProfile(arg0, arg1 int, arg2 models.Group) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateGroupProfile", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateGroupProfile indicates an expected call of UpdateGroupProfile
+func (mr *MockGroupRepositoryMockRecorder) UpdateGroupProfile(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateGroupProfile", reflect.TypeOf((*MockGroupRepository)(nil).UpdateGroupProfile), arg0, arg1, arg2)
+}
