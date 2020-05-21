@@ -20,5 +20,7 @@ run:
     - internal/cmd
   skip-files:
     - main.go
+linters-settings:
+  ignore: fmt:.*,io/ioutil:^Read.*/ioutil:^Write.*    
 
 
