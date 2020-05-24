@@ -132,7 +132,7 @@ func (CR ChatRepositoryRealisation) GetPrivateChatMessages(chatId int64, userId 
 		return models.ChatInfo{}, nil, err
 	}
 
-	msgQuery, err := CR.chatDB.Query("SELECT M.u_id , M.txt, M.send_time,U.name,U.surname,U.login,P.url,M.sticker_link FROM Messages M INNER JOIN Users U ON(U.u_id=M.u_id) INNER JOIN Photos P ON(P.photo_id=U.photo_id) WHERE M.pch_id = $1 ORDER BY M.send_time DESC", chatId)
+	msgQuery, err := CR.chatDB.Query("SELECT M.u_id , M.txt, M.send_time,U.name,U.surname,U.login,P.url,M.sticker_link,M.attach_link FROM Messages M INNER JOIN Users U ON(U.u_id=M.u_id) INNER JOIN Photos P ON(P.photo_id=U.photo_id) WHERE M.pch_id = $1 ORDER BY M.send_time DESC", chatId)
 
 	if err != nil {
 		return models.ChatInfo{}, nil, err
@@ -146,7 +146,7 @@ func (CR ChatRepositoryRealisation) GetPrivateChatMessages(chatId int64, userId 
 		msg := new(models.Message)
 
 		var stickerLink *string
-		err := msgQuery.Scan(&uId, &msg.Text, &msg.Time, &msg.AuthorName, &msg.AuthorSurname, &msg.AuthorUrl, &msg.AuthorPhoto, &stickerLink)
+		err := msgQuery.Scan(&uId, &msg.Text, &msg.Time, &msg.AuthorName, &msg.AuthorSurname, &msg.AuthorUrl, &msg.AuthorPhoto, &stickerLink , &msg.Attachment)
 
 		if err != nil {
 			return models.ChatInfo{}, nil, err
@@ -182,7 +182,7 @@ func (CR ChatRepositoryRealisation) GetGroupChatMessages(chatId int64, userId in
 		return models.ChatInfo{}, nil, err
 	}
 
-	msgQuery, err := CR.chatDB.Query("SELECT M.u_id , M.txt, M.send_time,U.name,U.surname,U.login,P.url,M.sticker_link FROM Messages M INNER JOIN Users U ON(U.u_id=M.u_id) INNER JOIN Photos P ON(P.photo_id=U.photo_id) WHERE M.gch_id = $1 ORDER BY M.send_time DESC", chatId)
+	msgQuery, err := CR.chatDB.Query("SELECT M.u_id , M.txt, M.send_time,U.name,U.surname,U.login,P.url,M.sticker_link , M.attach_link FROM Messages M INNER JOIN Users U ON(U.u_id=M.u_id) INNER JOIN Photos P ON(P.photo_id=U.photo_id) WHERE M.gch_id = $1 ORDER BY M.send_time DESC", chatId)
 
 	if err != nil {
 		fmt.Println(err, "here")
@@ -197,7 +197,7 @@ func (CR ChatRepositoryRealisation) GetGroupChatMessages(chatId int64, userId in
 		msg := new(models.Message)
 
 		var stickerLink *string
-		err := msgQuery.Scan(&uId, &msg.Text, &msg.Time, &msg.AuthorName, &msg.AuthorSurname, &msg.AuthorUrl, &msg.AuthorPhoto, &stickerLink)
+		err := msgQuery.Scan(&uId, &msg.Text, &msg.Time, &msg.AuthorName, &msg.AuthorSurname, &msg.AuthorUrl, &msg.AuthorPhoto, &stickerLink , &msg.Attachment)
 
 		if err != nil {
 			return models.ChatInfo{}, nil, err
@@ -239,7 +239,7 @@ func (CR ChatRepositoryRealisation) GetAllChats(userId int) ([]models.Chat, erro
 		"END = 1 " +
 		"WHERE CU.u_id = $1 GROUP BY CU.cu_id,PC.ch_id,GC.ch_id " +
 		") " +
-		"SELECT PC.ch_id,GC.ch_id,GC.name,U.name,U.surname,U.login,CP.url,P.url,max(M.send_time),M.txt FROM ChatsUsers CU " +
+		"SELECT PC.ch_id,GC.ch_id,GC.name,U.name,U.surname,U.login,CP.url,P.url,max(M.send_time),M.txt,M.sticker_link,M.attach_link FROM ChatsUsers CU " +
 		"LEFT JOIN PrivateChats PC ON(PC.ch_id=CU.pch_id) " +
 		"LEFT JOIN Users U ON CASE " +
 		"WHEN PC.fu_id != $1 AND PC.fu_id= U.u_id  THEN 1 " +
@@ -264,7 +264,7 @@ func (CR ChatRepositoryRealisation) GetAllChats(userId int) ([]models.Chat, erro
 		"WHEN CU.gch_id != 0 AND GC.photo_id = CP.photo_id THEN 1 " +
 		"ELSE 0 " +
 		"END = 1 " +
-		"WHERE CU.u_id = $1 GROUP BY PC.ch_id,GC.ch_id,GC.name,U.name,U.surname,U.login,CP.url,P.url,M.txt ORDER BY max(M.send_time) DESC"
+		"WHERE CU.u_id = $1 GROUP BY PC.ch_id,GC.ch_id,GC.name,U.name,U.surname,U.login,CP.url,P.url,M.txt,M.sticker_link,M.attach_link ORDER BY max(M.send_time) DESC"
 
 	chatRow, err := CR.chatDB.Query(queryRow, userId)
 
@@ -287,7 +287,9 @@ func (CR ChatRepositoryRealisation) GetAllChats(userId int) ([]models.Chat, erro
 		)
 
 		chat := new(models.Chat)
-		err = chatRow.Scan(&isPrivate, &isGroup, &chatName, &prName, &prSurname, &prLogin, &chat.ChatPhoto, &chat.LastMessageAuthorPhoto, &chat.LastMessageTime, &chat.LastMessageTxt)
+		var attachment string
+		var stickerLink *string
+		err = chatRow.Scan(&isPrivate, &isGroup, &chatName, &prName, &prSurname, &prLogin, &chat.ChatPhoto, &chat.LastMessageAuthorPhoto, &chat.LastMessageTime, &chat.LastMessageTxt ,&stickerLink,&attachment)
 		if err != nil {
 			return chats, err
 		}
@@ -301,6 +303,14 @@ func (CR ChatRepositoryRealisation) GetAllChats(userId int) ([]models.Chat, erro
 			chat.PrivateName = *prName
 			chat.PrivateSurname = *prSurname
 			chat.PrivateUrl = *prLogin
+		}
+
+		if chat.LastMessageTxt == "" {
+			if attachment != "" {
+				chat.LastMessageTxt = "Документ"
+			} else {
+				chat.LastMessageTxt = "Стикер"
+			}
 		}
 
 		chats = append(chats, *chat)

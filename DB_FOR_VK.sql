@@ -81,7 +81,7 @@ CREATE TABLE Posts
     txt_data          TEXT,
     photo_id          INT,
     posts_likes_count INT,
-    creation_date     TIMESTAMP,
+    creation_date     TIMESTAMP WITH TIME ZONE,
     attachments       TEXT
 );
 
@@ -99,7 +99,7 @@ CREATE TABLE Comments
     txt_data            TEXT,
     photo_id            INT,
     comment_likes_count INT,
-    creation_date       TIMESTAMP,
+    creation_date       TIMESTAMP WITH TIME ZONE,
     attachments         TEXT
 );
 
@@ -196,8 +196,9 @@ CREATE TABLE Messages
     gch_id       BIGINT  DEFAULT 0,
     u_id         INT NOT NULL REFERENCES Users,
     del_stat     BOOLEAN DEFAULT TRUE,
-    send_time    TIMESTAMP,
+    send_time    TIMESTAMP  WITH TIME ZONE,
     sticker_link TEXT    DEFAULT NULL,
+    attach_link TEXT DEFAULT '',
     txt          TEXT
 );
 
@@ -247,10 +248,10 @@ CREATE UNIQUE INDEX idx_packstick_uniquepackowner ON PacksOwners (owner, pack_id
 
 
 INSERT INTO photos (url, photos_likes_count)
-VALUES ('https://social-hub.ru/uploads/img/default.png', 0);
+VALUES ('https://tpvk.hb.bizmrg.com/uploads/img/default.png', 0);
 
 INSERT INTO photos (url, photos_likes_count)
-VALUES ('https://social-hub.ru/uploads/img/default_chat.png', 0);
+VALUES ('https://tpvk.hb.bizmrg.com/uploads/img/default_chat.png', 0);
 
 
 

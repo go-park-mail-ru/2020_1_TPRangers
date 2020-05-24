@@ -52,9 +52,9 @@ func (MR MessageRepositoryRealisation) AddNewMessage(author int, message models.
 
 	var msgRow *sql.Row
 	if message.Sticker == "" {
-		msgRow = MR.messageDB.QueryRow("INSERT INTO Messages ("+groupType+"_id,u_id,txt,send_time) VALUES($1,$2,$3,$4) RETURNING msg_id", chat, author, message.Text, time.Now())
+		msgRow = MR.messageDB.QueryRow("INSERT INTO Messages ("+groupType+"_id,u_id,txt,send_time,attach_link) VALUES($1,$2,$3,$4,$5) RETURNING msg_id", chat, author, message.Text, time.Now() , message.Attachment)
 	} else {
-		msgRow = MR.messageDB.QueryRow("INSERT INTO Messages ("+groupType+"_id,u_id,txt,send_time,sticker_link) VALUES($1,$2,$3,$4,$5) RETURNING msg_id", chat, author, message.Text, time.Now(), message.Sticker)
+		msgRow = MR.messageDB.QueryRow("INSERT INTO Messages ("+groupType+"_id,u_id,txt,send_time,sticker_link,attach_link) VALUES($1,$2,$3,$4,$5,$6) RETURNING msg_id", chat, author, message.Text, time.Now(), message.Sticker , message.Attachment)
 	}
 
 	msgId := 0
@@ -96,7 +96,7 @@ func (MR MessageRepositoryRealisation) ReceiveNewMessages(userId int) ([]models.
 
 	msgsArray := make([]models.Message, 0)
 
-	msgsRow, err := MR.messageDB.Query("SELECT M.msg_id, M.gch_id, M.pch_id ,M.u_id ,M.send_time ,M.txt , U.name,P.url, M.sticker_link FROM Messages M "+
+	msgsRow, err := MR.messageDB.Query("SELECT M.msg_id, M.gch_id, M.pch_id ,M.u_id ,M.send_time ,M.txt , U.name,P.url, M.sticker_link , M.attach_link FROM Messages M "+
 		"INNER JOIN NewMessages NM ON(NM.msg_id=M.msg_id) LEFT JOIN GroupChats GC ON(M.gch_id=GC.ch_id) INNER JOIN Users U ON(U.u_id=M.u_id) "+
 		"LEFT JOIN Photos P ON CASE "+
 		"WHEN P.photo_id=GC.photo_id AND M.pch_id = 0 THEN 1 "+
@@ -119,7 +119,7 @@ func (MR MessageRepositoryRealisation) ReceiveNewMessages(userId int) ([]models.
 		var isPrivate *int64
 		var isGroup *int64
 		var stickerLink *string
-		err = msgsRow.Scan(&msgId, &isGroup, &isPrivate, &userid, &msg.Time, &msg.Text, &msg.ChatName, &msg.ChatPhoto, &stickerLink)
+		err = msgsRow.Scan(&msgId, &isGroup, &isPrivate, &userid, &msg.Time, &msg.Text, &msg.ChatName, &msg.ChatPhoto, &stickerLink , &msg.Attachment)
 
 		if *isGroup != int64(0) {
 			msg.ChatId = "c" + strconv.FormatInt(*isGroup, 10)
