@@ -34,7 +34,9 @@ func (Data FeedRepositoryRealisation) GetUserFeedById(id int, count int) ([]mode
 			break
 		}
 		post := models.Post{}
+		post.IsGroup = 0
 		err := rows.Scan(&isGroup, &post.Id, &post.Text, &post.Attachments, &post.Likes, &post.Creation, &post.Photo.Id, &post.Photo.Url, &post.Photo.Likes, &post.AuthorName, &post.AuthorSurname, &post.AuthorUrl)
+		post.IsGroup = isGroup
 		if isGroup == 1 {
 			post.AuthorSurname = ""
 			gName := ""
