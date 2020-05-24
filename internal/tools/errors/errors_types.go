@@ -24,4 +24,5 @@ var (
 	InvalidCsrf        = errors.New("Неверный токен")
 	DontHavePermission = errors.New("Не хватает прав")
 	InvalidToken       = errors.New("Неверный токен")
+	InvalidPhotoFormat = errors.New("Неверный формат фотографии")
 )
