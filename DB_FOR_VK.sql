@@ -82,7 +82,8 @@ CREATE TABLE Posts
     photo_id          INT,
     posts_likes_count INT,
     creation_date     TIMESTAMP,
-    attachments       TEXT
+    attachments       TEXT,
+    is_group          INT
 );
 
 CREATE TABLE PostsAuthor

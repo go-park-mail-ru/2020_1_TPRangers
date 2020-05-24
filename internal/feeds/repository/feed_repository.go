@@ -6,6 +6,7 @@ import (
 	_ "github.com/lib/pq"
 	"main/internal/models"
 	"main/internal/tools/errors"
+	"strconv"
 	"time"
 )
 
@@ -19,11 +20,13 @@ func NewFeedRepositoryRealisation(db *sql.DB) FeedRepositoryRealisation {
 }
 
 func (Data FeedRepositoryRealisation) GetUserFeedById(id int, count int) ([]models.Post, error) {
-	rows, err := Data.feedDB.Query("select  p.post_id, p.txt_data, p.attachments, p.posts_likes_count, p.creation_date, ph.photo_id, ph.url, ph.photos_likes_count, u.name, u.surname, u.login " +
+	rows, err := Data.feedDB.Query("select  p.is_group, p.post_id, p.txt_data, p.attachments, p.posts_likes_count, p.creation_date, ph.photo_id, ph.url, ph.photos_likes_count, u.name, u.surname, u.login " +
 		"from posts AS p INNER JOIN postsauthor AS pa ON (p.post_id = pa.post_id) INNER JOIN users AS u ON (pa.u_id = u.u_id) LEFT JOIN photos AS ph ON p.photo_id = ph.photo_id;")
 	if err != nil {
 		return nil, errors.FailReadFromDB
 	}
+	isGroup := 0
+	gPhoto := "https://social-hub.ru/uploads/img/default.png"
 	posts := []models.Post{}
 	i := 0
 	for rows.Next() {
@@ -31,8 +34,19 @@ func (Data FeedRepositoryRealisation) GetUserFeedById(id int, count int) ([]mode
 			break
 		}
 		post := models.Post{}
-		err := rows.Scan(&post.Id, &post.Text, &post.Attachments, &post.Likes, &post.Creation, &post.Photo.Id, &post.Photo.Url, &post.Photo.Likes, &post.AuthorName, &post.AuthorSurname, &post.AuthorUrl)
-
+		err := rows.Scan(&isGroup, &post.Id, &post.Text, &post.Attachments, &post.Likes, &post.Creation, &post.Photo.Id, &post.Photo.Url, &post.Photo.Likes, &post.AuthorName, &post.AuthorSurname, &post.AuthorUrl)
+		if isGroup == 1 {
+			post.AuthorSurname = ""
+			gName := ""
+			gID := 1
+			rowGroup := Data.feedDB.QueryRow("select ph.url, g.name, g.g_id from groups AS g INNER JOIN groupsposts AS gp ON (g.g_id = gp.g_id AND gp.post_id = $1) INNER JOIN photos AS ph ON (g.photo_id = ph.photo_id);", post.Id)
+			err = rowGroup.Scan(&gPhoto, &gName, &gID)
+			if err != nil {
+				return nil, err
+			}
+			post.AuthorName = gName
+			post.AuthorUrl = strconv.Itoa(gID)
+		}
 		additional_row := Data.feedDB.QueryRow("select upl.postlike_id, uphl.photolike_id from userspostslikes AS upl RIGHT JOIN posts AS p "+
 			"ON (p.post_id = upl.post_id) LEFT JOIN usersphotoslikes AS uphl ON (p.photo_id = uphl.photo_id) INNER JOIN postsauthor AS pa ON (pa.post_id = p.post_id) "+
 			"LEFT JOIN users AS u ON (u.u_id = pa.u_id) LEFT JOIN photos AS ph ON (u.photo_id = ph.photo_id) WHERE p.post_id = $1 AND upl.u_id = $2;", post.Id, id)
@@ -41,6 +55,9 @@ func (Data FeedRepositoryRealisation) GetUserFeedById(id int, count int) ([]mode
 		var photoLikes *int
 		add_row := Data.feedDB.QueryRow("select ph.url from photos AS ph INNER JOIN users AS u ON (u.photo_id = ph.photo_id) INNER JOIN postsauthor AS pa ON (pa.post_id = $1 AND pa.u_id = u.u_id);", post.Id)
 		add_row.Scan(&post.AuthorPhoto)
+		if isGroup == 1 {
+			post.AuthorPhoto = gPhoto
+		}
 		additional_row.Scan(&postLikes, &photoLikes)
 		if postLikes != nil {
 			post.WasLike = true
@@ -56,7 +73,8 @@ func (Data FeedRepositoryRealisation) GetUserFeedById(id int, count int) ([]mode
 			return nil, errors.FailReadToVar
 		}
 
-		posts = append(posts, post)
+		//posts = append(posts, post)
+		posts = append([]models.Post{post}, posts...)
 		i++
 	}
 
@@ -187,7 +205,7 @@ func (Data FeedRepositoryRealisation) CreatePost(uId int, ownerLogin string, new
 		}
 	}
 
-	postRow, err := Data.feedDB.Query("INSERT INTO Posts (txt_data,photo_id,posts_likes_count,creation_date, attachments) VALUES($1 , $2 , $3 , $4 , $5) RETURNING post_id", newPost.Text, photo_id, 0, time.Now(), newPost.Attachments)
+	postRow, err := Data.feedDB.Query("INSERT INTO Posts (txt_data,photo_id,posts_likes_count,creation_date, attachments, is_group) VALUES($1 , $2 , $3 , $4 , $5, $6) RETURNING post_id", newPost.Text, photo_id, 0, time.Now(), newPost.Attachments, 0)
 	defer func() {
 		if postRow != nil {
 			postRow.Close()

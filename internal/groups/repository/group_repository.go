@@ -78,7 +78,7 @@ func (Data GroupRepositoryRealisation) CreatePostInGroup(userID int, groupID int
 		}
 	}
 
-	postRow, err := Data.groupDB.Query("INSERT INTO Posts (txt_data, photo_id, posts_likes_count, creation_date, attachments) VALUES($1 , $2 , $3 , $4 , $5) RETURNING post_id", newPost.Text, photo_id, 0, time.Now(), newPost.Attachments)
+	postRow, err := Data.groupDB.Query("INSERT INTO Posts (txt_data, photo_id, posts_likes_count, creation_date, attachments, is_group) VALUES($1 , $2 , $3 , $4 , $5, $6) RETURNING post_id", newPost.Text, photo_id, 0, time.Now(), newPost.Attachments, 1)
 	defer func () {
 		if postRow != nil {
 			postRow.Close()
