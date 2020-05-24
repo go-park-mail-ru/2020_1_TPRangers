@@ -83,7 +83,7 @@ CREATE TABLE Posts
     posts_likes_count INT,
     creation_date     TIMESTAMP,
     attachments       TEXT,
-    is_group          INT
+    is_group          BOOLEAN DEFAULT FALSE
 );
 
 CREATE TABLE PostsAuthor
