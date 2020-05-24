@@ -223,9 +223,9 @@ func (Data UserRepositoryRealisation) GetDefaultProfilePhotoId() (int, error) {
 }
 
 func (Data UserRepositoryRealisation) AddNewUser(userData models.User) error {
-	_, err := Data.userDB.Exec("insert into Users (phone, mail, name, surname, password, birthdate, login, photo_id) values ($1, $2, $3, $4, $5::bytea, $6, $7, $8)", userData.Telephone, userData.Email, userData.Name, userData.Surname, userData.CryptedPassword, userData.Date, userData.Login, userData.Photo)
+	_, err := Data.userDB.Exec("insert into Users (phone, mail, name, surname, password, birthdate, login, photo_id) values ($1, $2, $3, $4, $5::bytea, $6, $7, $8)", userData.Telephone, userData.Email, userData.Name, userData.Surname, userData.CryptedPassword, userData.Date, userData.Login, 1)
 	if err != nil {
-		return errors.FailSendToDB
+		return err
 	}
 	return nil
 }

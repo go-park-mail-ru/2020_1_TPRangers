@@ -65,7 +65,7 @@ func (AU AuthorizationUseCaseRealisation) LoginUser(ctx context.Context, auth *s
 
 	err := AU.sessionDB.AddCookie(id, session.Cookies, 15*time.Hour)
 	if err != nil {
-		return nil, errors.FailSendToDB
+		return nil, err
 	}
 
 	return session, nil
@@ -104,13 +104,13 @@ func (AU AuthorizationUseCaseRealisation) CreateNewUser(ctx context.Context, use
 	err = AU.userDB.AddNewUser(data)
 
 	if err != nil {
-		return nil, errors.FailReadFromDB
+		return nil, err
 	}
 
 	id, err := AU.userDB.GetIdByEmail(email)
 
 	if err != nil {
-		return nil, errors.FailReadFromDB
+		return nil, err
 	}
 
 	cookieValue := uuid.NewV4()

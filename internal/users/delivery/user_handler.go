@@ -333,7 +333,7 @@ func (userD UserDeliveryRealisation) Register(rwContext echo.Context) error {
 	exprTime := 12 * time.Hour
 
 	cookieValue, err := userD.userLogic.Register(*userAuthData)
-
+	fmt.Println(err)
 	errResStatus := 0
 
 	switch err {
