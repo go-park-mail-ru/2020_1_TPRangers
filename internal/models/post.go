@@ -13,4 +13,5 @@ type Post struct {
 	AuthorUrl     string    `json:"authorUrl,omitempty"`
 	AuthorPhoto   string    `json:"authorPhoto,omitempty"`
 	Comments      []Comment `json:"comments,omitempty"`
+	IsGroup       int       `json:"isGroup"`
 }
