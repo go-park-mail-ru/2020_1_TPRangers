@@ -40,6 +40,6 @@ func main() {
 	api := NewRequestHandlers()
 	api.photoSaveHandler.InitHandler(server)
 
-	port := os.Getenv("PORT")
+	port := os.Getenv("PORT_SAVE")
 	server.Logger.Fatal(server.Start(port))
 }
